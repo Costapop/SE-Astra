@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.1.0</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.1.1</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -503,8 +503,8 @@ footer p { margin: 4px 0; }
       <div class="fig-ctl">
         <span class="seg" id="fingerView"><button type="button" data-v="plane" class="on">плоскость (Ψ, Δ)</button><button type="button" data-v="lam">по длине волны</button></span>
         <span class="seg" id="fingerScale"><button type="button" data-s="common" class="on">общий масштаб</button><button type="button" data-s="own">свой масштаб</button></span>
-        <span class="ramp" id="fingerRamp"><span id="rampL0">400 нм</span><span class="ramp-bar"></span><span id="rampL1">800 нм</span></span>
       </div>
+      <div class="chart-legend legend-scale" id="fingerRamp" role="img" aria-label="Цвет точек — длина волны"><span class="legend-scale-title">Цвет точек · λ</span><span class="ramp"><span id="rampL0">400 нм</span><span class="ramp-bar"></span><span id="rampL1">800 нм</span></span></div>
       <div class="minis cols3" id="fingerGrid"></div>
       <div class="fig-note" id="fingerGridNote">Оси каждой панели: по горизонтали — Ψ-остаток, по вертикали — Δ-остаток, в единицах σ; цветные точки в заголовке — дефекты класса. Каналы — те же величины, что читает ИИ: Ψ в HW-якорях (градиент), |Δ| в HW-якорях (шероховатость), перепад Ψ синие − красные якоря (поглощение).</div>
       <div class="fig-table hidden"></div>
@@ -524,7 +524,7 @@ footer p { margin: 4px 0; }
     <figure class="fig" data-fig="se-ai_anchors_patterns" id="figAnchPat">
       <figcaption><span class="fig-title">Якорные паттерны в HW- и QW-якорях</span><span class="fig-sub">HW: относительно подложки. QW: Ψ относительно однородной плёнки, Δ относительно подложки с вычетом 180°.</span><span class="fig-tools"></span></figcaption>
       <div class="fig-ctl"><span class="seg" id="anchUnits"><button type="button" data-u="deg" class="on">в градусах</button><button type="button" data-u="sig">в единицах σ</button></span><span id="anchUnitsNote"></span></div>
-      <div id="anchLegend" class="shared-legend" role="group" aria-label="Ряды всех четырёх якорных графиков"></div>
+      <div id="anchLegend" class="chart-legend" role="group" aria-label="Ряды всех четырёх якорных графиков"></div>
       <p class="legend-hint">Нажмите на ряд в легенде, чтобы скрыть или показать его на всех четырёх графиках.</p>
       <div class="grid2x2">
         <div class="chart demo short"><canvas id="cAnchPsiHW"></canvas></div><div class="chart demo short"><canvas id="cAnchPsiQW"></canvas></div>
@@ -636,7 +636,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.1.1';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -811,8 +811,83 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   function figState(id) { const cv = $(id); const fig = cv && cv.closest('figure.fig'); if (!fig) return; const any = [...fig.querySelectorAll('canvas')].some(c => S.charts[c.id]); fig.classList.toggle('empty', !any); }
   function destroyChart(id) { if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } delete S.redraw[id]; figState(id); }
   /** Создать график и запомнить построитель (перерисовка при смене темы, полноэкранном режиме). */
-  function makeChart(id, builder) { destroyChart(id); const cv = $(id), fig = cv && cv.closest('figure.fig'); if (fig) fig.classList.remove('empty'); const c = builder(); S.charts[id] = c; S.redraw[id] = builder; figState(id); return c; }
-  function redrawCharts(ids) { for (const id of Object.keys(S.redraw)) { if (ids && !ids.includes(id)) continue; const b = S.redraw[id]; if (S.charts[id]) S.charts[id].destroy(); try { S.charts[id] = b(); } catch (e) { console.error(e); } } }
+  function makeChart(id, builder) { destroyChart(id); const cv = $(id), fig = cv && cv.closest('figure.fig'); if (fig) fig.classList.remove('empty'); const c = builder(); S.charts[id] = c; S.redraw[id] = builder; bindIllustrationLegend(c); figState(id); return c; }
+  function redrawCharts(ids) { for (const id of Object.keys(S.redraw)) { if (ids && !ids.includes(id)) continue; const b = S.redraw[id]; if (S.charts[id]) S.charts[id].destroy(); try { S.charts[id] = b(); bindIllustrationLegend(S.charts[id]); } catch (e) { console.error(e); } } }
+
+  // HTML legends sit outside Chart.js sizing containers. Shared controls use semantic
+  // series keys, so changing dataset order or the displayed units cannot hide another row.
+  const illustrationVisibility = new Map();
+  const legendSeriesKey = (ds, i) => ds.legendKey || ds.label || String(i);
+  function bindIllustrationLegend(chart) {
+    const canvas = chart.canvas; if (!canvas.closest('#page-demo')) return;
+    const id = canvas.id, fig = canvas.closest('figure.fig');
+    chart.options.plugins.legend.display = false;
+    if (/^cFg\d+$/.test(id) && DM.view === 'plane') {
+      chart.$astraLegend = { kind: 'wavelength', group: 'finger-plane' };
+      canvas.setAttribute('aria-describedby', 'fingerRamp');
+      if ($('fingerLegend')) $('fingerLegend').hidden = true;
+      chart.update('none'); return;
+    }
+    let host, group = id, peers = [id];
+    if (/^cAnch(Psi|Del)(HW|QW)$/.test(id)) {
+      host = $('anchLegend'); group = 'anchors'; peers = ['cAnchPsiHW','cAnchPsiQW','cAnchDelHW','cAnchDelQW'];
+    } else if (/^c(Fg|Ir|If)\d+$/.test(id)) {
+      const prefix = id.match(/^c(?:Fg|Ir|If)/)[0];
+      const gridId = { cFg: 'fingerGrid', cIr: 'instrRawGrid', cIf: 'instrFitGrid' }[prefix];
+      const hostId = { cFg: 'fingerLegend', cIr: 'instrRawLegend', cIf: 'instrFitLegend' }[prefix];
+      group = prefix; peers = [...$(gridId).querySelectorAll('canvas')].map(c => c.id);
+      host = $(hostId);
+      if (!host) { host = document.createElement('div'); host.id = hostId; $(gridId).before(host); }
+    } else {
+      const plot = canvas.parentElement;
+      if (!plot.parentElement.classList.contains('plot-panel')) {
+        const panel = document.createElement('div'); panel.className = 'plot-panel'; plot.before(panel); panel.append(plot);
+      }
+      host = $(id + 'Legend');
+      if (!host) { host = document.createElement('div'); host.id = id + 'Legend'; plot.before(host); }
+    }
+    host.className = 'chart-legend'; host.hidden = false;
+    host.setAttribute('role', 'group');
+    const title = fig.querySelector('.fig-title').textContent;
+    host.setAttribute('aria-label', `Легенда: ${title}${peers.length > 1 ? '. Управляет всеми графиками группы' : ''}`);
+    canvas.setAttribute('aria-describedby', host.id);
+    chart.$astraLegend = { kind: 'series', group, hostId: host.id };
+    if (!illustrationVisibility.has(group)) illustrationVisibility.set(group, new Map());
+    const visibility = illustrationVisibility.get(group);
+    const items = chart.data.datasets.map((ds, i) => {
+      const key = legendSeriesKey(ds, i);
+      if (visibility.has(key)) ds.hidden = visibility.get(key);
+      return { ds, key, hidden: !!ds.hidden };
+    });
+    host.replaceChildren(...items.map(({ds, key, hidden}) => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'legend-chip';
+      button.dataset.series = key; button.setAttribute('aria-pressed', String(!hidden));
+      button.setAttribute('aria-controls', peers.join(' '));
+      button.title = 'Нажмите, чтобы скрыть или показать ряд' + (peers.length > 1 ? ' на всех графиках группы' : '');
+      const swatch = document.createElement('span'); swatch.className = 'legend-mark'; swatch.setAttribute('aria-hidden','true');
+      const color = ds.borderColor || ds.backgroundColor || css('--muted');
+      swatch.style.setProperty('--series-color', Array.isArray(color) ? color[0] : color);
+      const bar = chart.config?.type === 'bar' || ds.maxBarThickness;
+      swatch.classList.toggle('is-bar', !!bar);
+      swatch.classList.toggle('is-dashed', !!ds.borderDash?.length);
+      swatch.classList.toggle('has-points', !bar && Number(ds.pointRadius) > 0);
+      const label = document.createElement('span'); label.className = 'legend-label'; label.textContent = ds.label;
+      const state = document.createElement('span'); state.className = 'legend-state'; state.setAttribute('aria-hidden','true'); state.textContent = hidden ? '+' : '✓';
+      button.append(swatch, label, state); return button;
+    }));
+    host.onclick = ev => {
+      const button = ev.target.closest('button[data-series]'); if (!button || !host.contains(button)) return;
+      const key = button.dataset.series, hidden = button.getAttribute('aria-pressed') === 'true';
+      visibility.set(key, hidden); button.setAttribute('aria-pressed', String(!hidden));
+      button.querySelector('.legend-state').textContent = hidden ? '+' : '✓';
+      for (const c of Object.values(S.charts)) {
+        if (c.$astraLegend?.group !== group) continue;
+        c.data.datasets.forEach((ds, i) => { if (legendSeriesKey(ds, i) === key) { ds.hidden = hidden; c.setDatasetVisibility?.(i, !hidden); } });
+        c.update('none');
+      }
+    };
+    chart.update('none');
+  }
   /** Подписи делений: стандартное форматирование Chart.js, но с настоящим минусом. */
   function tickFmt(v, i, ticks) { const f = (hasChart && Chart.Ticks && Chart.Ticks.formatters.numeric) ? Chart.Ticks.formatters.numeric.apply(this, [v, i, ticks]) : String(v); return String(f).replace('-', MINUS); }
   function baseOpts(xTitle, yTitle, y2Title) {
@@ -848,14 +923,25 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   /** Экспорт графика в PNG (тройное разрешение, фон карточки). */
   function exportPng(chart, name) {
     if (!chart || !chart.canvas || !chart.canvas.toBlob) return;
-    const dpr = chart.options.devicePixelRatio, shared = chart.canvas.closest('#figAnchPat'), legend = chart.options.plugins.legend.display;
+    const dpr = chart.options.devicePixelRatio, external = chart.$astraLegend, legend = chart.options.plugins.legend;
+    const saved = { display: legend.display, position: legend.position, align: legend.align, labels: { ...legend.labels }, title: { ...legend.title } };
     chart.options.devicePixelRatio = 3;
-    // Each exported panel includes its own legend, even though the on-screen legend is shared.
-    if (shared) { chart.options.plugins.legend.display = true; chart.resize(Math.max(720, chart.width), Math.max(480, chart.height)); }
+    // Every exported panel is self-contained, including panels with a shared HTML legend.
+    if (external) {
+      legend.display = true; legend.position = 'bottom'; legend.align = 'start';
+      legend.labels = { ...legend.labels, boxWidth: 24, boxHeight: 4, padding: 16, font: { size: 14 } };
+      if (external.kind === 'wavelength') {
+        const points = chart.data.datasets[0].data, first = points[0]?.lam, last = points[points.length - 1]?.lam;
+        legend.title = { display: true, text: chart.data.datasets[0].label + ' · цвет точек — длина волны', color: css('--text'), font: { size: 14 } };
+        legend.labels.usePointStyle = true;
+        legend.labels.generateLabels = () => [0, 0.5, 1].map(t => ({ text: `${fmt(first + t * (last - first), 0)} нм`, fillStyle: lamColor(t), strokeStyle: lamColor(t), lineWidth: 0, pointStyle: 'circle', hidden: false, datasetIndex: 0 }));
+      }
+      chart.resize(Math.max(960, chart.width), Math.max(560, chart.height));
+    }
     else chart.resize();
     chart.update('none');
     const file = name.replace(/[\\/:*?"<>|]+/g, '_') + '.png';
-    const restore = () => { chart.options.devicePixelRatio = dpr; chart.options.plugins.legend.display = legend; chart.resize(); chart.update('none'); };
+    const restore = () => { chart.options.devicePixelRatio = dpr; Object.assign(chart.options.plugins.legend, saved); chart.resize(); chart.update('none'); };
     chart.canvas.toBlob((blob) => {
       restore(); if (!blob) return;
       const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = file; document.body.appendChild(a); a.click(); a.remove();
@@ -1343,7 +1429,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 
   // ================================================================ страница «Иллюстрации»
   // DM.cfg / DM.prior — условия иллюстраций: снимок полей страницы «Анализ» на момент построения, отдельный от DM.cfg / DM.prior шагов 1–4
-  const DM = { res: {}, base: null, ref: null, cfg: null, prior: null, sizes: null, sizeSource: null, anchorHidden: new Set(), building: false, stale: true, staleAgain: null, view: 'plane', scale: 'common', anchUnits: 'deg', backUnits: 'deg' };
+  const DM = { res: {}, base: null, ref: null, cfg: null, prior: null, sizes: null, sizeSource: null, building: false, stale: true, staleAgain: null, view: 'plane', scale: 'common', anchUnits: 'deg', backUnits: 'deg' };
   const dmCfgRef = () => Object.assign({}, DM.cfg, { band: null });          // как dmCfgRef(), но от условий иллюстраций
   const dmMatOf = (P) => Object.assign({}, DM.cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg, Ak: P.Ak || 0 });
   /** Варианты дефектов для иллюстраций: фиксированный порядок и фиксированные цвета (цвет следует за сущностью). */
@@ -1476,11 +1562,12 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     $('fingerOverlaySub').textContent = `плёнка: ${DM.base.label}, d = ${fmt(DM.base.d, 1)} нм; ${DM.withInstr ? 'с эффектами прибора' : 'без эффектов прибора'}`;
     $('fingerGridSub').textContent = `δ = ±${fmtSize(100 * sz.delta)} %, слой ${fmtSize(sz.rough)} нм, k₄₀₀ = ${fmtSize(sz.k400 * 1000)}·10⁻³`;
     $('rampL0').textContent = `${fmt(lam[0], 0)} нм`; $('rampL1').textContent = `${fmt(lam[n - 1], 0)} нм`; document.querySelector('#fingerRamp .ramp-bar').style.background = rampCss();
+    $('fingerRamp').setAttribute('aria-label', `Цвет точек — длина волны от ${fmt(lam[0], 0)} до ${fmt(lam[n - 1], 0)} нм`);
     makeChart('cFingerOverlay', () => {
       const o = baseOpts('Ψ-остаток, σ', 'Δ-остаток, σ'); o.interaction = { mode: 'nearest', intersect: false }; o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam);
       o.plugins.guides = { xLines: [{ x: 0, color: css('--line') }], yLines: [{ y: 0, color: css('--line') }] };
       o.scales.x.min = -rng.psi; o.scales.x.max = rng.psi; o.scales.y.min = -rng.del; o.scales.y.max = rng.del; o.scales.x.ticks.stepSize = rng.psi / 2; o.scales.y.ticks.stepSize = rng.del / 2;
-      const ds = DEFS.map(dv => { const r = R[dv.cls]; if (!r) return null; const col = defColor(dv); return { label: legendLabel(dv, sz), data: tr(r.resid), borderColor: col, backgroundColor: col, borderWidth: 1.3, pointRadius: 2.2, pointHoverRadius: 5, showLine: true, tension: 0 }; }).filter(Boolean);
+      const ds = DEFS.map(dv => { const r = R[dv.cls]; if (!r) return null; const col = defColor(dv); return { legendKey: dv.key, label: legendLabel(dv, sz), data: tr(r.resid), borderColor: col, backgroundColor: col, borderWidth: 1.3, pointRadius: 2.2, pointHoverRadius: 5, showLine: true, tension: 0 }; }).filter(Boolean);
       if (DM.ref) ds.push({ label: 'измеренный спектр (опорный фит)', data: tr(DM.ref.resid), borderColor: css('--text'), backgroundColor: css('--text'), borderWidth: 1, borderDash: [3, 3], pointRadius: 2.6, pointHoverRadius: 5, showLine: true, tension: 0 });
       return new Chart($('cFingerOverlay'), { type: 'scatter', data: { datasets: ds }, options: o });
     });
@@ -1549,7 +1636,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const A = DM.res.anch; if (!A) return;
     const sz = A.sz, sigU = DM.anchUnits === 'sig';
     const anchorLines = () => A.HW.map(x => ({ x, color: css('--muted'), width: 1 })).concat(A.QW.map(x => ({ x, color: css('--muted'), width: 1, dash: [3, 3] })));
-    const vds = (key, extra) => A.variants.map(v => Object.assign({ label: legendLabel(v.def, sz), data: pts(A.lamF, v[key]), borderColor: defColor(v.def), backgroundColor: defColor(v.def), borderWidth: v.def.key === 'hom' ? 2.2 : 1.6, pointRadius: 0 }, extra || {}));
+    const vds = (key, extra) => A.variants.map(v => Object.assign({ legendKey: v.def.key, label: legendLabel(v.def, sz), data: pts(A.lamF, v[key]), borderColor: defColor(v.def), backgroundColor: defColor(v.def), borderWidth: v.def.key === 'hom' ? 2.2 : 1.6, pointRadius: 0 }, extra || {}));
     makeChart('cAnchPsi', () => {
       const o = baseOpts('Длина волны, нм', 'Ψ, град'); o.plugins.guides = { xLines: anchorLines() };
       const ds = [{ label: 'голая подложка', data: pts(A.lamF, A.sub.psi), borderColor: css('--text'), borderWidth: 1.4, borderDash: [6, 4], pointRadius: 0 }].concat(vds('psi'));
@@ -1566,12 +1653,11 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       const o = baseOpts('λ якоря, нм', sigU ? 'отклонение, σ' : 'отклонение, град'); o.plugins.title = { display: true, text: title, color: css('--text'), font: { size: fs(13), weight: '600' } }; o.plugins.guides = { yLines: [{ y: 0, color: css('--line') }] };
       o.plugins.legend.display = false; o.interaction = { mode: 'nearest', intersect: false };
       o.scales.x.ticks.maxTicksLimit = 5; o.scales.y.ticks.maxTicksLimit = 6;
-      const ds = A.variants.map((v, j) => ({ label: legendLabel(v.def, sz), hidden: DM.anchorHidden.has(v.def.key), data: pts(P.lam, P[comp][j].map((val, k) => sigU ? val / sig[k] : val)), borderColor: defColor(v.def), backgroundColor: defColor(v.def), borderWidth: 1.5, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: css('--surface'), pointBorderWidth: 1.5 }));
+      const ds = A.variants.map((v, j) => ({ legendKey: v.def.key, label: legendLabel(v.def, sz), data: pts(P.lam, P[comp][j].map((val, k) => sigU ? val / sig[k] : val)), borderColor: defColor(v.def), backgroundColor: defColor(v.def), borderWidth: 1.5, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: css('--surface'), pointBorderWidth: 1.5 }));
       return new Chart($(id), { type: 'line', data: { datasets: ds }, options: o });
     });
     patChart('cAnchPsiHW', 'HW', 'psi', ['HW · Ψ', 'Ψ − Ψ подложки']); patChart('cAnchPsiQW', 'QW', 'psi', ['QW · Ψ', 'Ψ − Ψ однородной плёнки']);
     patChart('cAnchDelHW', 'HW', 'del', ['HW · Δ', 'Δ − Δ подложки']); patChart('cAnchDelQW', 'QW', 'del', ['QW · Δ', 'Δ − Δ подложки − 180°']);
-    $('anchLegend').innerHTML = A.variants.map(v => `<button type="button" data-def="${v.def.key}" aria-pressed="${!DM.anchorHidden.has(v.def.key)}"><span class="legend-swatch" style="background:var(${v.def.color})"></span>${esc(legendLabel(v.def, sz))}</button>`).join('');
     $('anchUnitsNote').textContent = sigU ? 'σ(λ) текущего измерения в точках якорей' : '';
     const mean = (a) => a.length ? a.reduce((s, v) => s + v, 0) / a.length : NaN, mabs = (a) => mean(a.map(Math.abs));
     // перепад синие − красные: половины по середине диапазона λ, а если одна пуста — по номеру якоря (как в каналах ядра)
@@ -1586,14 +1672,6 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     $('dmAnchorInfo').innerHTML = T(`Плёнка: <b>${DM.base.label}</b>, d = ${fmt(DM.base.d, 2)} нм, ${DM.cfg.mat.name}; подложка — ${subShort(DM.cfg.subKey)}${DM.cfg.back ? ' с задней стороной' : ''}. ${anchList}${A.absorbs ? ' Материал поглощает на синем краю: однородная плёнка касается кривой подложки только в красных HW-якорях (см. примечание к сводке).' : ''}`);
   }
   document.querySelectorAll('#anchUnits button').forEach(b => b.addEventListener('click', () => { DM.anchUnits = b.dataset.u; document.querySelectorAll('#anchUnits button').forEach(x => x.classList.toggle('on', x === b)); renderAnchors(); }));
-  $('anchLegend').addEventListener('click', ev => {
-    const button = ev.target.closest('button[data-def]'); if (!button) return;
-    const key = button.dataset.def, hidden = !DM.anchorHidden.has(key), j = DEFS.findIndex(dv => dv.key === key);
-    if (hidden) DM.anchorHidden.add(key); else DM.anchorHidden.delete(key);
-    button.setAttribute('aria-pressed', String(!hidden));
-    ['cAnchPsiHW', 'cAnchPsiQW', 'cAnchDelHW', 'cAnchDelQW'].forEach(id => { const c = S.charts[id]; if (c) { c.data.datasets[j].hidden = hidden; c.update('none'); } });
-  });
-
   // ---------------------------------------------------------------- 3. дисперсия
   function dmDisp(base) {
     const lamF = base.lamF, mats = [];
@@ -1608,7 +1686,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   }
   function renderDisp() {
     const D = DM.res.disp; if (!D) return;
-    const line = (c, key, extra) => Object.assign({ label: c.label, data: pts(D.lamF, c[key]), borderColor: css(c.color), backgroundColor: css(c.color), borderWidth: c.key === 'truth' ? 2.4 : 1.8, borderDash: c.dash || undefined, pointRadius: 0 }, extra || {});
+    const line = (c, key, extra) => Object.assign({ legendKey: c.key, label: c.label, data: pts(D.lamF, c[key]), borderColor: css(c.color), backgroundColor: css(c.color), borderWidth: c.key === 'truth' ? 2.4 : 1.8, borderDash: c.dash || undefined, pointRadius: 0 }, extra || {});
     $('dispSub').textContent = D.mats.map(c => c.label).join(' · ');
     makeChart('cDispN', () => { const o = baseOpts('Длина волны, нм', 'n'); return new Chart($('cDispN'), { type: 'line', data: { datasets: D.mats.map(c => line(c, 'n')) }, options: o }); });
     makeChart('cDispK', () => { const o = baseOpts('Длина волны, нм', 'k'); const anyK = D.mats.some(c => c.k.some(v => v > 1e-6)); if (!anyK) { o.scales.y.min = 0; o.scales.y.max = 0.001; o.plugins.guides = { xBands: [{ from: D.lamF[0], to: D.lamF[D.lamF.length - 1], color: 'rgba(0,0,0,0)', label: 'плёнка прозрачна в диапазоне: k = 0' }] }; } return new Chart($('cDispK'), { type: 'line', data: { datasets: D.mats.map(c => line(c, 'k')) }, options: o }); });
@@ -1621,7 +1699,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       const o = baseOpts('Энергия фотона E, эВ', 'ε₂'); o.scales.y.type = 'logarithmic'; o.scales.y.min = 1e-7; o.scales.y.ticks.callback = (v) => { const l = Math.log10(v); return Number.isInteger(l) ? `10${String(l).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d])}` : ''; };
       const ref = D.mats.find(c => c.key === 'truth') || D.mats.find(c => c.key === 'fin') || D.mats[0];   // чьи E_g, E₀ отмечены: истина, иначе окончательный фит, иначе справочник
       o.plugins.guides = { xBands: [{ from: D.band[0], to: D.band[1], color: isDark() ? 'rgba(255,255,255,0.07)' : 'rgba(23,33,44,0.06)', label: 'измеряемая область' }], xLines: [{ x: E.TAIL_ET, color: css('--c-abs'), dash: [4, 3], label: `Et = ${E.TAIL_ET} эВ (порог хвоста)`, dy: 14 }, { x: ref.m.Eg, color: css('--muted'), dash: [4, 3], label: `Eg = ${fmt(ref.m.Eg, 2)} эВ (${ref.label})`, dy: 28 }, { x: ref.m.E0, color: css('--muted'), dash: [4, 3], label: `E₀ = ${fmt(ref.m.E0, 2)} эВ (${ref.label})`, dy: 42 }] };
-      const ds = []; for (const c of D.mats) { if (c.key === 'hand' && D.mats.length > 1) continue; ds.push({ label: `${c.label}: материал`, data: pts(D.Eg, c.e2), borderColor: css(c.color), borderWidth: c.key === 'truth' ? 2.4 : 1.8, borderDash: c.dash || undefined, pointRadius: 0, spanGaps: false }); if (c.e2tail) ds.push({ label: `${c.label}: хвост`, data: pts(D.Eg, c.e2tail), borderColor: css(c.color), borderWidth: 1.6, borderDash: [2, 3], pointRadius: 0, spanGaps: false }); }
+      const ds = []; for (const c of D.mats) { if (c.key === 'hand' && D.mats.length > 1) continue; ds.push({ legendKey: c.key + '-material', label: `${c.label}: материал`, data: pts(D.Eg, c.e2), borderColor: css(c.color), borderWidth: c.key === 'truth' ? 2.4 : 1.8, borderDash: c.dash || undefined, pointRadius: 0, spanGaps: false }); if (c.e2tail) ds.push({ legendKey: c.key + '-tail', label: `${c.label}: хвост`, data: pts(D.Eg, c.e2tail), borderColor: css(c.color), borderWidth: 1.6, borderDash: [2, 3], pointRadius: 0, spanGaps: false }); }
       return new Chart($('cDispEps'), { type: 'line', data: { datasets: ds }, options: o });
     });
     // формулы
@@ -1660,15 +1738,15 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const B = DM.res.back; if (!B) return; const lam = B.lam, n = lam.length, sigU = DM.backUnits === 'sig';
     const subName = subShort(B.subKey), fL = `f = ${fmt(B.f, 2)}`;
     makeChart('cBackPsi', () => { const o = baseOpts('Длина волны, нм', 'Ψ, град'); return new Chart($('cBackPsi'), { type: 'line', data: { datasets: [
-      { label: 'плёнка без задней стороны', data: pts(lam, B.film0.psi), borderColor: css('--muted'), borderWidth: 1.6, pointRadius: 0 }, { label: `плёнка, ${fL}`, data: pts(lam, B.film1.psi), borderColor: css('--accent'), borderWidth: 2.2, pointRadius: 0 },
-      { label: 'подложка без задней стороны', data: pts(lam, B.sub0.psi), borderColor: css('--muted'), borderWidth: 1.4, borderDash: [6, 4], pointRadius: 0 }, { label: `подложка, ${fL}`, data: pts(lam, B.sub1.psi), borderColor: css('--accent'), borderWidth: 1.6, borderDash: [6, 4], pointRadius: 0 }] }, options: o }); });
+      { label: 'плёнка без задней стороны', data: pts(lam, B.film0.psi), borderColor: css('--muted'), borderWidth: 1.6, pointRadius: 0 }, { legendKey: 'film-backside', label: `плёнка, ${fL}`, data: pts(lam, B.film1.psi), borderColor: css('--accent'), borderWidth: 2.2, pointRadius: 0 },
+      { label: 'подложка без задней стороны', data: pts(lam, B.sub0.psi), borderColor: css('--muted'), borderWidth: 1.4, borderDash: [6, 4], pointRadius: 0 }, { legendKey: 'substrate-backside', label: `подложка, ${fL}`, data: pts(lam, B.sub1.psi), borderColor: css('--accent'), borderWidth: 1.6, borderDash: [6, 4], pointRadius: 0 }] }, options: o }); });
     makeChart('cBackDel', () => { const o = baseOpts('Длина волны, нм', 'Δ, град'); return new Chart($('cBackDel'), { type: 'line', data: { datasets: [
-      { label: 'плёнка без задней стороны', data: delPts(lam, B.film0.del), borderColor: css('--muted'), borderWidth: 1.6, pointRadius: 0, spanGaps: false }, { label: `плёнка, ${fL}`, data: delPts(lam, B.film1.del), borderColor: css('--accent'), borderWidth: 2.2, pointRadius: 0, spanGaps: false },
-      { label: 'подложка без задней стороны', data: delPts(lam, B.sub0.del), borderColor: css('--muted'), borderWidth: 1.4, borderDash: [6, 4], pointRadius: 0, spanGaps: false }, { label: `подложка, ${fL}`, data: delPts(lam, B.sub1.del), borderColor: css('--accent'), borderWidth: 1.6, borderDash: [6, 4], pointRadius: 0, spanGaps: false }] }, options: o }); });
+      { label: 'плёнка без задней стороны', data: delPts(lam, B.film0.del), borderColor: css('--muted'), borderWidth: 1.6, pointRadius: 0, spanGaps: false }, { legendKey: 'film-backside', label: `плёнка, ${fL}`, data: delPts(lam, B.film1.del), borderColor: css('--accent'), borderWidth: 2.2, pointRadius: 0, spanGaps: false },
+      { label: 'подложка без задней стороны', data: delPts(lam, B.sub0.del), borderColor: css('--muted'), borderWidth: 1.4, borderDash: [6, 4], pointRadius: 0, spanGaps: false }, { legendKey: 'substrate-backside', label: `подложка, ${fL}`, data: delPts(lam, B.sub1.del), borderColor: css('--accent'), borderWidth: 1.6, borderDash: [6, 4], pointRadius: 0, spanGaps: false }] }, options: o }); });
     makeChart('cBackDiff', () => { const o = baseOpts('Длина волны, нм', sigU ? 'разность, σ' : 'разность, град'); o.plugins.guides = { yLines: [{ y: 0, color: css('--line') }] };
       const dp = B.dPsi.map((v, i) => sigU ? v / DM.base.sig.psi[i] : v), ddl = B.dDel.map((v, i) => sigU ? v / DM.base.sig.del[i] : v);
       return new Chart($('cBackDiff'), { type: 'line', data: { datasets: [{ label: 'ΔΨ (с задней стороной − без)', data: pts(lam, dp), borderColor: css('--psi'), borderWidth: 1.8, pointRadius: 0 }, { label: 'ΔΔ (с задней стороной − без)', data: pts(lam, ddl), borderColor: css('--del'), borderWidth: 1.8, pointRadius: 0 }] }, options: o }); });
-    makeChart('cBackDepol', () => { const o = baseOpts('Длина волны, нм', 'деполяризация, %'); o.plugins.legend.display = false; o.scales.y.min = 0; return new Chart($('cBackDepol'), { type: 'line', data: { datasets: [{ label: `степень деполяризации плёнки, ${fL}`, data: pts(lam, B.depol), borderColor: css('--accent'), backgroundColor: 'rgba(30,110,142,0.10)', fill: true, borderWidth: 2, pointRadius: 0 }] }, options: o }); });
+    makeChart('cBackDepol', () => { const o = baseOpts('Длина волны, нм', 'деполяризация, %'); o.plugins.legend.display = false; o.scales.y.min = 0; return new Chart($('cBackDepol'), { type: 'line', data: { datasets: [{ legendKey: 'depolarization', label: `степень деполяризации плёнки, ${fL}`, data: pts(lam, B.depol), borderColor: css('--accent'), backgroundColor: 'rgba(30,110,142,0.10)', fill: true, borderWidth: 2, pointRadius: 0 }] }, options: o }); });
     makeChart('cBackFit', () => { const o = baseOpts('Длина волны, нм', 'остаток, σ'); o.plugins.guides = { yLines: [{ y: 0, color: css('--line') }] }; const r = B.fitNo.resid;
       return new Chart($('cBackFit'), { type: 'line', data: { datasets: [{ label: 'Ψ-остаток', data: pts(lam, Array.from(r.slice(0, n))), borderColor: css('--psi'), borderWidth: 1.5, pointRadius: 0 }, { label: 'Δ-остаток', data: pts(lam, Array.from(r.slice(n))), borderColor: css('--del'), borderWidth: 1.5, pointRadius: 0 }] }, options: o }); });
     const mp = maxAbs(B.dPsi), md = maxAbs(B.dDel), mdp = Math.max(...B.depol), negligible = mp < 1e-3 && md < 1e-2;   // поглощающая подложка (c-Si) или f = 0: эффекта нет

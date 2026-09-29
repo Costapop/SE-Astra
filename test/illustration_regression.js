@@ -4,7 +4,7 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const { JSDOM } = require('jsdom');
 let html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 html = html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/, `<script>window.Chart=class {
-  constructor(el,cfg){this.canvas=el;this.data=cfg.data;this.options=cfg.options;this.width=400;this.height=300;el.__chart=this;}
+  constructor(el,cfg){this.canvas=el;this.config=cfg;this.data=cfg.data;this.options=cfg.options;this.width=400;this.height=300;el.__chart=this;}
   destroy(){}resize(w,h){if(w)this.width=w;if(h)this.height=h;}update(){}
 };</script>`).replace(/<script src="vendor\/[^" ]*"><\/script>/g, '');
 html = html.replace('  // ---------------------------------------------------------------- стартовое состояние:',
@@ -65,6 +65,43 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
    T.renderAnchors();assert.equal($('anchLegend').children[j].getAttribute('aria-pressed'),'false');
    $('anchLegend').children[j].click();charts.forEach(id=>assert.equal(S.charts[id].data.datasets[j].hidden,false));
  }
+ // Every illustration has an accessible external legend; shared groups control every
+ // peer. Rebuilding charts must retain visibility without duplicate legend elements.
+ const demoCharts=()=>Object.values(S.charts).filter(c=>c.canvas.closest('#page-demo'));
+ assert.equal(demoCharts().length,41);
+ assert.match($('fingerRamp').getAttribute('aria-label'),/400.*800/);
+ demoCharts().forEach(c=>{
+   assert.ok(c.$astraLegend,c.canvas.id);assert.equal(c.options.plugins.legend.display,false);
+   const legend=$(c.canvas.getAttribute('aria-describedby'));assert.ok(legend,c.canvas.id);
+   assert.ok(!legend.closest('.chart'),'legend must not affect Chart.js sizing');
+ });
+ const hosts=[...new Set(demoCharts().filter(c=>c.$astraLegend.kind==='series').map(c=>c.$astraLegend.hostId))];
+ for(const id of hosts){
+   const btn=$(id).querySelector('button'),key=btn.dataset.series;
+   const peers=btn.getAttribute('aria-controls').split(' ');
+   btn.click();
+   peers.forEach(cid=>assert.equal(S.charts[cid].data.datasets.find(d=>(d.legendKey||d.label)===key).hidden,true));
+   T.redrawCharts();
+   assert.equal($(id).querySelector('button').getAttribute('aria-pressed'),'false');
+   peers.forEach(cid=>assert.equal(S.charts[cid].data.datasets.find(d=>(d.legendKey||d.label)===key).hidden,true));
+   $(id).querySelector('button').click();
+ }
+ assert.equal(w.document.querySelectorAll('#page-demo .chart-legend').length,hosts.length+1);
+ assert.ok($('cInstrSumLegend').querySelector('.is-bar'));
+ assert.ok($('cAnchPsiLegend').querySelector('.is-dashed'));
+ assert.ok($('cFingerOverlayLegend').querySelector('.has-points'));
+ // A wavelength color scale and a shared Ψ/Δ legend represent different data modes.
+ $('fingerView').querySelector('[data-v="lam"]').click();
+ assert.equal($('fingerLegend').querySelectorAll('button').length,2);
+ $('fingerLegend').querySelector('button').click();
+ for(let i=0;i<12;i++)assert.equal(S.charts['cFg'+i].data.datasets[0].hidden,true);
+ $('fingerView').querySelector('[data-v="plane"]').click();
+ assert.equal($('fingerLegend').hidden,true);
+ for(let i=0;i<12;i++)assert.equal(!!S.charts['cFg'+i].data.datasets[0].hidden,false);
+ $('fingerView').querySelector('[data-v="lam"]').click();
+ assert.equal($('fingerLegend').querySelector('button').getAttribute('aria-pressed'),'false');
+ $('fingerLegend').querySelector('button').click();
+ $('fingerView').querySelector('[data-v="plane"]').click();
  // Correct σ channel and denominator on every panel, with an exact round trip.
  const deg=charts.map(id=>S.charts[id].data.datasets.map(ds=>ds.data.map(p=>p.y)));
  $('anchUnits').querySelector('[data-u="sig"]').click();
@@ -79,6 +116,20 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
  let exported=false,downloaded=false;w.URL.createObjectURL=()=>{downloaded=true;return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
  const chart=S.charts.cAnchPsiHW;chart.canvas.toBlob=cb=>{assert.equal(chart.options.plugins.legend.display,true);assert.equal(chart.options.devicePixelRatio,3);assert.ok(chart.width>=720);exported=true;cb(new w.Blob(['png']));};
  T.exportPng(chart,'anchors');assert.ok(exported&&downloaded);assert.equal(chart.options.plugins.legend.display,false);
+ // Individual, shared-mini, bar and color-mapped panels all export their own keys.
+ for(const id of ['cDispN','cBackDepol','cIr3','cInstrSum','cFg2']){
+   const c=S.charts[id],before=c.options.plugins.legend.position;
+   c.canvas.toBlob=cb=>{
+     assert.equal(c.options.plugins.legend.display,true,id);
+     assert.equal(c.options.plugins.legend.position,'bottom',id);
+     if(id==='cFg2'){
+       const labels=c.options.plugins.legend.labels.generateLabels();
+       assert.equal(labels.length,3);assert.match(labels[0].text,/400/);assert.match(labels[2].text,/800/);
+     }
+     cb(new w.Blob(['png']));
+   };
+   T.exportPng(c,id);assert.equal(c.options.plugins.legend.display,false,id);assert.equal(c.options.plugins.legend.position,before,id);
+ }
  // Large gradients use the same converged discretization as finalFit (160 sublayers).
  DM.sizes={delta:.15,rough:0,k400:0};T.dmAnchors(DM.base);
  const A=DM.res.anch,base=DM.base,cfg=base.cfg,lam=A.HW;
@@ -86,5 +137,5 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
  const sub=E.modelPsiDelta(lam,E.substrateN(cfg.subKey,lam),cfg.phi,0,base.mat,0,0,1,cfg.back,null);
  A.pat.HW.psi[1].forEach((v,i)=>close(v,exact.psi[i]-sub.psi[i]));
  assert.equal(errors.length,0,errors.join('\n'));dom.window.close();
- console.log('PASS: source priority, fit units/veto, real final fit, simulator fallback, zero physics, build snapshot, five linked legend entries, redraw persistence, all four σ conversions, table/PNG export, 15% gradient discretization.');
+ console.log('PASS: source priority, fit units/veto, real final fit, simulator fallback, zero physics, build snapshot, unified legends on all 41 charts, linked series, redraw persistence, wavelength/series mode isolation, four sigma conversions, table/PNG export, 15% gradient discretization.');
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});

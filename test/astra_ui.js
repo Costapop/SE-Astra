@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM}=require('jsdom');
 let html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-html=html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/,'<script>window.Chart=class{constructor(el,cfg){this.data=cfg.data;this.options=cfg.options;}destroy(){}resize(){}update(){}};</script>').replace(/<script src="vendor\/[^" ]*"><\/script>/g,'');
+html=html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/,'<script>window.Chart=class{constructor(el,cfg){this.canvas=el;this.config=cfg;this.data=cfg.data;this.options=cfg.options;}destroy(){}resize(){}update(){}};</script>').replace(/<script src="vendor\/[^" ]*"><\/script>/g,'');
 const errors=[],registrations=[];
 const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'http://localhost',beforeParse(w){w.scrollTo=()=>{};w.document.modelContext={registerTool(tool){registrations.push(tool);}};w.addEventListener('error',e=>errors.push(e.message));}});
 const w=dom.window,$=id=>w.document.getElementById(id);
