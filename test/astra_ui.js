@@ -1,0 +1,32 @@
+/* Focused regression checks for SE Astra navigation, input validation and state. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {JSDOM}=require('jsdom');
+let html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+html=html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/,'<script>window.Chart=class{constructor(el,cfg){this.data=cfg.data;this.options=cfg.options;}destroy(){}resize(){}update(){}};</script>').replace(/<script src="vendor\/[^" ]*"><\/script>/g,'');
+const errors=[],registrations=[];
+const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'http://localhost',beforeParse(w){w.scrollTo=()=>{};w.document.modelContext={registerTool(tool){registrations.push(tool);}};w.addEventListener('error',e=>errors.push(e.message));}});
+const w=dom.window,$=id=>w.document.getElementById(id);
+(async()=>{
+ await new Promise(r=>setTimeout(r,30));
+ assert.equal(errors.length,0,errors.join('\n'));
+ assert.equal(w.document.title,'SE Astra — спектральная эллипсометрия');
+ assert.equal($('exSel').options.length,10);
+ assert.equal($('summaryMaterial').textContent,'TiO₂');
+ $('tab-simulator').click();assert.equal($('panel-simulator').hidden,false);assert.equal($('panel-sample').hidden,true);
+ $('tab-model').dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));assert.equal($('panel-sample').hidden,false);
+ const rows=[['lambda','psi','delta','sigPsi','sigDelta'],...Array.from({length:21},(_,i)=>[400+i*2,30,-20,.02,.04])];
+ const data=w.__parseRows(rows);assert.equal(data.lam.length,21);assert.equal(data.del[0],340);assert.equal(data.hasSigma,true);
+ assert.throws(()=>w.__parseRows([...rows,rows[1]]),/повторяются/);
+ assert.throws(()=>w.__parseRows([rows[0],[400,30,20,0,.04],...rows.slice(2)]),/положительными/);
+ assert.throws(()=>w.__parseRows([rows[0],[-1,30,20,.02,.04],...rows.slice(2)]),/λ/);
+ const blank=w.__parseRows([...rows, ['', '', '', '', '']]);assert.equal(blank.lam.length,21);
+ const read=registrations.find(t=>t.name==='read_analysis_state'),select=registrations.find(t=>t.name==='select_example_spectrum');
+ assert.ok(read&&select);assert.equal(read.annotations.readOnlyHint,true);assert.equal(select.annotations.readOnlyHint,false);
+ assert.throws(()=>select.execute({index:99}),/от 1 до 9/);assert.equal(read.execute().material,'tio2');
+ select.execute({index:9});assert.equal(read.execute().material,'zro2');assert.equal($('ckBack').checked,true);
+ select.execute({index:1});
+ $('phi').value='95';$('btnAll').click();await new Promise(r=>setTimeout(r,30));assert.match($('globalStatus').textContent,/Ошибка: Угол/);assert.equal($('btnAll').disabled,false);
+ $('phi').value='65';$('btn1').click();await new Promise(r=>setTimeout(r,300));assert.equal(read.execute().stages.reference,true);assert.equal($('btn2').disabled,false);
+ $('phi').value='64.9';$('phi').dispatchEvent(new w.Event('change'));assert.equal(read.execute().stages.reference,true);assert.equal(read.execute().stale,true);assert.equal($('btn2').disabled,true);
+ assert.equal(errors.length,0,errors.join('\n'));dom.window.close();console.log('PASS: Astra tabs, keyboard navigation, spectrum validation, reference fit, invalidation, WebMCP success/error paths.');
+})().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});
