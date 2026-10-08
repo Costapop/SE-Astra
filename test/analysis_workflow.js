@@ -41,7 +41,7 @@ const active = () => [...w.document.querySelectorAll('#page-analysis main>.step'
   $('viewStage3').click(); assert.deepEqual(active(), ['s3']);
   assert.equal([...$('inferenceTop').children].filter(r => r.getAttribute('aria-hidden') === 'false').length, 5);
   // Cancel diagnosis; stale final results must disappear and training remains reusable.
-  $('btn3').click(); await until(() => /Учитываем/.test($('stageStatus3').textContent));
+  $('btn3').click(); await until(() => /Определяем вероятности/.test($('stageStatus3').textContent));
   $('btnCancel').click(); await until(() => !$('btnAll').disabled);
   assert.match($('globalStatus').textContent, /остановлен/); assert.equal(w.__analysisTest.S.fin, null); assert.equal(w.__analysisTest.S.probs, null);
   $('btn3').click(); await until(() => !$('btnAll').disabled); assert.ok(w.__analysisTest.S.probs);

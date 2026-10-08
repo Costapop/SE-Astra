@@ -40,6 +40,17 @@ function analysisTask(type, args, onProgress) {
 }
 window.addEventListener('pagehide', () => { analysisAbort?.abort(); stopAnalysisWorker(abortError()); });
 
+function revealAnalysisProgress(n = analysisStage) {
+  const card = $('stageLive' + n);
+  if (!card || card.hidden || n < 2) return;
+  const nav = document.querySelector('.analysis-navigation');
+  const header = document.querySelector('.appbar');
+  const top = Math.max(0, header.getBoundingClientRect().bottom) + nav.getBoundingClientRect().height + 10;
+  window.scrollTo({ top: Math.max(0, window.scrollY + card.getBoundingClientRect().top - top), behavior: 'instant' });
+}
+window.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
+window.visualViewport?.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
+
 function refreshStageNav() {
   const done = [S.data, S.ref, S.train, S.probs, S.fin];
   document.querySelectorAll('[data-analysis-stage]').forEach(b => {
@@ -60,7 +71,9 @@ function showAnalysisStage(n, scroll = false) {
   $('resultsHeading').hidden = n === 0;
   refreshStageNav();
   if (scroll) {
-    const section = $('s' + n); section.scrollIntoView?.({ behavior: 'instant', block: 'start' });
+    const section = $('s' + n);
+    if (n >= 2 && !$('stageLive' + n).hidden) revealAnalysisProgress(n);
+    else section.scrollIntoView?.({ behavior: 'instant', block: 'start' });
     section.querySelector('h2').focus({ preventScroll: true });
   }
   requestAnimationFrame(() => { for (const c of Object.values(S.charts)) if (c.canvas.closest('#s' + n)) c.resize(); });
@@ -100,15 +113,14 @@ function referenceProgress(e) {
 function trainingProgress(e) {
   const labels = { examples: 'Смоделировано и профитировано', holdout: 'Проверка классификатора · эпоха', classifier: 'Обучение классификатора · эпоха', ridge: 'Оценка размеров дефектов · регрессия' };
   const text = e.phase === 'trained' ? 'Обучение завершено.' : `${labels[e.phase]} ${e.done} из ${e.total}`;
-  stageStatus(text); $('trainOut').textContent = text;
-  progressValue(e.fraction); $('trainBar').style.width = (100 * e.fraction) + '%';
+  stageStatus(text); progressValue(e.fraction);
 }
 
 function renderInferenceFrame(frame, final = false) {
   const order = frame.probs.map((_, i) => i).sort((a, b) => frame.probs[b] - frame.probs[a]);
   for (let i = 0; i < E.CLASSES.length; i++) {
     const row = $('probLive' + i), rank = order.indexOf(i), visible = rank < 5;
-    row.style.transform = `translateY(${Math.min(rank, 5) * 72}px)`;
+    row.style.setProperty('--prob-rank', Math.min(rank, 5));
     row.style.opacity = visible ? '1' : '0'; row.style.visibility = visible ? 'visible' : 'hidden';
     row.setAttribute('aria-hidden', String(!visible));
     row.querySelector('.live-rank').textContent = String(rank + 1).padStart(2, '0');
@@ -116,24 +128,15 @@ function renderInferenceFrame(frame, final = false) {
     row.querySelector('.live-prob-bar').style.width = (100 * frame.probs[i]) + '%';
   }
   $('otherProbs').textContent = 'Остальные 7 комбинаций: ' + fmt(100 * order.slice(5).reduce((s, i) => s + frame.probs[i], 0), 1) + ' %';
-  const label = final ? 'Все признаки учтены · итоговые вероятности' : frame.phase === 'bias' ? 'Начальные оценки обученной модели' : frame.phase === 'anchors' ? 'Канал: ' + frame.label : `Учитываем ${frame.phase === 'psi' ? 'Ψ' : 'Δ'}-остаток · ${Math.round(frame.scan * 100)} % диапазона`;
-  stageStatus(label); progressValue(frame.fraction);
-  const scan = $('residualScan');
-  scan.setAttribute('x1', 16 + 568 * (frame.scan || 0)); scan.setAttribute('x2', 16 + 568 * (frame.scan || 0));
-  scan.style.opacity = final || frame.phase === 'anchors' ? '0' : '1';
-  $('inferencePhase').textContent = final ? 'Готово' : frame.phase === 'anchors' ? 'Якорные каналы' : 'Спектральный остаток';
+  stageStatus(final ? 'Итоговые вероятности' : 'Определяем вероятности · ' + Math.round(100 * frame.fraction) + ' %');
+  progressValue(frame.fraction);
 }
 function prepareInference() {
-  $('inferenceTop').innerHTML = E.CLASSES.map((c, i) => `<div class="live-prob-row" id="probLive${i}"><span class="live-rank"></span><span class="live-prob-name">${classDots(c)}${c.name}</span><b class="live-prob-value">—</b><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`).join('');
-  const r = S.ref.resid, n = S.data.lam.length;
-  const amp = Math.max(1, ...Array.from(r, Math.abs));
-  const path = offset => {
-    const step = Math.max(1, Math.ceil(n / 200)), pts = [];
-    for (let i = 0; i < n; i += step) pts.push(`${16 + 568 * i / (n - 1)},${100 - 78 * r[offset + i] / amp}`);
-    pts.push(`${584},${100 - 78 * r[offset + n - 1] / amp}`); return pts.join(' ');
-  };
-  $('inferencePsi').setAttribute('points', path(0)); $('inferenceDelta').setAttribute('points', path(n));
-  $('inferenceRange').textContent = `${fmt(S.data.lam[0], 0)}–${fmt(S.data.lam[n - 1], 0)} нм · остаток в единицах σ`;
+  $('inferenceTop').innerHTML = E.CLASSES.map((c, i) => {
+    const parts = [c.g ? 'градиент n' + (c.g > 0 ? '↑' : '↓') : '', c.r ? 'шероховатость' : '', c.a ? 'поглощение' : ''].filter(Boolean);
+    const name = parts.length ? parts.join(', ') : 'однородная плёнка';
+    return `<div class="live-prob-row" id="probLive${i}" aria-hidden="true"><span class="live-rank"></span><span class="live-prob-name" title="${c.name}">${name}</span><b class="live-prob-value">—</b><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`;
+  }).join('');
 }
 async function animateInference(frames) {
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -150,24 +153,28 @@ async function animateInference(frames) {
   if (analysisAbort?.signal.aborted) throw abortError();
 }
 
+function fitMetric(value, digits) {
+  const text = fmt(value, digits);
+  return text.length > 8 ? Number(value).toExponential(2).replace('e+', 'e') : text;
+}
 function finalProgress(e, pass = 0) {
   const names = { absorption: 'Поиск силы поглощения', starts: 'Проверка стартов', refine: 'Точный фит', layers: 'Уточнение профиля', uncertainty: 'Оценка погрешностей' };
   const prefix = pass ? `Повтор после вето ${pass} · ` : '';
-  const info = e.phase === 'uncertainty' ? '' : ` · старт ${e.start} · итерация ${e.iteration}`;
+  const info = e.phase === 'uncertainty' ? '' : ` · старт ${e.start}`;
   stageStatus(prefix + (names[e.phase] || 'Окончательный фит') + info);
   if (!Number.isFinite(e.chi2)) return;
-  $('fitChi').textContent = fmt(e.chi2, 3); $('fitD').textContent = e.P ? fmt(e.P.d, 2) + ' нм' : '—';
+  $('fitChi').textContent = fitMetric(e.chi2, 3); $('fitD').textContent = e.P ? fitMetric(e.P.d, 2) : '—';
   $('fitIteration').textContent = String(e.iteration ?? '—');
-  $('fitPhase').textContent = `${e.M || 40} подслоёв · ${e.nfev || 0} вычислений в текущем запуске`;
+  $('fitPhase').textContent = `${e.M || 40} подслоёв · ${e.nfev || 0} вычислений`;
   fitHistory.push(e.chi2);
   // Bounded rendering cost even for a long multistart fit.
   if (fitHistory.length > 240) fitHistory = fitHistory.filter((_, i) => i % 2 === 0);
   const values = fitHistory.map(v => Math.log10(Math.max(v, 1e-12))), lo = Math.min(...values), hi = Math.max(lo + 0.1, ...values);
   $('fitTrace').setAttribute('points', values.map((v, i) => `${20 + 560 * i / Math.max(1, values.length - 1)},${160 - 140 * (v - lo) / (hi - lo)}`).join(' '));
-  $('fitScale').textContent = `χ²/ν: ${fmt(Math.pow(10, lo), 2)}–${fmt(Math.pow(10, hi), 2)} · логарифмическая шкала`;
+  $('fitScale').textContent = `χ²/ν: ${fmt(Math.pow(10, lo), 2)}–${fmt(Math.pow(10, hi), 2)} · log`;
 }
 function fitComplete(fin) {
-  $('fitChi').textContent = fmt(fin.chi2, 3); $('fitD').textContent = fmt(fin.P.d, 2) + ' нм';
+  $('fitChi').textContent = fitMetric(fin.chi2, 3); $('fitD').textContent = fitMetric(fin.P.d, 2);
   $('fitPhase').textContent = `Фит завершён · ${fin.M} подслоёв · ${fin.starts} стартов`;
 }
 

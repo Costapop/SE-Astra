@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.0</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.1</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -425,33 +425,24 @@ footer p { margin: 4px 0; }
 
   <section class="step" id="s2" role="tabpanel" aria-labelledby="viewStage2" hidden>
     <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
-    <p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p>
-    <div class="bar"><div id="trainBar"></div></div>
     <div class="stage-live" id="stageLive2" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
       <progress id="stageBar2" max="100" value="0" aria-label="Ход шага 2"></progress>
     </div>
+    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
   <section class="step" id="s3" role="tabpanel" aria-labelledby="viewStage3" hidden>
     <h2 tabindex="-1"><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
-    <p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — вероятность каждого класса и оценка размеров дефектов регрессией. Модель для окончательного фита можно поправить вручную.</p>
     <div class="stage-live" id="stageLive3" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus3" role="status" aria-live="polite">Подготовка…</p><span id="elapsed3" class="stage-elapsed">0 с</span></div>
       <progress id="stageBar3" max="100" value="0" aria-label="Ход шага 3"></progress>
-      <div class="inference-layout">
-        <div class="inference-input"><h3>Остаток опорного фита</h3><span class="inference-phase" id="inferencePhase">Спектральный остаток</span>
-          <svg class="residual-viz" viewBox="0 0 600 200" role="img" aria-label="Остатки Ψ и Δ, передаваемые обученной модели">
-            <path class="viz-axis" d="M16 100H584"/><polyline id="inferencePsi" class="viz-psi" fill="none"/><polyline id="inferenceDelta" class="viz-delta" fill="none"/>
-            <line id="residualScan" x1="16" x2="16" y1="16" y2="184" class="residual-scan"/>
-          </svg>
-          <div class="residual-key"><span>Ψ-остаток</span><span>Δ-остаток</span></div><p id="inferenceRange" class="note"></p>
-          <details class="inference-explanation"><summary>Как читать анимацию</summary><p class="note">Визуализация вклада признаков обученной модели. Промежуточные оценки рассчитаны по части признаков; итоговые вероятности — после всего остатка и якорных каналов.</p></details>
-        </div>
-        <div><h3>Топ-5 комбинаций</h3><div class="live-prob-list" id="inferenceTop" aria-label="Пять наиболее вероятных комбинаций"></div><p id="otherProbs" class="note"></p></div>
-      </div>
+      <h3 class="prob-title">Топ-5 комбинаций дефектов</h3>
+      <div class="live-prob-list" id="inferenceTop" aria-label="Пять наиболее вероятных комбинаций"></div>
+      <p id="otherProbs" class="note"></p>
     </div>
+    <details class="stage-explanation"><summary>О диагнозе и выборе модели</summary><p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — вероятность каждого класса и оценка размеров дефектов регрессией. Модель для окончательного фита можно поправить вручную. Промежуточные вероятности учитывают часть признаков; последняя оценка использует все признаки модели. В кратких названиях n↑ и n↓ означают рост и снижение показателя к поверхности.</p></details>
     <div id="diagOut" class="empty">Сначала обучение.</div>
     <div class="checks" id="modelChoice" style="display:none">
       <label><input type="checkbox" id="ckGrad"> градиент показателя по глубине</label>
@@ -462,14 +453,13 @@ footer p { margin: 4px 0; }
 
   <section class="step" id="s4" role="tabpanel" aria-labelledby="viewStage4" hidden>
     <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
-    <p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется.</p>
     <div class="stage-live" id="stageLive4" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
-      <div class="fit-metrics"><div><span>Текущий χ²/ν</span><b id="fitChi">—</b></div><div><span>Толщина d</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
+      <div class="fit-metrics"><div><span>χ²/ν</span><b id="fitChi">—</b></div><div><span>d, нм</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
       <svg class="fit-viz" viewBox="0 0 600 180" role="img" aria-label="Динамика невязки по итерациям окончательного фита"><path class="viz-axis" d="M20 20V160H580"/><polyline id="fitTrace" fill="none"/></svg>
       <p id="fitScale" class="note">Ожидаем первые итерации…</p><p id="fitPhase" class="note">Перебор стартов, точный фит и оценка погрешностей.</p>
-      <p class="note">Показаны реальные расчёты. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p>
     </div>
+    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p></details>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
@@ -679,7 +669,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.2.1';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -758,7 +748,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     $('btn1').disabled = !S.data; $('btn2').disabled = true; $('btn3').disabled = true; $('btn4').disabled = true;
     ['refOut', 'trainOut', 'diagOut', 'finOut'].forEach(id => { $(id).className = 'empty'; });
     $('refOut').textContent = 'Нажмите «Опорный фит».'; $('trainOut').textContent = 'Сначала опорный фит.'; $('diagOut').textContent = 'Сначала обучение.'; $('finOut').textContent = 'Сначала диагноз.';
-    $('modelChoice').style.display = 'none'; $('truthOut').innerHTML = ''; $('causeOut').innerHTML = ''; $('chanOut').textContent = ''; $('trainBar').style.width = '0%';
+    $('modelChoice').style.display = 'none'; $('truthOut').innerHTML = ''; $('causeOut').innerHTML = ''; $('chanOut').textContent = '';
     ['chRes', 'chResFin', 'chFinger', 'chN'].forEach(destroyChart); $('chNTitle').textContent = 'Показатель преломления плёнки';
     refreshStageNav(); if (S.onDataChange) S.onDataChange();
   }
@@ -1058,7 +1048,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   function clearFrom(k) {
     for (let n = k + 1; n <= 4; n++) $('stageLive' + n).hidden = true;
     if (k <= 1) { $('refOut').className = 'empty'; $('refOut').textContent = 'Идёт опорный фит…'; $('chanOut').textContent = ''; destroyChart('chRes'); S.ref = null; S.refFeat = null; }
-    if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? 'Идёт обучение…' : 'Сначала опорный фит.'; $('trainBar').style.width = '0%'; S.train = null; $('btn3').disabled = true; }
+    if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? '' : 'Сначала опорный фит.'; S.train = null; $('btn3').disabled = true; }
     if (k <= 3) { $('diagOut').className = 'empty'; $('diagOut').textContent = k === 3 ? 'Идёт диагноз…' : 'Сначала обучение.'; $('modelChoice').style.display = 'none'; S.probs = null; S.est = null; S.aiFlags = null; S.choice = null; $('btn4').disabled = true; }
     if (k <= 4) { $('finOut').className = 'empty'; $('finOut').textContent = k === 4 ? 'Идёт окончательный фит…' : 'Сначала диагноз.'; $('truthOut').innerHTML = ''; $('causeOut').innerHTML = ''; ['chResFin', 'chFinger', 'chN'].forEach(destroyChart); $('chNTitle').textContent = 'Показатель преломления плёнки'; S.fin = null; S.finFlags = null; }
   }
@@ -1217,7 +1207,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     // --- бюджет: последовательное устранение факторов при верном наборе дефектов
     const { rows, truthRow, contrib, unexpl, bwModel } = await analysisTask('causes', { data: S.data, example: S.example, cfg: S.cfg, prior: S.prior, ref: S.ref, fin: S.fin, finFlags: S.finFlags }, e => {
       const text = 'Проверка по скрытой истине · ' + e.row + (e.iteration !== undefined ? ` · итерация ${e.iteration}` : '');
-      stageStatus(text); $('causeOut').textContent = text;
+      stageStatus('Проверка скрытой истины' + (e.iteration !== undefined ? ` · итерация ${e.iteration}` : '')); $('causeOut').textContent = text;
     });
     // словесные выводы по бюджету
     const big = (v, thr) => Math.abs(v) > thr;
@@ -1424,6 +1414,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       if (stage > 1 && S.analysisStale) throw new Error('Условия изменились. Начните с опорного фита.');
       if ((stage === 2 && !S.ref) || (stage === 3 && !S.train) || (stage === 4 && !S.probs)) throw new Error('Сначала выполните предыдущий шаг.');
       astraBusy = true; started = true; analysisAbort = new AbortController();
+      document.body.classList.add('analysis-running');
       $('analysisControls').inert = true; $('analysisControls').setAttribute('aria-busy', 'true');
       $('modelChoice').inert = true;
       ['btnAll', 'btn1', 'btn2', 'btn3', 'btn4', 'dmBuild'].forEach(id => $(id).disabled = true);
@@ -1438,7 +1429,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
         clearInterval(analysisTimer); analysisTimer = null;
         $('elapsed' + n).textContent = fmt((Date.now() - analysisStarted) / 1000, 1) + ' с';
         $('stageLive' + n).classList.remove('is-running'); progressValue(1);
-        $('stageStatus' + n).textContent = n === 3 ? 'Все признаки учтены · итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
+        $('stageStatus' + n).textContent = n === 3 ? 'Итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
         refreshStageNav(); await yieldPaint();
       }
       stageStatus('Готово.');
@@ -1451,6 +1442,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
         clearInterval(analysisTimer); analysisTimer = null;
         for (let n = 1; n <= 4; n++) $('stageLive' + n).classList.remove('is-running');
         astraBusy = false; analysisAbort = null;
+        document.body.classList.remove('analysis-running');
       }
       $('analysisControls').inert = false; $('analysisControls').removeAttribute('aria-busy'); $('modelChoice').inert = false;
       $('btnAll').disabled = !S.data; $('btn1').disabled = !S.data; $('btn2').disabled = !S.ref || S.analysisStale; $('btn3').disabled = !S.train || S.analysisStale; $('btn4').disabled = !S.probs || S.analysisStale; $('dmBuild').disabled = false;
