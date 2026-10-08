@@ -643,8 +643,14 @@
     const deltaStarts = flags.grad ? (Math.abs(d0) <= 0.01 ? (Math.abs(d0) > 1e-4 ? [d0, -d0] : [0.004, -0.004]) : [d0]) : [0];
     // разведка бассейнов на грубой модели (10 подслоёв), затем лучший старт дотягивается на 40 подслоях
     const fn10 = makeResidJacFn(data, cfg, free, fixed, flags.grad ? 10 : 40), fn40 = makeResidJacFn(data, cfg, free, fixed, 40);
-    let best = null, nfev = 0, nStarts = 0;
-    const report = (phase, M, start) => onProgress && (e => onProgress({ ...e, phase, M, start, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) }));
+    let best = null, nfev = 0, nStarts = 0, runs = 0, iterations = 0;
+    const dof = Math.max(1, 2 * data.lam.length - free.length);
+    const optimize = (fn, x0, maxIter, phase, M, start) => {
+      const run = ++runs, offset = nfev;
+      const r = lmFitJac(fn, x0, lo, hi, maxIter, onProgress && (e => onProgress({ ...e, nfev: offset + e.nfev, phase, M, start, run, dof, profileLayers: flags.grad ? M : 1, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) })));
+      nfev += r.nfev; iterations += r.nit;
+      return r;
+    };
     let base = Object.assign({}, p0, { dRough: Math.max(0.1, p0.dRough || 0.1), Ak: 0 });
     if (flags.abs) {
       // Поглощение: опорный фит без хвоста искажает дисперсию (A, E_g растут, компенсируя затухание полос), и старт из него
@@ -656,7 +662,7 @@
       let bestA = null;
       for (const dp of disp) for (const k of ks) {
         const x0 = clampP(Object.assign({}, base, dp, { delta: deltaStarts[0], Ak: tailAk(cfg.mat, k) }));
-        const r = lmFitJac(fn10, x0, lo, hi, 20, report('absorption', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++;
+        const r = optimize(fn10, x0, 20, 'absorption', flags.grad ? 10 : 40, nStarts + 1); nStarts++;
         if (!bestA || r.chi2 < bestA.chi2) bestA = r;
       }
       const PA = {}; free.forEach((k, i) => PA[k] = bestA.x[i]);
@@ -665,19 +671,20 @@
     }
     const cands = [];
     for (const dS of dStarts) for (const dl of deltaStarts) cands.push(clampP(Object.assign({}, base, { d: dS, delta: dl })));
-    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25, report('starts', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
-    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80, report('refine', 40, Math.max(1, nStarts))); nfev += res.nfev; nStarts = Math.max(1, nStarts);
+    if (cands.length > 1) cands.forEach((x0) => { const r = optimize(fn10, x0, 25, 'starts', flags.grad ? 10 : 40, nStarts + 1); nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
+    let res = optimize(fn40, best ? best.x : cands[0], 80, 'refine', 40, Math.max(1, nStarts)); nStarts = Math.max(1, nStarts);
     const iD = free.indexOf('delta'); let Mfin = 40;
-    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40, report('layers', Mfin, nStarts)); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
+    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); res = optimize(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, 40, 'layers', Mfin, nStarts); }   // 80 или 160 подслоёв
     const P = { dRough: 0, delta: 0, Ak: 0 }; free.forEach((k, i) => P[k] = res.x[i]);
     const E = {}; free.forEach((k, i) => E[k] = res.err[i]);
     const mFit = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg });                  // k₄₀₀ — по найденной дисперсии
     const dk400 = (Ak) => { const h = Math.max(1e-6, 1e-3 * Ak); return (tailK400(mFit, Ak + h) - tailK400(mFit, Ak)) / h; };
     if (flags.abs) { P.k400 = tailK400(mFit, P.Ak); E.k400 = E.Ak * dk400(P.Ak); } else { P.k400 = 0; }
     let sys = null;
-    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit });
+    const profileLayers = flags.grad ? Mfin : 1;
+    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit, run: runs, dof, profileLayers });
     if (nuis) { sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis); if (sys && flags.abs) { const dk = dk400(P.Ak); sys.total.k400 = sys.total.Ak * dk; for (const q of Object.keys(sys.parts)) sys.parts[q].k400 = sys.parts[q].Ak * dk; } }
-    return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin };
+    return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin, runs, iterations, dof, profileLayers };
   }
 
   // ---------------------------------------------------------------- аналитический якобиан (Фурман–Тихонравов, разд. 1.4.1: формулы 1.4.9–1.4.16) и ЛМ с масштабированием
@@ -939,14 +946,18 @@
    *  диагональное масштабирование Марквардта с нижним порогом; пробные шаги — без якобиана. Ковариация — по J_x в решении. */
   function lmFitJac(residJac, x0, lo, hi, maxIter, onProgress) {
     maxIter = maxIter || 60;
+    // Count every residual/Jacobian request, including accepted-step refreshes
+    // and the final covariance evaluation. This does not alter the optimizer.
+    let nfev = 0;
+    const evaluate = (x, jac) => { nfev++; return residJac(x, jac); };
     const p = x0.length, W = lo.map((v, k) => hi[k] - v);
     const toX = (th) => th.map((v, k) => lo[k] + W[k] * (1 + Math.sin(v)) / 2);
     const toTh = (x) => x.map((v, k) => Math.asin(Math.max(-0.999999, Math.min(0.999999, 2 * (v - lo[k]) / W[k] - 1))));
-    let th = toTh(x0), x = toX(th), ev = residJac(x, true), r = ev.r, Jx = ev.J;
+    let th = toTh(x0), x = toX(th), ev = evaluate(x, true), r = ev.r, Jx = ev.J;
     const m = r.length;
     let F = 0; for (let i = 0; i < m; i++) F += r[i] * r[i]; F *= 0.5;
-    let lam = -1, nu = 2, nfev = 1, nit = 0;
-    const report = () => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice() }); };
+    let lam = -1, nu = 2, nit = 0;
+    const report = (completed = false) => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice(), completed }); };
     report();
     const JTJ = Array.from({ length: p }, () => new Array(p).fill(0)), g = new Array(p).fill(0), D = new Array(p).fill(0);
     for (let it = 0; it < maxIter; it++) {
@@ -969,14 +980,14 @@
         let vnorm = 0; for (let k = 0; k < p; k++) vnorm += dth[k] * dth[k]; vnorm = Math.sqrt(vnorm);
         if (vnorm > 1e-12) {
           const hh = Math.min(0.1, 0.1 / vnorm);
-          const rP = residJac(toX(th.map((v, k) => v + hh * dth[k])), false).r, rM = residJac(toX(th.map((v, k) => v - hh * dth[k])), false).r; nfev += 2;
+          const rP = evaluate(toX(th.map((v, k) => v + hh * dth[k])), false).r, rM = evaluate(toX(th.map((v, k) => v - hh * dth[k])), false).r;
           const rhs = new Array(p).fill(0);
           for (let a = 0; a < p; a++) { let sacc = 0; const Ja = Jx[a]; for (let i = 0; i < m; i++) sacc += Ja[i] * (rP[i] - 2 * r[i] + rM[i]); rhs[a] = -sacc * sc[a] / (hh * hh); }
           const acc = solveLinear(Aug, rhs);
           if (acc) { let anorm = 0; for (let k = 0; k < p; k++) anorm += acc[k] * acc[k]; anorm = Math.sqrt(anorm); if (anorm < 0.75 * vnorm) for (let k = 0; k < p; k++) dth[k] += 0.5 * acc[k]; }
         }
         let maxStep = 0; for (let k = 0; k < p; k++) { dth[k] = Math.max(-1.0, Math.min(1.0, dth[k])); maxStep = Math.max(maxStep, Math.abs(dth[k])); }
-        const thn = th.map((v, k) => v + dth[k]), xn = toX(thn), evn = residJac(xn, false); nfev++;
+        const thn = th.map((v, k) => v + dth[k]), xn = toX(thn), evn = evaluate(xn, false);
         let Fn = 0; for (let i = 0; i < m; i++) Fn += evn.r[i] * evn.r[i]; Fn *= 0.5;
         let pred = 0; for (let k = 0; k < p; k++) pred += dth[k] * (lam * D[k] * dth[k] - g[k]); pred *= 0.5;
         const rho = pred > 0 ? (F - Fn) / pred : (Fn < F ? 1 : -1);
@@ -984,7 +995,7 @@
           const rel = (F - Fn) / Math.max(F, 1e-300);
           th = thn; x = xn; r = evn.r; F = Fn; accepted = true;
           lam *= Math.max(1 / 3, 1 - Math.pow(2 * rho - 1, 3)); nu = 2;
-          if (rel < 1e-8 || maxStep < 1e-7) { it = maxIter; } else { Jx = residJac(x, true).J; }
+          if (rel < 1e-8 || maxStep < 1e-7) { it = maxIter; } else { Jx = evaluate(x, true).J; }
           break;
         }
         lam *= nu; nu *= 2;
@@ -992,11 +1003,12 @@
       report();
       if (!accepted) break;
     }
-    Jx = residJac(x, true).J;                                                  // якобиан в решении — для ковариации
+    Jx = evaluate(x, true).J;                                                  // якобиан в решении — для ковариации
     const nuDof = Math.max(1, m - p), chi2 = 2 * F / nuDof;
     const JTJx = Array.from({ length: p }, () => new Array(p).fill(0));
     for (let a = 0; a < p; a++) for (let b = a; b < p; b++) { let s = 0; for (let i = 0; i < m; i++) s += Jx[a][i] * Jx[b][i]; JTJx[a][b] = s; JTJx[b][a] = s; }
     const inv = invert(JTJx); const cov = inv ? inv.map(row => row.map(v => v * chi2)) : null;
+    report(true);
     return { x, resid: r, chi2, cov, nfev, nit, err: cov ? cov.map((row, k) => Math.sqrt(Math.max(0, row[k]))) : x.map(() => NaN) };
   }
 
@@ -1108,7 +1120,7 @@
   /** Один обучающий пример: истина со случайными дефектами и мешающими факторами → опорный фит → остаток.
    *  nuis = {deltaMax, roughMax, kMax, bw, phiErr, backFerr}; kMax — верхняя граница k хвоста поглощения при 400 нм;
    *  backFerr — неопределённость заданной доли задней стороны (cfg.back), в этих пределах доля истины разыгрывается случайно. */
-  function trainingExample(data, cfg, prior, nuis, rng, cls) {
+  function trainingSpectrum(data, cfg, prior, nuis, rng, cls) {
     const c = CLASSES[cls];
     const delta = c.g * twoScale(rng, 0.0002, 0.02, nuis.deltaMax), dRough = c.r ? rng.range(0.02, nuis.roughMax) : 0;
     const k400 = c.a ? twoScale(rng, 2e-5, 1e-3, nuis.kMax || 5e-3) : 0;
@@ -1121,9 +1133,13 @@
     const s = synthesize(data.lam, cfg.subKey, cfg.phi + rng.range(-nuis.phiErr, nuis.phiErr), d, m, delta, dRough, opt, rng);
     const dd = { lam: data.lam, psi: s.psi, del: s.del, sigPsi: data.sigPsi, sigDel: data.sigDel };
     const fit = referenceFit(dd, cfg, prior);
-    return { x: featureVector(dd, cfg, fit.resid), y: cls, delta, dRough, k400, d, dFit: fit.P.d, chi2: fit.chi2 };
+    return { dd, resid: fit.resid, y: cls, delta, dRough, k400, d, dFit: fit.P.d, chi2: fit.chi2 };
+  }
+  function trainingExample(data, cfg, prior, nuis, rng, cls) {
+    const { dd, resid, ...sample } = trainingSpectrum(data, cfg, prior, nuis, rng, cls);
+    return { x: featureVector(dd, cfg, resid), ...sample };
   }
 
-  const api = { HC, TAIL_ET, K400_MAX, N_CHANNELS, BAND_H, MATERIALS, SUBSTRATES, CLASSES, classIndex, chooseFlags, filmN, filmNK, tailK400, tailAk, substrateN, cubicTab, buildLayers, rhoStack, psiDeltaFromR, psiDeltaFromNCS, ncsFromR, muellerFromR, ncsFromMueller, stackCoefs, ncsBackside, backOn, bandOn, band2, lam3Of, modelMueller, modelPsiDelta, rhoGraded, synthesizeClean, applyNoise, synthesize, makeRng, lmFit, lmFitJac, makeResidJacFn, rhoStackJac, buildLayersJac, filmNJac, psiDeltaJac, muellerJac, psiDeltaJacMueller, referenceFit, finalFit, subLayersFor, sysErrors, vetoThreshold, anchors, channels, featureVector, trainSoftmax, ridge, trainingExample, wrap, interp, tlEps };
+  const api = { HC, TAIL_ET, K400_MAX, N_CHANNELS, BAND_H, MATERIALS, SUBSTRATES, CLASSES, classIndex, chooseFlags, filmN, filmNK, tailK400, tailAk, substrateN, cubicTab, buildLayers, rhoStack, psiDeltaFromR, psiDeltaFromNCS, ncsFromR, muellerFromR, ncsFromMueller, stackCoefs, ncsBackside, backOn, bandOn, band2, lam3Of, modelMueller, modelPsiDelta, rhoGraded, synthesizeClean, applyNoise, synthesize, makeRng, lmFit, lmFitJac, makeResidJacFn, rhoStackJac, buildLayersJac, filmNJac, psiDeltaJac, muellerJac, psiDeltaJacMueller, referenceFit, finalFit, subLayersFor, sysErrors, vetoThreshold, anchors, channels, featureVector, trainSoftmax, ridge, trainingSpectrum, trainingExample, wrap, interp, tlEps };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.EllipCore = api;
 })(typeof window !== 'undefined' ? window : globalThis);

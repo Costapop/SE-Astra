@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.2</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.3</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -426,9 +426,14 @@ footer p { margin: 4px 0; }
     <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <div class="stage-live" id="stageLive2" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
-      <progress id="stageBar2" max="100" value="0" aria-label="Ход шага 2"></progress>
+      <div class="training-phases">
+        <div class="training-phase"><div><b>1. Моделирование и фит спектров</b><span id="trainSpectraCount">Ожидает</span></div><progress id="trainSpectraBar" max="1" value="0" aria-label="Моделирование и фит спектров"></progress></div>
+        <div class="training-phase"><div><b>2. Обработка остатков по якорям</b><span id="trainAnchorsCount">Ожидает</span></div><progress id="trainAnchorsBar" max="1" value="0" aria-label="Обработка остатков по якорям"></progress></div>
+        <div class="training-phase"><div><b>3. Обучение ИИ</b><span id="trainModelCount">Ожидает</span></div><progress id="trainModelBar" max="1" value="0" aria-label="Обучение ИИ"></progress></div>
+      </div>
+      <p class="training-note">Якоря HW/QW берутся из тех же спектров; используются остатки уже выполненного фита.</p>
     </div>
-    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
+    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. Подготовка разделена на два прохода: сначала моделирование и опорный фит всех спектров, затем поиск HW/QW-якорей и расчёт восьми признаков из остатка. Отдельного фита только по якорям нет. При недостатке якорей восемь дополнительных признаков равны нулю. Третья строка показывает 250 эпох обучения для контрольной выборки, 250 эпох итогового классификатора и три регрессии размеров дефектов; процент отражает выполненные операции, а не оставшееся время. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
@@ -454,20 +459,24 @@ footer p { margin: 4px 0; }
     <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <div class="stage-live" id="stageLive4" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
-      <div class="fit-metrics"><div><span>χ²/ν</span><b id="fitChi">—</b></div><div><span>d, нм</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
-      <svg class="fit-viz" viewBox="0 0 600 180" role="img" aria-label="Динамика невязки по итерациям окончательного фита"><path class="viz-axis" d="M20 20V160H580"/><polyline id="fitTrace" fill="none"/></svg>
-      <p id="fitScale" class="note">Ожидаем первые итерации…</p><p id="fitPhase" class="note">Перебор стартов, точный фит и оценка погрешностей.</p>
+      <div class="fit-metrics"><div><span>Невязка χ²/ν</span><b id="fitChi">—</b></div><div><span>Толщина, нм</span><b id="fitD">—</b></div><div><span>Расчёты</span><b id="fitEvaluations">—</b></div></div>
+      <div class="fit-chart" role="img" aria-labelledby="fitPlotTitle" aria-describedby="fitScale fitPhase">
+        <p id="fitPlotTitle">Невязка χ²/ν · логарифмическая шкала</p>
+        <div class="fit-plot"><div class="fit-y-axis"><span id="fitYMax">—</span><span id="fitYMin">—</span></div><svg class="fit-viz" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true"><path class="viz-axis" d="M0 0V120H600"/><path id="fitTrace" fill="none"/><circle id="fitCurrent" r="3" visibility="hidden"/></svg></div>
+        <div class="fit-x-axis"><span>0</span><span>Расчёты невязки →</span><span id="fitXMax">—</span></div>
+      </div>
+      <p id="fitScale" class="note">Ниже — лучше. Разрыв линии — новый старт, сетка или модель. Точка — текущее решение.</p><p id="fitPhase" class="note">Ожидаем первые расчёты…</p>
     </div>
-    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p></details>
+    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %, 160 при |δ| &gt; 12 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта ниже порога значимости с учётом систематики и численного минимума отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p><p class="note">На графике показано χ²/ν = Σr²/(2N − p), где r — остатки Ψ и Δ, делённые на их σ, N — число длин волн, p — число свободных параметров. Около 1 — остаток сопоставим с заданным шумом. Вертикальная шкала логарифмическая, поэтому равный сдвиг означает одинаковое отношение невязок. По горизонтали — суммарное число вызовов функции невязки при оптимизации, включая якобианы и повторы после вето; это не число итераций и не процент готовности. Систематические погрешности и проверка по скрытой истине считаются отдельно. Линии соединяют показанные состояния внутри одного запуска; быстрые промежуточные состояния прорежены. Итоговая точка соответствует результату в таблице. Нулевая невязка показана у нижней границы шкалы.</p></details>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
-        <div class="chart"><canvas id="chResFin"></canvas></div><div class="fig-table hidden"></div></figure>
-      <figure class="fig empty" data-fig="se-ai_fingerprint_before_after"><figcaption><span class="fig-title">Отпечаток: до и после</span><span class="fig-tools"></span></figcaption>
-        <div class="chart"><canvas id="chFinger"></canvas></div><div class="fig-table hidden"></div></figure>
+        <div class="chart"><canvas id="chResFin"></canvas></div><p class="note fig-explanation">По горизонтали — длина волны. Линии показывают (измерено − модель)/σ для Ψ и Δ. Ноль означает совпадение с моделью; ±1 — отклонение на одну заданную σ.</p><div class="fig-table hidden"></div></figure>
+      <figure class="fig empty" data-fig="se-ai_fingerprint_before_after"><figcaption><span class="fig-title">Остатки Ψ и Δ: опорный и окончательный фит</span><span class="fig-tools"></span></figcaption>
+        <div class="chart"><canvas id="chFinger"></canvas></div><p class="note fig-explanation">Каждая точка — одна длина волны: по X остаток Ψ/σ, по Y остаток Δ/σ. Серые точки — опорный фит, зелёные — окончательный. Ближе к (0, 0) — меньше остаток.</p><div class="fig-table hidden"></div></figure>
     </div>
     <figure class="fig empty" data-fig="se-ai_film_n_k"><figcaption><span class="fig-title" id="chNTitle">Показатель преломления плёнки</span><span class="fig-tools"></span></figcaption>
-      <div class="chart short"><canvas id="chN"></canvas></div><div class="fig-table hidden"></div></figure>
+      <div class="chart short"><canvas id="chN"></canvas></div><p class="note fig-explanation">Дисперсия базового материала плёнки: n по левой оси, k (если показан) по правой. При градиенте это значение n в середине плёнки. «Истина» доступна только для учебного образца.</p><div class="fig-table hidden"></div></figure>
     <div id="truthOut"></div>
     <div id="causeOut"></div>
   </section>
@@ -668,7 +677,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.2';
+  const APP_VERSION = '1.2.3';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -1110,7 +1119,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 
   // ---------------------------------------------------------------- шаг 4
   async function step4() {
-    if (!S.probs) return; clearFrom(4); fitHistory = []; $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…';
+    if (!S.probs) return; clearFrom(4); resetFitProgress();
     let flags = { grad: $('ckGrad').checked, rough: $('ckRough').checked, abs: $('ckAbs').checked };
     const sgn = S.choice && S.choice.sign ? S.choice.sign : 0, dStart = sgn ? sgn * Math.max(0.002, Math.abs(S.est.delta)) : S.est.delta;   // знак старта δ — из класса ИИ
     const p0 = Object.assign({}, S.ref.P, { dRough: Math.max(0.1, S.est.dRough), delta: dStart, Ak: S.est.k400 > 0 ? E.tailAk(S.cfg.mat, S.est.k400) : 0, starts: S.ref.starts, startCosts: S.ref.startCosts });
@@ -1118,13 +1127,15 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const t = performance.now();
     const fit = pass => analysisTask('final', { data: S.data, cfg: S.cfg, prior: S.prior, flags, p0, nuis: S.nuis }, e => finalProgress(e, pass));
     let result = await fit(0), fin = result.fin, veto = [];
-    // вето: дефект убирается, если |p| < √((3σ_форм)² + сист.²) — он должен превышать и формальную погрешность, и систематику заявленных неопределённостей условий
-    const vetoMsg = (name, k, scale, unit) => `${name} ${fmt(scale * Math.abs(fin.P[k]), 3)}${unit} не превышает порога √((3σ)² + сист.²) = ${fmt(scale * E.vetoThreshold(fin, k), 3)}${unit} — убран`;
+    // Вето: фактический порог = max(статистика с систематикой, численный минимум).
+    const vetoFloor = { dRough: 0.03, delta: 3e-4, Ak: 3e-4 };
+    const vetoLimit = k => Math.max(vetoFloor[k], E.vetoThreshold(fin, k));
+    const vetoMsg = (name, k, scale, unit) => `${name} ${fitMetric(scale * Math.abs(fin.P[k]), 3)}${unit} ниже порога ${fitMetric(scale * vetoLimit(k), 3)}${unit} — убран`;
     for (let pass = 0; pass < 2; pass++) {
       let changed = false;
-      if (flags.rough && fin.P.dRough < Math.max(0.03, E.vetoThreshold(fin, 'dRough'))) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
-      if (flags.grad && Math.abs(fin.P.delta) < Math.max(3e-4, E.vetoThreshold(fin, 'delta'))) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
-      if (flags.abs && fin.P.Ak < Math.max(3e-4, E.vetoThreshold(fin, 'Ak'))) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
+      if (flags.rough && fin.P.dRough < vetoLimit('dRough')) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
+      if (flags.grad && Math.abs(fin.P.delta) < vetoLimit('delta')) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
+      if (flags.abs && fin.P.Ak < vetoLimit('Ak')) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
       if (!changed) break; result = await fit(pass + 1); fin = result.fin;
     }
     const ms = performance.now() - t; S.fin = fin; S.finFlags = flags;
@@ -1136,7 +1147,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const curves = [{ label: 'опорный фит', n: nkRef.n, k: nkRef.k }, { label: 'окончательный фит', n: nkFin.n, k: nkFin.k }];
     const modelName = (flags.grad || flags.rough || flags.abs) ? ['однородная плёнка', flags.grad ? 'градиент' : null, flags.rough ? 'EMA-слой' : null, flags.abs ? 'хвост поглощения' : null].filter(Boolean).join(' + ') : 'однородная плёнка (дефектов нет)';
     const nAt = (m, l) => E.filmNK([l], m).n[0], kAt = (m, l) => E.filmNK([l], m).k[0];
-    const rows = [['Модель', modelName + (S.cfg.band ? ` (полоса ${fmt(S.cfg.band.bw, 1)} нм в модели)` : ''), ''], ['χ²/ν', `${fmt(fin.chi2, 2)} (опорный: ${fmt(S.ref.chi2, 1)})`, ''], ['Толщина d, нм', pm('d', fin.P.d, fin.E.d, 2, 1), `опорный: ${fmt(S.ref.P.d, 2)}`]];
+    const rows = [['Модель', modelName + (S.cfg.band ? ` (полоса ${fmt(S.cfg.band.bw, 1)} нм в модели)` : ''), ''], ['χ²/ν', `${fitMetric(fin.chi2, 3)} (опорный: ${fitMetric(S.ref.chi2, 3)})`, ''], ['Толщина d, нм', pm('d', fin.P.d, fin.E.d, 2, 1), `опорный: ${fmt(S.ref.P.d, 2)}`]];
     if (flags.grad) rows.push(['Градиент δ, %', pm('delta', fin.P.delta, fin.E.delta, 3, 100), fin.P.delta > 0 ? 'n растёт к поверхности' : 'n падает к поверхности']);
     if (flags.rough) rows.push(['EMA-слой шероховатости, нм', pm('dRough', fin.P.dRough, fin.E.dRough, 3, 1), 'Бруггеман 50/50; σ_rms ≈ 0.5–0.7 толщины']);
     if (flags.abs) rows.push(['Поглощение: k хвоста при 400 нм', `${fmtK(fin.P.k400)} ± ${fmtK(fin.E.k400)}${fin.sys ? ` <span class="note">(сист. ± ${fmtK(sysOf('k400'))})</span>` : ''}`, `сила хвоста A_k = ${fmt(fin.P.Ak, 4)} эВ, порог E_t = ${E.TAIL_ET} эВ; k₄₀₀ — по найденной дисперсии; k плёнки при 550 нм ${fmt(kAt(mFin, 550), 5)}`]);
@@ -1145,8 +1156,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const n = S.data.lam.length, rp = Array.from(fin.resid.slice(0, n)), rd = Array.from(fin.resid.slice(n)); const rms = a => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
     const sysParts = fin.sys && fin.sys.parts ? Object.entries(fin.sys.parts).map(([q, v]) => `${{ phi: 'угол', backF: 'доля', bw: 'полоса', off: 'шкала λ' }[q] || q}: Δd ${fmt(v.d, 2)} нм${flags.grad ? `, Δδ ${fmt(100 * v.delta, 3)} %` : ''}${flags.rough ? `, Δслой ${fmt(v.dRough, 3)} нм` : ''}${flags.abs ? `, Δk₄₀₀ ${fmtK(v.k400)}` : ''}`).join('; ') : '';
     $('finOut').className = ''; $('finOut').innerHTML = T(`<table><thead><tr><th>параметр</th><th class="num">окончательный фит</th><th>примечание</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="note">${r[2]}</td></tr>`).join('')}</tbody></table>
-      <p class="note">${veto.length ? '<b>Вето:</b> ' + veto.join('; ') + '. ' : ''}RMS остатка после фита: Ψ ${fmt(rms(rp), 2)} σ, Δ ${fmt(rms(rd), 2)} σ; ${fin.chi2 < 2.5 ? 'остаток на уровне шума — модель закрыта.' : 'остаток выше шума: остаются неучтённые факторы (ошибка угла, отклонение полосы от паспортной, дисперсия вне справочной формы) — параметры дефектов при этом обычно уже верны, но их погрешности заниженны.'}</p>
-      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Вето убирает дефект, не превышающий √((3σ)² + сист.²): дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). Подслоёв в фите ${fin.M || 40}, стартов ${fin.starts || 1}, время фита ${fmt(ms, 0)} мс.</p>`);
+      <p class="note">${veto.length ? '<b>Вето:</b> ' + veto.join('; ') + '. ' : ''}RMS остатка после фита: Ψ ${fitMetric(rms(rp), 3)} σ, Δ ${fitMetric(rms(rd), 3)} σ; χ²/ν = Σr²/(2N − p) = ${fitMetric(fin.chi2, 3)}, где N = ${n}, p = ${fin.free.length}, ν = ${fin.dof}. Около 1 — остаток сопоставим с заданным шумом; существенно выше 1 — нужно проверить модель, условия и оценку σ.</p>
+      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Вето убирает дефект ниже max(√((3σ)² + сист.²), численный минимум). Минимумы: шероховатость 0,03 нм, |δ| 0,03 %, A_k 0,0003 эВ: дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). ${flags.grad ? `Градиент: ${fin.profileLayers} подслоёв` : 'Однородный профиль плёнки'}. У итоговой модели ${fin.starts} стартов, ${fin.runs} запусков оптимизации и ${fin.iterations} итераций. Всего вызовов невязки при оптимизации с повторами после вето: ${fitEvaluations}; время фита с оценкой погрешностей и повторами: ${fmt(ms, 0)} мс.</p>`);
     if (S.example) {
       const Tt = S.example.truth, tk = Tt.k400 || 0; const cT = E.classIndex(Math.sign(Tt.delta), Tt.dRough > 0 ? 1 : 0, tk > 0 ? 1 : 0);
       const bestCls = E.classIndex(flags.grad ? Math.sign(fin.P.delta) : 0, flags.rough ? 1 : 0, flags.abs ? 1 : 0);

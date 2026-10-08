@@ -476,8 +476,25 @@ footer details p { max-width:120ch; margin:10px 0; }
 .fit-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0 8px; }
 .fit-metrics span { display:block; font-size:14px; color:var(--muted); }
 .fit-metrics b { display:block; margin-top:7px; font-size:24px; font-variant-numeric:tabular-nums; font-weight:550; white-space:nowrap; }
-.fit-viz { height:clamp(90px,22dvh,160px); margin-top:10px; }
+.fit-viz { height:clamp(90px,18dvh,130px); margin:0; }
 #fitTrace { stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; }
+#fitTrace,.viz-axis { vector-effect:non-scaling-stroke; }
+#fitCurrent { fill:var(--accent); stroke:var(--accent); stroke-width:3; vector-effect:non-scaling-stroke; }
+.fit-chart { margin-top:8px; font-size:12px; line-height:1.35; font-variant-numeric:tabular-nums; color:var(--muted); }
+.fit-chart p { margin:0 0 7px; font-size:13px; }
+.fit-plot { display:grid; grid-template-columns:62px minmax(0,1fr); gap:6px; padding-right:4px; }
+.fit-y-axis { display:flex; flex-direction:column; justify-content:space-between; text-align:right; }
+.fit-x-axis { display:flex; justify-content:space-between; gap:6px; margin:5px 4px 0 68px; }
+.fig-explanation { margin:4px 18px 14px; }
+.training-phases { display:grid; gap:12px; margin-top:8px; }
+.training-phase>div { display:grid; gap:3px; font-size:14px; line-height:1.4; }
+.training-phase b { font-weight:550; }
+.training-phase span { color:var(--muted); font-variant-numeric:tabular-nums; }
+.training-phase.is-active b { color:var(--accent); }
+.training-phase.is-complete span { color:var(--ok); }
+.training-phase progress { height:5px; margin-top:5px; }
+.training-note { margin:12px 0 0; font-size:13px; line-height:1.4; color:var(--muted); }
+@container (max-width:380px) { .training-phase b { min-height:2.8em; } }
 #finOut,#truthOut,#causeOut details { overflow:visible; min-width:0; }
 #s4 .analysis-table { table-layout:fixed; width:100%; font-size:15px; line-height:1.5; }
 #s4 .analysis-table th,#s4 .analysis-table td,#finOut td:first-child,#truthOut td:first-child { white-space:normal; overflow-wrap:anywhere; min-width:0; }
@@ -530,6 +547,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   .analysis-tab-full { display:block; }
   .analysis-tabs button .analysis-tab-full { overflow-wrap:normal; }
 }
+@container analysis-workspace (max-width:360px) { .analysis-tabs button { font-size:13px; } }
 
 /* Compact live panels keep the full animation within the visible viewport. */
 #stageLive2,#stageLive3,#stageLive4 { padding:14px; margin:12px 0; }
@@ -541,7 +559,7 @@ footer details p { max-width:120ch; margin:10px 0; }
 #otherProbs { min-height:20px; }
 .analysis-running #runbar .status,.analysis-running #runbar .tb-progress { visibility:hidden; }
 #s2:has(.stage-live.is-running) #trainOut,#s3:has(.stage-live.is-running) #diagOut.empty,#s4:has(.stage-live.is-running) #finOut.empty { display:none; }
-@container (max-width:460px) { .fit-metrics b { font-size:18px; } }
+@container (max-width:460px) { .fit-metrics b { font-size:18px; } .fit-metrics span { min-height:2.8em; } }
 @media (max-width:720px) {
   .appbar { flex-wrap:nowrap; gap:12px; padding:0 12px; }
   .appbar .brand { gap:5px; }
@@ -555,13 +573,15 @@ footer details p { max-width:120ch; margin:10px 0; }
   .analysis-nav-actions { flex:none; }
   #analysisPosition { display:none; }
   .analysis-tabs button { min-height:36px; }
-  #stageLive3,#stageLive4 { padding:8px 12px; }
+  #stageLive2,#stageLive3,#stageLive4 { padding:8px 12px; }
   .live-prob-list { --prob-row-height:46px; }
   .stage-live .prob-title { margin:6px 0 2px; }
   .stage-live-heading { min-height:28px; }
   .fit-metrics { margin:8px 0 4px; }
   .fit-metrics b { margin-top:3px; font-size:20px; }
-  .fit-viz { height:90px; margin-top:4px; }
+  .fit-viz { height:76px; }
+  .training-phases { gap:8px; }
+  .training-note { margin-top:8px; }
 }
 @media (max-height:540px) and (min-width:680px) {
   #page-analysis .wrap { display:block; }
@@ -574,7 +594,7 @@ footer details p { max-width:120ch; margin:10px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.2</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.3</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -766,9 +786,14 @@ footer details p { max-width:120ch; margin:10px 0; }
     <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <div class="stage-live" id="stageLive2" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
-      <progress id="stageBar2" max="100" value="0" aria-label="Ход шага 2"></progress>
+      <div class="training-phases">
+        <div class="training-phase"><div><b>1. Моделирование и фит спектров</b><span id="trainSpectraCount">Ожидает</span></div><progress id="trainSpectraBar" max="1" value="0" aria-label="Моделирование и фит спектров"></progress></div>
+        <div class="training-phase"><div><b>2. Обработка остатков по якорям</b><span id="trainAnchorsCount">Ожидает</span></div><progress id="trainAnchorsBar" max="1" value="0" aria-label="Обработка остатков по якорям"></progress></div>
+        <div class="training-phase"><div><b>3. Обучение ИИ</b><span id="trainModelCount">Ожидает</span></div><progress id="trainModelBar" max="1" value="0" aria-label="Обучение ИИ"></progress></div>
+      </div>
+      <p class="training-note">Якоря HW/QW берутся из тех же спектров; используются остатки уже выполненного фита.</p>
     </div>
-    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
+    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. Подготовка разделена на два прохода: сначала моделирование и опорный фит всех спектров, затем поиск HW/QW-якорей и расчёт восьми признаков из остатка. Отдельного фита только по якорям нет. При недостатке якорей восемь дополнительных признаков равны нулю. Третья строка показывает 250 эпох обучения для контрольной выборки, 250 эпох итогового классификатора и три регрессии размеров дефектов; процент отражает выполненные операции, а не оставшееся время. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
@@ -794,20 +819,24 @@ footer details p { max-width:120ch; margin:10px 0; }
     <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <div class="stage-live" id="stageLive4" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
-      <div class="fit-metrics"><div><span>χ²/ν</span><b id="fitChi">—</b></div><div><span>d, нм</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
-      <svg class="fit-viz" viewBox="0 0 600 180" role="img" aria-label="Динамика невязки по итерациям окончательного фита"><path class="viz-axis" d="M20 20V160H580"/><polyline id="fitTrace" fill="none"/></svg>
-      <p id="fitScale" class="note">Ожидаем первые итерации…</p><p id="fitPhase" class="note">Перебор стартов, точный фит и оценка погрешностей.</p>
+      <div class="fit-metrics"><div><span>Невязка χ²/ν</span><b id="fitChi">—</b></div><div><span>Толщина, нм</span><b id="fitD">—</b></div><div><span>Расчёты</span><b id="fitEvaluations">—</b></div></div>
+      <div class="fit-chart" role="img" aria-labelledby="fitPlotTitle" aria-describedby="fitScale fitPhase">
+        <p id="fitPlotTitle">Невязка χ²/ν · логарифмическая шкала</p>
+        <div class="fit-plot"><div class="fit-y-axis"><span id="fitYMax">—</span><span id="fitYMin">—</span></div><svg class="fit-viz" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true"><path class="viz-axis" d="M0 0V120H600"/><path id="fitTrace" fill="none"/><circle id="fitCurrent" r="3" visibility="hidden"/></svg></div>
+        <div class="fit-x-axis"><span>0</span><span>Расчёты невязки →</span><span id="fitXMax">—</span></div>
+      </div>
+      <p id="fitScale" class="note">Ниже — лучше. Разрыв линии — новый старт, сетка или модель. Точка — текущее решение.</p><p id="fitPhase" class="note">Ожидаем первые расчёты…</p>
     </div>
-    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p></details>
+    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %, 160 при |δ| &gt; 12 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта ниже порога значимости с учётом систематики и численного минимума отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p><p class="note">На графике показано χ²/ν = Σr²/(2N − p), где r — остатки Ψ и Δ, делённые на их σ, N — число длин волн, p — число свободных параметров. Около 1 — остаток сопоставим с заданным шумом. Вертикальная шкала логарифмическая, поэтому равный сдвиг означает одинаковое отношение невязок. По горизонтали — суммарное число вызовов функции невязки при оптимизации, включая якобианы и повторы после вето; это не число итераций и не процент готовности. Систематические погрешности и проверка по скрытой истине считаются отдельно. Линии соединяют показанные состояния внутри одного запуска; быстрые промежуточные состояния прорежены. Итоговая точка соответствует результату в таблице. Нулевая невязка показана у нижней границы шкалы.</p></details>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
-        <div class="chart"><canvas id="chResFin"></canvas></div><div class="fig-table hidden"></div></figure>
-      <figure class="fig empty" data-fig="se-ai_fingerprint_before_after"><figcaption><span class="fig-title">Отпечаток: до и после</span><span class="fig-tools"></span></figcaption>
-        <div class="chart"><canvas id="chFinger"></canvas></div><div class="fig-table hidden"></div></figure>
+        <div class="chart"><canvas id="chResFin"></canvas></div><p class="note fig-explanation">По горизонтали — длина волны. Линии показывают (измерено − модель)/σ для Ψ и Δ. Ноль означает совпадение с моделью; ±1 — отклонение на одну заданную σ.</p><div class="fig-table hidden"></div></figure>
+      <figure class="fig empty" data-fig="se-ai_fingerprint_before_after"><figcaption><span class="fig-title">Остатки Ψ и Δ: опорный и окончательный фит</span><span class="fig-tools"></span></figcaption>
+        <div class="chart"><canvas id="chFinger"></canvas></div><p class="note fig-explanation">Каждая точка — одна длина волны: по X остаток Ψ/σ, по Y остаток Δ/σ. Серые точки — опорный фит, зелёные — окончательный. Ближе к (0, 0) — меньше остаток.</p><div class="fig-table hidden"></div></figure>
     </div>
     <figure class="fig empty" data-fig="se-ai_film_n_k"><figcaption><span class="fig-title" id="chNTitle">Показатель преломления плёнки</span><span class="fig-tools"></span></figcaption>
-      <div class="chart short"><canvas id="chN"></canvas></div><div class="fig-table hidden"></div></figure>
+      <div class="chart short"><canvas id="chN"></canvas></div><p class="note fig-explanation">Дисперсия базового материала плёнки: n по левой оси, k (если показан) по правой. При градиенте это значение n в середине плёнки. «Истина» доступна только для учебного образца.</p><div class="fig-table hidden"></div></figure>
     <div id="truthOut"></div>
     <div id="causeOut"></div>
   </section>
@@ -1641,8 +1670,14 @@ footer details p { max-width:120ch; margin:10px 0; }
     const deltaStarts = flags.grad ? (Math.abs(d0) <= 0.01 ? (Math.abs(d0) > 1e-4 ? [d0, -d0] : [0.004, -0.004]) : [d0]) : [0];
     // разведка бассейнов на грубой модели (10 подслоёв), затем лучший старт дотягивается на 40 подслоях
     const fn10 = makeResidJacFn(data, cfg, free, fixed, flags.grad ? 10 : 40), fn40 = makeResidJacFn(data, cfg, free, fixed, 40);
-    let best = null, nfev = 0, nStarts = 0;
-    const report = (phase, M, start) => onProgress && (e => onProgress({ ...e, phase, M, start, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) }));
+    let best = null, nfev = 0, nStarts = 0, runs = 0, iterations = 0;
+    const dof = Math.max(1, 2 * data.lam.length - free.length);
+    const optimize = (fn, x0, maxIter, phase, M, start) => {
+      const run = ++runs, offset = nfev;
+      const r = lmFitJac(fn, x0, lo, hi, maxIter, onProgress && (e => onProgress({ ...e, nfev: offset + e.nfev, phase, M, start, run, dof, profileLayers: flags.grad ? M : 1, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) })));
+      nfev += r.nfev; iterations += r.nit;
+      return r;
+    };
     let base = Object.assign({}, p0, { dRough: Math.max(0.1, p0.dRough || 0.1), Ak: 0 });
     if (flags.abs) {
       // Поглощение: опорный фит без хвоста искажает дисперсию (A, E_g растут, компенсируя затухание полос), и старт из него
@@ -1654,7 +1689,7 @@ footer details p { max-width:120ch; margin:10px 0; }
       let bestA = null;
       for (const dp of disp) for (const k of ks) {
         const x0 = clampP(Object.assign({}, base, dp, { delta: deltaStarts[0], Ak: tailAk(cfg.mat, k) }));
-        const r = lmFitJac(fn10, x0, lo, hi, 20, report('absorption', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++;
+        const r = optimize(fn10, x0, 20, 'absorption', flags.grad ? 10 : 40, nStarts + 1); nStarts++;
         if (!bestA || r.chi2 < bestA.chi2) bestA = r;
       }
       const PA = {}; free.forEach((k, i) => PA[k] = bestA.x[i]);
@@ -1663,19 +1698,20 @@ footer details p { max-width:120ch; margin:10px 0; }
     }
     const cands = [];
     for (const dS of dStarts) for (const dl of deltaStarts) cands.push(clampP(Object.assign({}, base, { d: dS, delta: dl })));
-    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25, report('starts', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
-    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80, report('refine', 40, Math.max(1, nStarts))); nfev += res.nfev; nStarts = Math.max(1, nStarts);
+    if (cands.length > 1) cands.forEach((x0) => { const r = optimize(fn10, x0, 25, 'starts', flags.grad ? 10 : 40, nStarts + 1); nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
+    let res = optimize(fn40, best ? best.x : cands[0], 80, 'refine', 40, Math.max(1, nStarts)); nStarts = Math.max(1, nStarts);
     const iD = free.indexOf('delta'); let Mfin = 40;
-    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40, report('layers', Mfin, nStarts)); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
+    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); res = optimize(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, 40, 'layers', Mfin, nStarts); }   // 80 или 160 подслоёв
     const P = { dRough: 0, delta: 0, Ak: 0 }; free.forEach((k, i) => P[k] = res.x[i]);
     const E = {}; free.forEach((k, i) => E[k] = res.err[i]);
     const mFit = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg });                  // k₄₀₀ — по найденной дисперсии
     const dk400 = (Ak) => { const h = Math.max(1e-6, 1e-3 * Ak); return (tailK400(mFit, Ak + h) - tailK400(mFit, Ak)) / h; };
     if (flags.abs) { P.k400 = tailK400(mFit, P.Ak); E.k400 = E.Ak * dk400(P.Ak); } else { P.k400 = 0; }
     let sys = null;
-    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit });
+    const profileLayers = flags.grad ? Mfin : 1;
+    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit, run: runs, dof, profileLayers });
     if (nuis) { sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis); if (sys && flags.abs) { const dk = dk400(P.Ak); sys.total.k400 = sys.total.Ak * dk; for (const q of Object.keys(sys.parts)) sys.parts[q].k400 = sys.parts[q].Ak * dk; } }
-    return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin };
+    return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin, runs, iterations, dof, profileLayers };
   }
 
   // ---------------------------------------------------------------- аналитический якобиан (Фурман–Тихонравов, разд. 1.4.1: формулы 1.4.9–1.4.16) и ЛМ с масштабированием
@@ -1937,14 +1973,18 @@ footer details p { max-width:120ch; margin:10px 0; }
    *  диагональное масштабирование Марквардта с нижним порогом; пробные шаги — без якобиана. Ковариация — по J_x в решении. */
   function lmFitJac(residJac, x0, lo, hi, maxIter, onProgress) {
     maxIter = maxIter || 60;
+    // Count every residual/Jacobian request, including accepted-step refreshes
+    // and the final covariance evaluation. This does not alter the optimizer.
+    let nfev = 0;
+    const evaluate = (x, jac) => { nfev++; return residJac(x, jac); };
     const p = x0.length, W = lo.map((v, k) => hi[k] - v);
     const toX = (th) => th.map((v, k) => lo[k] + W[k] * (1 + Math.sin(v)) / 2);
     const toTh = (x) => x.map((v, k) => Math.asin(Math.max(-0.999999, Math.min(0.999999, 2 * (v - lo[k]) / W[k] - 1))));
-    let th = toTh(x0), x = toX(th), ev = residJac(x, true), r = ev.r, Jx = ev.J;
+    let th = toTh(x0), x = toX(th), ev = evaluate(x, true), r = ev.r, Jx = ev.J;
     const m = r.length;
     let F = 0; for (let i = 0; i < m; i++) F += r[i] * r[i]; F *= 0.5;
-    let lam = -1, nu = 2, nfev = 1, nit = 0;
-    const report = () => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice() }); };
+    let lam = -1, nu = 2, nit = 0;
+    const report = (completed = false) => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice(), completed }); };
     report();
     const JTJ = Array.from({ length: p }, () => new Array(p).fill(0)), g = new Array(p).fill(0), D = new Array(p).fill(0);
     for (let it = 0; it < maxIter; it++) {
@@ -1967,14 +2007,14 @@ footer details p { max-width:120ch; margin:10px 0; }
         let vnorm = 0; for (let k = 0; k < p; k++) vnorm += dth[k] * dth[k]; vnorm = Math.sqrt(vnorm);
         if (vnorm > 1e-12) {
           const hh = Math.min(0.1, 0.1 / vnorm);
-          const rP = residJac(toX(th.map((v, k) => v + hh * dth[k])), false).r, rM = residJac(toX(th.map((v, k) => v - hh * dth[k])), false).r; nfev += 2;
+          const rP = evaluate(toX(th.map((v, k) => v + hh * dth[k])), false).r, rM = evaluate(toX(th.map((v, k) => v - hh * dth[k])), false).r;
           const rhs = new Array(p).fill(0);
           for (let a = 0; a < p; a++) { let sacc = 0; const Ja = Jx[a]; for (let i = 0; i < m; i++) sacc += Ja[i] * (rP[i] - 2 * r[i] + rM[i]); rhs[a] = -sacc * sc[a] / (hh * hh); }
           const acc = solveLinear(Aug, rhs);
           if (acc) { let anorm = 0; for (let k = 0; k < p; k++) anorm += acc[k] * acc[k]; anorm = Math.sqrt(anorm); if (anorm < 0.75 * vnorm) for (let k = 0; k < p; k++) dth[k] += 0.5 * acc[k]; }
         }
         let maxStep = 0; for (let k = 0; k < p; k++) { dth[k] = Math.max(-1.0, Math.min(1.0, dth[k])); maxStep = Math.max(maxStep, Math.abs(dth[k])); }
-        const thn = th.map((v, k) => v + dth[k]), xn = toX(thn), evn = residJac(xn, false); nfev++;
+        const thn = th.map((v, k) => v + dth[k]), xn = toX(thn), evn = evaluate(xn, false);
         let Fn = 0; for (let i = 0; i < m; i++) Fn += evn.r[i] * evn.r[i]; Fn *= 0.5;
         let pred = 0; for (let k = 0; k < p; k++) pred += dth[k] * (lam * D[k] * dth[k] - g[k]); pred *= 0.5;
         const rho = pred > 0 ? (F - Fn) / pred : (Fn < F ? 1 : -1);
@@ -1982,7 +2022,7 @@ footer details p { max-width:120ch; margin:10px 0; }
           const rel = (F - Fn) / Math.max(F, 1e-300);
           th = thn; x = xn; r = evn.r; F = Fn; accepted = true;
           lam *= Math.max(1 / 3, 1 - Math.pow(2 * rho - 1, 3)); nu = 2;
-          if (rel < 1e-8 || maxStep < 1e-7) { it = maxIter; } else { Jx = residJac(x, true).J; }
+          if (rel < 1e-8 || maxStep < 1e-7) { it = maxIter; } else { Jx = evaluate(x, true).J; }
           break;
         }
         lam *= nu; nu *= 2;
@@ -1990,11 +2030,12 @@ footer details p { max-width:120ch; margin:10px 0; }
       report();
       if (!accepted) break;
     }
-    Jx = residJac(x, true).J;                                                  // якобиан в решении — для ковариации
+    Jx = evaluate(x, true).J;                                                  // якобиан в решении — для ковариации
     const nuDof = Math.max(1, m - p), chi2 = 2 * F / nuDof;
     const JTJx = Array.from({ length: p }, () => new Array(p).fill(0));
     for (let a = 0; a < p; a++) for (let b = a; b < p; b++) { let s = 0; for (let i = 0; i < m; i++) s += Jx[a][i] * Jx[b][i]; JTJx[a][b] = s; JTJx[b][a] = s; }
     const inv = invert(JTJx); const cov = inv ? inv.map(row => row.map(v => v * chi2)) : null;
+    report(true);
     return { x, resid: r, chi2, cov, nfev, nit, err: cov ? cov.map((row, k) => Math.sqrt(Math.max(0, row[k]))) : x.map(() => NaN) };
   }
 
@@ -2106,7 +2147,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   /** Один обучающий пример: истина со случайными дефектами и мешающими факторами → опорный фит → остаток.
    *  nuis = {deltaMax, roughMax, kMax, bw, phiErr, backFerr}; kMax — верхняя граница k хвоста поглощения при 400 нм;
    *  backFerr — неопределённость заданной доли задней стороны (cfg.back), в этих пределах доля истины разыгрывается случайно. */
-  function trainingExample(data, cfg, prior, nuis, rng, cls) {
+  function trainingSpectrum(data, cfg, prior, nuis, rng, cls) {
     const c = CLASSES[cls];
     const delta = c.g * twoScale(rng, 0.0002, 0.02, nuis.deltaMax), dRough = c.r ? rng.range(0.02, nuis.roughMax) : 0;
     const k400 = c.a ? twoScale(rng, 2e-5, 1e-3, nuis.kMax || 5e-3) : 0;
@@ -2119,10 +2160,14 @@ footer details p { max-width:120ch; margin:10px 0; }
     const s = synthesize(data.lam, cfg.subKey, cfg.phi + rng.range(-nuis.phiErr, nuis.phiErr), d, m, delta, dRough, opt, rng);
     const dd = { lam: data.lam, psi: s.psi, del: s.del, sigPsi: data.sigPsi, sigDel: data.sigDel };
     const fit = referenceFit(dd, cfg, prior);
-    return { x: featureVector(dd, cfg, fit.resid), y: cls, delta, dRough, k400, d, dFit: fit.P.d, chi2: fit.chi2 };
+    return { dd, resid: fit.resid, y: cls, delta, dRough, k400, d, dFit: fit.P.d, chi2: fit.chi2 };
+  }
+  function trainingExample(data, cfg, prior, nuis, rng, cls) {
+    const { dd, resid, ...sample } = trainingSpectrum(data, cfg, prior, nuis, rng, cls);
+    return { x: featureVector(dd, cfg, resid), ...sample };
   }
 
-  const api = { HC, TAIL_ET, K400_MAX, N_CHANNELS, BAND_H, MATERIALS, SUBSTRATES, CLASSES, classIndex, chooseFlags, filmN, filmNK, tailK400, tailAk, substrateN, cubicTab, buildLayers, rhoStack, psiDeltaFromR, psiDeltaFromNCS, ncsFromR, muellerFromR, ncsFromMueller, stackCoefs, ncsBackside, backOn, bandOn, band2, lam3Of, modelMueller, modelPsiDelta, rhoGraded, synthesizeClean, applyNoise, synthesize, makeRng, lmFit, lmFitJac, makeResidJacFn, rhoStackJac, buildLayersJac, filmNJac, psiDeltaJac, muellerJac, psiDeltaJacMueller, referenceFit, finalFit, subLayersFor, sysErrors, vetoThreshold, anchors, channels, featureVector, trainSoftmax, ridge, trainingExample, wrap, interp, tlEps };
+  const api = { HC, TAIL_ET, K400_MAX, N_CHANNELS, BAND_H, MATERIALS, SUBSTRATES, CLASSES, classIndex, chooseFlags, filmN, filmNK, tailK400, tailAk, substrateN, cubicTab, buildLayers, rhoStack, psiDeltaFromR, psiDeltaFromNCS, ncsFromR, muellerFromR, ncsFromMueller, stackCoefs, ncsBackside, backOn, bandOn, band2, lam3Of, modelMueller, modelPsiDelta, rhoGraded, synthesizeClean, applyNoise, synthesize, makeRng, lmFit, lmFitJac, makeResidJacFn, rhoStackJac, buildLayersJac, filmNJac, psiDeltaJac, muellerJac, psiDeltaJacMueller, referenceFit, finalFit, subLayersFor, sysErrors, vetoThreshold, anchors, channels, featureVector, trainSoftmax, ridge, trainingSpectrum, trainingExample, wrap, interp, tlEps };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.EllipCore = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -2142,11 +2187,20 @@ footer details p { max-width:120ch; margin:10px 0; }
 
   function train(a, emit) {
     const { data, cfg, prior, nuis, N, seed } = a, K = E.CLASSES.length, rng = E.makeRng(seed);
-    const X = [], y = [], sz = [], t0 = Date.now();
+    const X = [], y = [], sz = [], pending = [], t0 = Date.now();
+    emit({ phase: 'spectra', done: 0, total: N, fraction: 0 });
     for (let i = 0; i < N; i++) {
-      const s = E.trainingExample(data, cfg, prior, nuis, rng, i % K);
-      X.push(s.x); y.push(s.y); sz.push([s.delta, s.dRough, s.k400]);
-      emit({ phase: 'examples', done: i + 1, total: N, fraction: 0.7 * (i + 1) / N });
+      const s = E.trainingSpectrum(data, cfg, prior, nuis, rng, i % K);
+      // Only Δ and residuals are needed for anchor features; release Ψ here.
+      pending.push({ dd: { lam: data.lam, del: s.dd.del }, resid: s.resid });
+      y.push(s.y); sz.push([s.delta, s.dRough, s.k400]);
+      emit({ phase: 'spectra', done: i + 1, total: N, fraction: 0.65 * (i + 1) / N });
+    }
+    emit({ phase: 'anchors', done: 0, total: N, fraction: 0.65 });
+    for (let i = 0; i < N; i++) {
+      X.push(E.featureVector(pending[i].dd, cfg, pending[i].resid));
+      pending[i] = null;
+      emit({ phase: 'anchors', done: i + 1, total: N, fraction: 0.65 + 0.05 * (i + 1) / N });
     }
     const idx = X.map((_, k) => k);
     for (let k = idx.length - 1; k > 0; k--) { const j = rng.int(k + 1); [idx[k], idx[j]] = [idx[j], idx[k]]; }
@@ -2165,6 +2219,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     const rr = E.ridge(X, sz.map(v => v[1]), 30);
     emit({ phase: 'ridge', done: 2, total: 3, fraction: 0.96 });
     const rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
+    emit({ phase: 'ridge', done: 3, total: 3, fraction: 0.99 });
     let e1 = 0, e2 = 0, e3 = 0;
     for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
     emit({ phase: 'trained', fraction: 1 });
@@ -2250,7 +2305,7 @@ footer details p { max-width:120ch; margin:10px 0; }
       const emit = p => {
         const key = p.phase + ':' + (p.start || '') + ':' + (p.row || '');
         const now = Date.now();
-        if (key === phase && now - last < 75 && p.fraction !== 1) return;
+        if (key === phase && now - last < 75 && p.fraction !== 1 && (p.total === undefined || p.done !== p.total) && !p.completed) return;
         last = now; phase = key; root.postMessage({ id, progress: p });
       };
       try { root.postMessage({ id, result: run(type, args, emit) }); }
@@ -2267,7 +2322,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.2';
+  const APP_VERSION = '1.2.3';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -2709,7 +2764,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 
   // ---------------------------------------------------------------- шаг 4
   async function step4() {
-    if (!S.probs) return; clearFrom(4); fitHistory = []; $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…';
+    if (!S.probs) return; clearFrom(4); resetFitProgress();
     let flags = { grad: $('ckGrad').checked, rough: $('ckRough').checked, abs: $('ckAbs').checked };
     const sgn = S.choice && S.choice.sign ? S.choice.sign : 0, dStart = sgn ? sgn * Math.max(0.002, Math.abs(S.est.delta)) : S.est.delta;   // знак старта δ — из класса ИИ
     const p0 = Object.assign({}, S.ref.P, { dRough: Math.max(0.1, S.est.dRough), delta: dStart, Ak: S.est.k400 > 0 ? E.tailAk(S.cfg.mat, S.est.k400) : 0, starts: S.ref.starts, startCosts: S.ref.startCosts });
@@ -2717,13 +2772,15 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     const t = performance.now();
     const fit = pass => analysisTask('final', { data: S.data, cfg: S.cfg, prior: S.prior, flags, p0, nuis: S.nuis }, e => finalProgress(e, pass));
     let result = await fit(0), fin = result.fin, veto = [];
-    // вето: дефект убирается, если |p| < √((3σ_форм)² + сист.²) — он должен превышать и формальную погрешность, и систематику заявленных неопределённостей условий
-    const vetoMsg = (name, k, scale, unit) => `${name} ${fmt(scale * Math.abs(fin.P[k]), 3)}${unit} не превышает порога √((3σ)² + сист.²) = ${fmt(scale * E.vetoThreshold(fin, k), 3)}${unit} — убран`;
+    // Вето: фактический порог = max(статистика с систематикой, численный минимум).
+    const vetoFloor = { dRough: 0.03, delta: 3e-4, Ak: 3e-4 };
+    const vetoLimit = k => Math.max(vetoFloor[k], E.vetoThreshold(fin, k));
+    const vetoMsg = (name, k, scale, unit) => `${name} ${fitMetric(scale * Math.abs(fin.P[k]), 3)}${unit} ниже порога ${fitMetric(scale * vetoLimit(k), 3)}${unit} — убран`;
     for (let pass = 0; pass < 2; pass++) {
       let changed = false;
-      if (flags.rough && fin.P.dRough < Math.max(0.03, E.vetoThreshold(fin, 'dRough'))) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
-      if (flags.grad && Math.abs(fin.P.delta) < Math.max(3e-4, E.vetoThreshold(fin, 'delta'))) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
-      if (flags.abs && fin.P.Ak < Math.max(3e-4, E.vetoThreshold(fin, 'Ak'))) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
+      if (flags.rough && fin.P.dRough < vetoLimit('dRough')) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
+      if (flags.grad && Math.abs(fin.P.delta) < vetoLimit('delta')) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
+      if (flags.abs && fin.P.Ak < vetoLimit('Ak')) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
       if (!changed) break; result = await fit(pass + 1); fin = result.fin;
     }
     const ms = performance.now() - t; S.fin = fin; S.finFlags = flags;
@@ -2735,7 +2792,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     const curves = [{ label: 'опорный фит', n: nkRef.n, k: nkRef.k }, { label: 'окончательный фит', n: nkFin.n, k: nkFin.k }];
     const modelName = (flags.grad || flags.rough || flags.abs) ? ['однородная плёнка', flags.grad ? 'градиент' : null, flags.rough ? 'EMA-слой' : null, flags.abs ? 'хвост поглощения' : null].filter(Boolean).join(' + ') : 'однородная плёнка (дефектов нет)';
     const nAt = (m, l) => E.filmNK([l], m).n[0], kAt = (m, l) => E.filmNK([l], m).k[0];
-    const rows = [['Модель', modelName + (S.cfg.band ? ` (полоса ${fmt(S.cfg.band.bw, 1)} нм в модели)` : ''), ''], ['χ²/ν', `${fmt(fin.chi2, 2)} (опорный: ${fmt(S.ref.chi2, 1)})`, ''], ['Толщина d, нм', pm('d', fin.P.d, fin.E.d, 2, 1), `опорный: ${fmt(S.ref.P.d, 2)}`]];
+    const rows = [['Модель', modelName + (S.cfg.band ? ` (полоса ${fmt(S.cfg.band.bw, 1)} нм в модели)` : ''), ''], ['χ²/ν', `${fitMetric(fin.chi2, 3)} (опорный: ${fitMetric(S.ref.chi2, 3)})`, ''], ['Толщина d, нм', pm('d', fin.P.d, fin.E.d, 2, 1), `опорный: ${fmt(S.ref.P.d, 2)}`]];
     if (flags.grad) rows.push(['Градиент δ, %', pm('delta', fin.P.delta, fin.E.delta, 3, 100), fin.P.delta > 0 ? 'n растёт к поверхности' : 'n падает к поверхности']);
     if (flags.rough) rows.push(['EMA-слой шероховатости, нм', pm('dRough', fin.P.dRough, fin.E.dRough, 3, 1), 'Бруггеман 50/50; σ_rms ≈ 0.5–0.7 толщины']);
     if (flags.abs) rows.push(['Поглощение: k хвоста при 400 нм', `${fmtK(fin.P.k400)} ± ${fmtK(fin.E.k400)}${fin.sys ? ` <span class="note">(сист. ± ${fmtK(sysOf('k400'))})</span>` : ''}`, `сила хвоста A_k = ${fmt(fin.P.Ak, 4)} эВ, порог E_t = ${E.TAIL_ET} эВ; k₄₀₀ — по найденной дисперсии; k плёнки при 550 нм ${fmt(kAt(mFin, 550), 5)}`]);
@@ -2744,8 +2801,8 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     const n = S.data.lam.length, rp = Array.from(fin.resid.slice(0, n)), rd = Array.from(fin.resid.slice(n)); const rms = a => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
     const sysParts = fin.sys && fin.sys.parts ? Object.entries(fin.sys.parts).map(([q, v]) => `${{ phi: 'угол', backF: 'доля', bw: 'полоса', off: 'шкала λ' }[q] || q}: Δd ${fmt(v.d, 2)} нм${flags.grad ? `, Δδ ${fmt(100 * v.delta, 3)} %` : ''}${flags.rough ? `, Δслой ${fmt(v.dRough, 3)} нм` : ''}${flags.abs ? `, Δk₄₀₀ ${fmtK(v.k400)}` : ''}`).join('; ') : '';
     $('finOut').className = ''; $('finOut').innerHTML = T(`<table><thead><tr><th>параметр</th><th class="num">окончательный фит</th><th>примечание</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="note">${r[2]}</td></tr>`).join('')}</tbody></table>
-      <p class="note">${veto.length ? '<b>Вето:</b> ' + veto.join('; ') + '. ' : ''}RMS остатка после фита: Ψ ${fmt(rms(rp), 2)} σ, Δ ${fmt(rms(rd), 2)} σ; ${fin.chi2 < 2.5 ? 'остаток на уровне шума — модель закрыта.' : 'остаток выше шума: остаются неучтённые факторы (ошибка угла, отклонение полосы от паспортной, дисперсия вне справочной формы) — параметры дефектов при этом обычно уже верны, но их погрешности заниженны.'}</p>
-      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Вето убирает дефект, не превышающий √((3σ)² + сист.²): дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). Подслоёв в фите ${fin.M || 40}, стартов ${fin.starts || 1}, время фита ${fmt(ms, 0)} мс.</p>`);
+      <p class="note">${veto.length ? '<b>Вето:</b> ' + veto.join('; ') + '. ' : ''}RMS остатка после фита: Ψ ${fitMetric(rms(rp), 3)} σ, Δ ${fitMetric(rms(rd), 3)} σ; χ²/ν = Σr²/(2N − p) = ${fitMetric(fin.chi2, 3)}, где N = ${n}, p = ${fin.free.length}, ν = ${fin.dof}. Около 1 — остаток сопоставим с заданным шумом; существенно выше 1 — нужно проверить модель, условия и оценку σ.</p>
+      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Вето убирает дефект ниже max(√((3σ)² + сист.²), численный минимум). Минимумы: шероховатость 0,03 нм, |δ| 0,03 %, A_k 0,0003 эВ: дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). ${flags.grad ? `Градиент: ${fin.profileLayers} подслоёв` : 'Однородный профиль плёнки'}. У итоговой модели ${fin.starts} стартов, ${fin.runs} запусков оптимизации и ${fin.iterations} итераций. Всего вызовов невязки при оптимизации с повторами после вето: ${fitEvaluations}; время фита с оценкой погрешностей и повторами: ${fmt(ms, 0)} мс.</p>`);
     if (S.example) {
       const Tt = S.example.truth, tk = Tt.k400 || 0; const cT = E.classIndex(Math.sign(Tt.delta), Tt.dRough > 0 ? 1 : 0, tk > 0 ? 1 : 0);
       const bestCls = E.classIndex(flags.grad ? Math.sign(fin.P.delta) : 0, flags.rough ? 1 : 0, flags.abs ? 1 : 0);
@@ -3567,6 +3624,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   // Completed stages stay in a continuous feed; computation runs in a reusable Worker.
 let analysisWorker = null, analysisRequest = 0, analysisPending = null, analysisAbort = null;
 let analysisStage = 0, fitHistory = [], analysisStarted = 0, analysisTimer = null;
+let fitPass = 0, fitOffset = 0, fitEvaluations = 0, fitRange = { min: Infinity, max: 0 };
 const stageNames = ['Спектр', 'Опорный фит', 'Обучение ИИ', 'Диагноз', 'Окончательный фит'];
 const abortError = () => new DOMException('Расчёт остановлен.', 'AbortError');
 const yieldPaint = () => new Promise(resolve => setTimeout(resolve, 24));
@@ -3727,8 +3785,9 @@ function progressCard(stage) {
   const el = $('stageLive' + stage); el.hidden = false; el.classList.add('is-running');
   $('stageStatus' + stage).textContent = 'Подготовка…';
   $('elapsed' + stage).textContent = '0 с';
+  if (stage === 2) resetTrainingProgress();
   if (stage === 3) { prepareInference(); $('otherProbs').textContent = ''; }
-  if (stage === 4) { $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…'; $('fitPhase').textContent = 'Перебор стартов, точный фит и оценка погрешностей.'; }
+  if (stage === 4) resetFitProgress();
 }
 function progressValue(fraction) {
   if (!Number.isFinite(fraction)) return;
@@ -3741,10 +3800,29 @@ function referenceProgress(e) {
   if (e.phase === 'scan') { stageStatus('Перебор толщины · d = ' + fmt(e.d, 1) + ' нм'); progressValue(e.fraction * 0.45); }
   else { stageStatus(`Опорный фит · старт ${e.start}/${e.totalStarts} · итерация ${e.iteration} · χ²/ν = ${fmt(e.chi2, 2)}`); progressValue(0.45 + 0.5 * (e.start - 1) / e.totalStarts); }
 }
+function trainingRow(name, done, total, text) {
+  const bar = $('train' + name + 'Bar'), row = bar.closest('.training-phase');
+  bar.max = total; bar.value = done; bar.setAttribute('aria-valuetext', text);
+  $('train' + name + 'Count').textContent = text;
+  row.classList.toggle('is-complete', done === total);
+  row.classList.toggle('is-active', done < total);
+}
+function resetTrainingProgress() {
+  for (const name of ['Spectra', 'Anchors', 'Model']) {
+    trainingRow(name, 0, 1, 'Ожидает');
+    $('train' + name + 'Bar').closest('.training-phase').classList.remove('is-active');
+  }
+}
 function trainingProgress(e) {
-  const labels = { examples: 'Смоделировано и профитировано', holdout: 'Проверка классификатора · эпоха', classifier: 'Обучение классификатора · эпоха', ridge: 'Оценка размеров дефектов · регрессия' };
-  const text = e.phase === 'trained' ? 'Обучение завершено.' : `${labels[e.phase]} ${e.done} из ${e.total}`;
-  stageStatus(text); progressValue(e.fraction);
+  const labels = { spectra: 'Моделируем и фитируем спектры', anchors: 'Обрабатываем остатки по якорям', holdout: 'Обучаем контрольный классификатор', classifier: 'Обучаем итоговый классификатор', ridge: 'Обучаем оценки размеров дефектов' };
+  if (e.phase === 'spectra' || e.phase === 'anchors') trainingRow(e.phase === 'spectra' ? 'Spectra' : 'Anchors', e.done, e.total, `${e.done} / ${e.total}${e.done === e.total ? ' · готово' : ''}`);
+  else if (e.phase === 'trained') trainingRow('Model', 503, 503, 'Готово · 500 эпох + 3 регрессии');
+  else {
+    const offset = { holdout: 0, classifier: 250, ridge: 500 }[e.phase];
+    trainingRow('Model', offset + e.done, 503, e.phase === 'ridge' ? `Регрессии: ${e.done} / 3` : `${e.phase === 'holdout' ? 'Контроль' : 'Итоговая модель'}: ${e.done} / ${e.total} эпох`);
+  }
+  stageStatus(e.phase === 'trained' ? 'Обучение завершено.' : labels[e.phase]);
+  progressValue(e.fraction);
 }
 
 function renderInferenceFrame(frame, final = false) {
@@ -3782,28 +3860,54 @@ async function animateInference(frames) {
 }
 
 function fitMetric(value, digits) {
+  if (!Number.isFinite(value)) return '—';
   const text = fmt(value, digits);
-  return text.length > 8 ? Number(value).toExponential(2).replace('e+', 'e') : text;
+  return text.length > 8 || (value !== 0 && Math.abs(value) < Math.pow(10, -digits)) ? Number(value).toExponential(2).replace('e+', 'e') : text;
+}
+function resetFitProgress() {
+  fitHistory = []; fitPass = 0; fitOffset = 0; fitEvaluations = 0; fitRange = { min: Infinity, max: 0 };
+  $('fitTrace').setAttribute('d', ''); $('fitCurrent').setAttribute('visibility', 'hidden');
+  ['fitChi', 'fitD', 'fitEvaluations', 'fitYMin', 'fitYMax', 'fitXMax'].forEach(id => $(id).textContent = '—');
+  $('fitPhase').textContent = 'Ожидаем первые расчёты…';
+}
+function drawFitTrace() {
+  const positiveMin = Math.min(...fitHistory.filter(p => p.chi2 > 0).map(p => p.chi2));
+  const floor = Number.isFinite(positiveMin) ? Math.max(Number.MIN_VALUE, positiveMin / 10) : 1e-12;
+  let lo = Math.log10(fitRange.min || floor), hi = Math.log10(fitRange.max || floor);
+  if (hi === lo) { lo -= 0.5; hi += 0.5; }
+  const xy = p => [600 * p.nfev / Math.max(1, fitEvaluations), 120 - 120 * (Math.log10(p.chi2 || floor) - lo) / (hi - lo)];
+  $('fitTrace').setAttribute('d', fitHistory.map((p, i) => `${i && p.key === fitHistory[i - 1].key ? 'L' : 'M'}${xy(p).join(',')}`).join(' '));
+  const [x, y] = xy(fitHistory.at(-1));
+  $('fitCurrent').setAttribute('cx', x); $('fitCurrent').setAttribute('cy', y); $('fitCurrent').setAttribute('visibility', 'visible');
+  $('fitYMin').textContent = (fitRange.min === 0 ? '≤ ' : '') + fitMetric(Math.pow(10, lo), 2);
+  $('fitYMax').textContent = fitMetric(Math.pow(10, hi), 2);
+  $('fitXMax').textContent = String(fitEvaluations);
 }
 function finalProgress(e, pass = 0) {
   const names = { absorption: 'Поиск силы поглощения', starts: 'Проверка стартов', refine: 'Точный фит', layers: 'Уточнение профиля', uncertainty: 'Оценка погрешностей' };
-  const prefix = pass ? `Повтор после вето ${pass} · ` : '';
-  const info = e.phase === 'uncertainty' ? '' : ` · старт ${e.start}`;
+  const prefix = pass ? `Вето ${pass} · ` : '';
+  const info = ['starts', 'absorption'].includes(e.phase) ? ` · старт ${e.start}` : '';
   stageStatus(prefix + (names[e.phase] || 'Окончательный фит') + info);
   if (!Number.isFinite(e.chi2)) return;
   $('fitChi').textContent = fitMetric(e.chi2, 3); $('fitD').textContent = e.P ? fitMetric(e.P.d, 2) : '—';
-  $('fitIteration').textContent = String(e.iteration ?? '—');
-  $('fitPhase').textContent = `${e.M || 40} подслоёв · ${e.nfev || 0} вычислений`;
-  fitHistory.push(e.chi2);
+  if (pass !== fitPass) { fitOffset = fitEvaluations; fitPass = pass; }
+  fitEvaluations = fitOffset + e.nfev;
+  $('fitEvaluations').textContent = String(fitEvaluations);
+  const profile = e.profileLayers === 1 ? 'Однородный профиль' : `Градиент: ${e.profileLayers} подслоёв`;
+  $('fitPhase').textContent = `${profile} · итерация ${e.iteration} текущего запуска`;
+  fitRange.min = Math.min(fitRange.min, e.chi2); fitRange.max = Math.max(fitRange.max, e.chi2);
+  fitHistory.push({ chi2: e.chi2, nfev: fitEvaluations, key: `${pass}:${e.run}` });
   // Bounded rendering cost even for a long multistart fit.
-  if (fitHistory.length > 240) fitHistory = fitHistory.filter((_, i) => i % 2 === 0);
-  const values = fitHistory.map(v => Math.log10(Math.max(v, 1e-12))), lo = Math.min(...values), hi = Math.max(lo + 0.1, ...values);
-  $('fitTrace').setAttribute('points', values.map((v, i) => `${20 + 560 * i / Math.max(1, values.length - 1)},${160 - 140 * (v - lo) / (hi - lo)}`).join(' '));
-  $('fitScale').textContent = `χ²/ν: ${fmt(Math.pow(10, lo), 2)}–${fmt(Math.pow(10, hi), 2)} · log`;
+  if (fitHistory.length > 240) {
+    const minIndex = fitHistory.findIndex(p => p.chi2 === fitRange.min), maxIndex = fitHistory.findIndex(p => p.chi2 === fitRange.max);
+    fitHistory = fitHistory.filter((p, i, a) => i % 2 === 0 || i === a.length - 1 || p.key !== a[i - 1]?.key || p.key !== a[i + 1]?.key || i === minIndex || i === maxIndex);
+  }
+  drawFitTrace();
 }
 function fitComplete(fin) {
-  $('fitChi').textContent = fitMetric(fin.chi2, 3); $('fitD').textContent = fitMetric(fin.P.d, 2);
-  $('fitPhase').textContent = `Фит завершён · ${fin.M} подслоёв · ${fin.starts} стартов`;
+  // Include the exact returned solution even if intermediate events were throttled.
+  finalProgress({ ...fin, phase: 'complete', run: fin.runs, iteration: fin.iterations }, fitPass);
+  $('fitPhase').textContent = `Итог: ${fin.profileLayers === 1 ? 'однородный профиль' : fin.profileLayers + ' подслоёв градиента'} · ν = ${fin.dof}`;
 }
 
 function formatResultTables() {

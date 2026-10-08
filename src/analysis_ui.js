@@ -1,6 +1,7 @@
 // Completed stages stay in a continuous feed; computation runs in a reusable Worker.
 let analysisWorker = null, analysisRequest = 0, analysisPending = null, analysisAbort = null;
 let analysisStage = 0, fitHistory = [], analysisStarted = 0, analysisTimer = null;
+let fitPass = 0, fitOffset = 0, fitEvaluations = 0, fitRange = { min: Infinity, max: 0 };
 const stageNames = ['Спектр', 'Опорный фит', 'Обучение ИИ', 'Диагноз', 'Окончательный фит'];
 const abortError = () => new DOMException('Расчёт остановлен.', 'AbortError');
 const yieldPaint = () => new Promise(resolve => setTimeout(resolve, 24));
@@ -161,8 +162,9 @@ function progressCard(stage) {
   const el = $('stageLive' + stage); el.hidden = false; el.classList.add('is-running');
   $('stageStatus' + stage).textContent = 'Подготовка…';
   $('elapsed' + stage).textContent = '0 с';
+  if (stage === 2) resetTrainingProgress();
   if (stage === 3) { prepareInference(); $('otherProbs').textContent = ''; }
-  if (stage === 4) { $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…'; $('fitPhase').textContent = 'Перебор стартов, точный фит и оценка погрешностей.'; }
+  if (stage === 4) resetFitProgress();
 }
 function progressValue(fraction) {
   if (!Number.isFinite(fraction)) return;
@@ -175,10 +177,29 @@ function referenceProgress(e) {
   if (e.phase === 'scan') { stageStatus('Перебор толщины · d = ' + fmt(e.d, 1) + ' нм'); progressValue(e.fraction * 0.45); }
   else { stageStatus(`Опорный фит · старт ${e.start}/${e.totalStarts} · итерация ${e.iteration} · χ²/ν = ${fmt(e.chi2, 2)}`); progressValue(0.45 + 0.5 * (e.start - 1) / e.totalStarts); }
 }
+function trainingRow(name, done, total, text) {
+  const bar = $('train' + name + 'Bar'), row = bar.closest('.training-phase');
+  bar.max = total; bar.value = done; bar.setAttribute('aria-valuetext', text);
+  $('train' + name + 'Count').textContent = text;
+  row.classList.toggle('is-complete', done === total);
+  row.classList.toggle('is-active', done < total);
+}
+function resetTrainingProgress() {
+  for (const name of ['Spectra', 'Anchors', 'Model']) {
+    trainingRow(name, 0, 1, 'Ожидает');
+    $('train' + name + 'Bar').closest('.training-phase').classList.remove('is-active');
+  }
+}
 function trainingProgress(e) {
-  const labels = { examples: 'Смоделировано и профитировано', holdout: 'Проверка классификатора · эпоха', classifier: 'Обучение классификатора · эпоха', ridge: 'Оценка размеров дефектов · регрессия' };
-  const text = e.phase === 'trained' ? 'Обучение завершено.' : `${labels[e.phase]} ${e.done} из ${e.total}`;
-  stageStatus(text); progressValue(e.fraction);
+  const labels = { spectra: 'Моделируем и фитируем спектры', anchors: 'Обрабатываем остатки по якорям', holdout: 'Обучаем контрольный классификатор', classifier: 'Обучаем итоговый классификатор', ridge: 'Обучаем оценки размеров дефектов' };
+  if (e.phase === 'spectra' || e.phase === 'anchors') trainingRow(e.phase === 'spectra' ? 'Spectra' : 'Anchors', e.done, e.total, `${e.done} / ${e.total}${e.done === e.total ? ' · готово' : ''}`);
+  else if (e.phase === 'trained') trainingRow('Model', 503, 503, 'Готово · 500 эпох + 3 регрессии');
+  else {
+    const offset = { holdout: 0, classifier: 250, ridge: 500 }[e.phase];
+    trainingRow('Model', offset + e.done, 503, e.phase === 'ridge' ? `Регрессии: ${e.done} / 3` : `${e.phase === 'holdout' ? 'Контроль' : 'Итоговая модель'}: ${e.done} / ${e.total} эпох`);
+  }
+  stageStatus(e.phase === 'trained' ? 'Обучение завершено.' : labels[e.phase]);
+  progressValue(e.fraction);
 }
 
 function renderInferenceFrame(frame, final = false) {
@@ -216,28 +237,54 @@ async function animateInference(frames) {
 }
 
 function fitMetric(value, digits) {
+  if (!Number.isFinite(value)) return '—';
   const text = fmt(value, digits);
-  return text.length > 8 ? Number(value).toExponential(2).replace('e+', 'e') : text;
+  return text.length > 8 || (value !== 0 && Math.abs(value) < Math.pow(10, -digits)) ? Number(value).toExponential(2).replace('e+', 'e') : text;
+}
+function resetFitProgress() {
+  fitHistory = []; fitPass = 0; fitOffset = 0; fitEvaluations = 0; fitRange = { min: Infinity, max: 0 };
+  $('fitTrace').setAttribute('d', ''); $('fitCurrent').setAttribute('visibility', 'hidden');
+  ['fitChi', 'fitD', 'fitEvaluations', 'fitYMin', 'fitYMax', 'fitXMax'].forEach(id => $(id).textContent = '—');
+  $('fitPhase').textContent = 'Ожидаем первые расчёты…';
+}
+function drawFitTrace() {
+  const positiveMin = Math.min(...fitHistory.filter(p => p.chi2 > 0).map(p => p.chi2));
+  const floor = Number.isFinite(positiveMin) ? Math.max(Number.MIN_VALUE, positiveMin / 10) : 1e-12;
+  let lo = Math.log10(fitRange.min || floor), hi = Math.log10(fitRange.max || floor);
+  if (hi === lo) { lo -= 0.5; hi += 0.5; }
+  const xy = p => [600 * p.nfev / Math.max(1, fitEvaluations), 120 - 120 * (Math.log10(p.chi2 || floor) - lo) / (hi - lo)];
+  $('fitTrace').setAttribute('d', fitHistory.map((p, i) => `${i && p.key === fitHistory[i - 1].key ? 'L' : 'M'}${xy(p).join(',')}`).join(' '));
+  const [x, y] = xy(fitHistory.at(-1));
+  $('fitCurrent').setAttribute('cx', x); $('fitCurrent').setAttribute('cy', y); $('fitCurrent').setAttribute('visibility', 'visible');
+  $('fitYMin').textContent = (fitRange.min === 0 ? '≤ ' : '') + fitMetric(Math.pow(10, lo), 2);
+  $('fitYMax').textContent = fitMetric(Math.pow(10, hi), 2);
+  $('fitXMax').textContent = String(fitEvaluations);
 }
 function finalProgress(e, pass = 0) {
   const names = { absorption: 'Поиск силы поглощения', starts: 'Проверка стартов', refine: 'Точный фит', layers: 'Уточнение профиля', uncertainty: 'Оценка погрешностей' };
-  const prefix = pass ? `Повтор после вето ${pass} · ` : '';
-  const info = e.phase === 'uncertainty' ? '' : ` · старт ${e.start}`;
+  const prefix = pass ? `Вето ${pass} · ` : '';
+  const info = ['starts', 'absorption'].includes(e.phase) ? ` · старт ${e.start}` : '';
   stageStatus(prefix + (names[e.phase] || 'Окончательный фит') + info);
   if (!Number.isFinite(e.chi2)) return;
   $('fitChi').textContent = fitMetric(e.chi2, 3); $('fitD').textContent = e.P ? fitMetric(e.P.d, 2) : '—';
-  $('fitIteration').textContent = String(e.iteration ?? '—');
-  $('fitPhase').textContent = `${e.M || 40} подслоёв · ${e.nfev || 0} вычислений`;
-  fitHistory.push(e.chi2);
+  if (pass !== fitPass) { fitOffset = fitEvaluations; fitPass = pass; }
+  fitEvaluations = fitOffset + e.nfev;
+  $('fitEvaluations').textContent = String(fitEvaluations);
+  const profile = e.profileLayers === 1 ? 'Однородный профиль' : `Градиент: ${e.profileLayers} подслоёв`;
+  $('fitPhase').textContent = `${profile} · итерация ${e.iteration} текущего запуска`;
+  fitRange.min = Math.min(fitRange.min, e.chi2); fitRange.max = Math.max(fitRange.max, e.chi2);
+  fitHistory.push({ chi2: e.chi2, nfev: fitEvaluations, key: `${pass}:${e.run}` });
   // Bounded rendering cost even for a long multistart fit.
-  if (fitHistory.length > 240) fitHistory = fitHistory.filter((_, i) => i % 2 === 0);
-  const values = fitHistory.map(v => Math.log10(Math.max(v, 1e-12))), lo = Math.min(...values), hi = Math.max(lo + 0.1, ...values);
-  $('fitTrace').setAttribute('points', values.map((v, i) => `${20 + 560 * i / Math.max(1, values.length - 1)},${160 - 140 * (v - lo) / (hi - lo)}`).join(' '));
-  $('fitScale').textContent = `χ²/ν: ${fmt(Math.pow(10, lo), 2)}–${fmt(Math.pow(10, hi), 2)} · log`;
+  if (fitHistory.length > 240) {
+    const minIndex = fitHistory.findIndex(p => p.chi2 === fitRange.min), maxIndex = fitHistory.findIndex(p => p.chi2 === fitRange.max);
+    fitHistory = fitHistory.filter((p, i, a) => i % 2 === 0 || i === a.length - 1 || p.key !== a[i - 1]?.key || p.key !== a[i + 1]?.key || i === minIndex || i === maxIndex);
+  }
+  drawFitTrace();
 }
 function fitComplete(fin) {
-  $('fitChi').textContent = fitMetric(fin.chi2, 3); $('fitD').textContent = fitMetric(fin.P.d, 2);
-  $('fitPhase').textContent = `Фит завершён · ${fin.M} подслоёв · ${fin.starts} стартов`;
+  // Include the exact returned solution even if intermediate events were throttled.
+  finalProgress({ ...fin, phase: 'complete', run: fin.runs, iteration: fin.iterations }, fitPass);
+  $('fitPhase').textContent = `Итог: ${fin.profileLayers === 1 ? 'однородный профиль' : fin.profileLayers + ' подслоёв градиента'} · ν = ${fin.dof}`;
 }
 
 function formatResultTables() {

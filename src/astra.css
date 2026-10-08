@@ -246,8 +246,25 @@ footer details p { max-width:120ch; margin:10px 0; }
 .fit-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0 8px; }
 .fit-metrics span { display:block; font-size:14px; color:var(--muted); }
 .fit-metrics b { display:block; margin-top:7px; font-size:24px; font-variant-numeric:tabular-nums; font-weight:550; white-space:nowrap; }
-.fit-viz { height:clamp(90px,22dvh,160px); margin-top:10px; }
+.fit-viz { height:clamp(90px,18dvh,130px); margin:0; }
 #fitTrace { stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; }
+#fitTrace,.viz-axis { vector-effect:non-scaling-stroke; }
+#fitCurrent { fill:var(--accent); stroke:var(--accent); stroke-width:3; vector-effect:non-scaling-stroke; }
+.fit-chart { margin-top:8px; font-size:12px; line-height:1.35; font-variant-numeric:tabular-nums; color:var(--muted); }
+.fit-chart p { margin:0 0 7px; font-size:13px; }
+.fit-plot { display:grid; grid-template-columns:62px minmax(0,1fr); gap:6px; padding-right:4px; }
+.fit-y-axis { display:flex; flex-direction:column; justify-content:space-between; text-align:right; }
+.fit-x-axis { display:flex; justify-content:space-between; gap:6px; margin:5px 4px 0 68px; }
+.fig-explanation { margin:4px 18px 14px; }
+.training-phases { display:grid; gap:12px; margin-top:8px; }
+.training-phase>div { display:grid; gap:3px; font-size:14px; line-height:1.4; }
+.training-phase b { font-weight:550; }
+.training-phase span { color:var(--muted); font-variant-numeric:tabular-nums; }
+.training-phase.is-active b { color:var(--accent); }
+.training-phase.is-complete span { color:var(--ok); }
+.training-phase progress { height:5px; margin-top:5px; }
+.training-note { margin:12px 0 0; font-size:13px; line-height:1.4; color:var(--muted); }
+@container (max-width:380px) { .training-phase b { min-height:2.8em; } }
 #finOut,#truthOut,#causeOut details { overflow:visible; min-width:0; }
 #s4 .analysis-table { table-layout:fixed; width:100%; font-size:15px; line-height:1.5; }
 #s4 .analysis-table th,#s4 .analysis-table td,#finOut td:first-child,#truthOut td:first-child { white-space:normal; overflow-wrap:anywhere; min-width:0; }
@@ -300,6 +317,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   .analysis-tab-full { display:block; }
   .analysis-tabs button .analysis-tab-full { overflow-wrap:normal; }
 }
+@container analysis-workspace (max-width:360px) { .analysis-tabs button { font-size:13px; } }
 
 /* Compact live panels keep the full animation within the visible viewport. */
 #stageLive2,#stageLive3,#stageLive4 { padding:14px; margin:12px 0; }
@@ -311,7 +329,7 @@ footer details p { max-width:120ch; margin:10px 0; }
 #otherProbs { min-height:20px; }
 .analysis-running #runbar .status,.analysis-running #runbar .tb-progress { visibility:hidden; }
 #s2:has(.stage-live.is-running) #trainOut,#s3:has(.stage-live.is-running) #diagOut.empty,#s4:has(.stage-live.is-running) #finOut.empty { display:none; }
-@container (max-width:460px) { .fit-metrics b { font-size:18px; } }
+@container (max-width:460px) { .fit-metrics b { font-size:18px; } .fit-metrics span { min-height:2.8em; } }
 @media (max-width:720px) {
   .appbar { flex-wrap:nowrap; gap:12px; padding:0 12px; }
   .appbar .brand { gap:5px; }
@@ -325,13 +343,15 @@ footer details p { max-width:120ch; margin:10px 0; }
   .analysis-nav-actions { flex:none; }
   #analysisPosition { display:none; }
   .analysis-tabs button { min-height:36px; }
-  #stageLive3,#stageLive4 { padding:8px 12px; }
+  #stageLive2,#stageLive3,#stageLive4 { padding:8px 12px; }
   .live-prob-list { --prob-row-height:46px; }
   .stage-live .prob-title { margin:6px 0 2px; }
   .stage-live-heading { min-height:28px; }
   .fit-metrics { margin:8px 0 4px; }
   .fit-metrics b { margin-top:3px; font-size:20px; }
-  .fit-viz { height:90px; margin-top:4px; }
+  .fit-viz { height:76px; }
+  .training-phases { gap:8px; }
+  .training-note { margin-top:8px; }
 }
 @media (max-height:540px) and (min-width:680px) {
   #page-analysis .wrap { display:block; }

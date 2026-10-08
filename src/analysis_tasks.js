@@ -12,11 +12,20 @@
 
   function train(a, emit) {
     const { data, cfg, prior, nuis, N, seed } = a, K = E.CLASSES.length, rng = E.makeRng(seed);
-    const X = [], y = [], sz = [], t0 = Date.now();
+    const X = [], y = [], sz = [], pending = [], t0 = Date.now();
+    emit({ phase: 'spectra', done: 0, total: N, fraction: 0 });
     for (let i = 0; i < N; i++) {
-      const s = E.trainingExample(data, cfg, prior, nuis, rng, i % K);
-      X.push(s.x); y.push(s.y); sz.push([s.delta, s.dRough, s.k400]);
-      emit({ phase: 'examples', done: i + 1, total: N, fraction: 0.7 * (i + 1) / N });
+      const s = E.trainingSpectrum(data, cfg, prior, nuis, rng, i % K);
+      // Only Δ and residuals are needed for anchor features; release Ψ here.
+      pending.push({ dd: { lam: data.lam, del: s.dd.del }, resid: s.resid });
+      y.push(s.y); sz.push([s.delta, s.dRough, s.k400]);
+      emit({ phase: 'spectra', done: i + 1, total: N, fraction: 0.65 * (i + 1) / N });
+    }
+    emit({ phase: 'anchors', done: 0, total: N, fraction: 0.65 });
+    for (let i = 0; i < N; i++) {
+      X.push(E.featureVector(pending[i].dd, cfg, pending[i].resid));
+      pending[i] = null;
+      emit({ phase: 'anchors', done: i + 1, total: N, fraction: 0.65 + 0.05 * (i + 1) / N });
     }
     const idx = X.map((_, k) => k);
     for (let k = idx.length - 1; k > 0; k--) { const j = rng.int(k + 1); [idx[k], idx[j]] = [idx[j], idx[k]]; }
@@ -35,6 +44,7 @@
     const rr = E.ridge(X, sz.map(v => v[1]), 30);
     emit({ phase: 'ridge', done: 2, total: 3, fraction: 0.96 });
     const rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
+    emit({ phase: 'ridge', done: 3, total: 3, fraction: 0.99 });
     let e1 = 0, e2 = 0, e3 = 0;
     for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
     emit({ phase: 'trained', fraction: 1 });
@@ -120,7 +130,7 @@
       const emit = p => {
         const key = p.phase + ':' + (p.start || '') + ':' + (p.row || '');
         const now = Date.now();
-        if (key === phase && now - last < 75 && p.fraction !== 1) return;
+        if (key === phase && now - last < 75 && p.fraction !== 1 && (p.total === undefined || p.done !== p.total) && !p.completed) return;
         last = now; phase = key; root.postMessage({ id, progress: p });
       };
       try { root.postMessage({ id, result: run(type, args, emit) }); }
