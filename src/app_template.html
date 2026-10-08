@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.1</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.2</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -390,17 +390,16 @@ footer p { margin: 4px 0; }
     <div id="globalStatus" class="status" role="status" aria-live="polite">Готово к анализу · 800 обучающих примеров</div>
     <div class="tb-progress" aria-hidden="true"><div id="runProgress"></div></div>
   </div>
-  <div class="analysis-navigation">
-    <div class="analysis-tabs" role="tablist" aria-label="Разделы анализа">
-      <button id="viewStage0" role="tab" data-analysis-stage="0" aria-controls="s0" aria-selected="true" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button>
-      <button id="viewStage1" role="tab" data-analysis-stage="1" aria-controls="s1" aria-selected="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
-      <button id="viewStage2" role="tab" data-analysis-stage="2" aria-controls="s2" aria-selected="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
-      <button id="viewStage3" role="tab" data-analysis-stage="3" aria-controls="s3" aria-selected="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
-      <button id="viewStage4" role="tab" data-analysis-stage="4" aria-controls="s4" aria-selected="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
+  <nav class="analysis-navigation" aria-label="Шаги анализа">
+    <div class="analysis-tabs">
+      <button id="viewStage1" data-analysis-stage="1" aria-controls="s1" aria-current="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
+      <button id="viewStage2" data-analysis-stage="2" aria-controls="s2" aria-current="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
+      <button id="viewStage3" data-analysis-stage="3" aria-controls="s3" aria-current="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
+      <button id="viewStage4" data-analysis-stage="4" aria-controls="s4" aria-current="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
     </div>
-    <button id="btnCancel" type="button" hidden>Остановить</button>
-  </div>
-  <section class="step spectrum-card" id="s0" role="tabpanel" aria-labelledby="viewStage0">
+    <div class="analysis-nav-actions"><button id="viewStage0" data-analysis-stage="0" aria-controls="s0" aria-current="step" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button><span id="analysisPosition">Измеренный спектр</span><button id="btnCancel" type="button" hidden>Остановить</button></div>
+  </nav>
+  <section class="step spectrum-card" id="s0" role="region" aria-labelledby="viewStage0">
 <div class="sample-summary" aria-label="Текущие условия"><div><span>Материал</span><b id="summaryMaterial">—</b></div><div><span>Подложка</span><b id="summarySubstrate">—</b></div><div><span>Угол падения</span><b id="summaryAngle">—</b></div><div><span>Диапазон</span><b id="summaryRange">—</b></div></div>
     <h2 tabindex="-1">Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
     <p class="lead">Экспериментальные данные и физическая модель.</p>
@@ -410,7 +409,7 @@ footer p { margin: 4px 0; }
   </section>
 
   <div class="results-heading" id="resultsHeading" hidden><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
-  <section class="step" id="s1" role="tabpanel" aria-labelledby="viewStage1" hidden>
+  <section class="step" id="s1" role="region" aria-labelledby="viewStage1" hidden>
     <h2 tabindex="-1"><span class="num">1</span>Опорный фит: однородная плёнка</h2>
     <p class="lead">Толщина ищется грубым перебором в заданном разбросе, затем метод Левенберга–Марквардта с аналитическим якобианом (формулы Фурмана–Тихонравова, разд. 1.4.1) по d, A, A<sub>uv</sub>, E<sub>g</sub> из трёх лучших стартов. Остаток (измерено − модель) в единицах σ — то, что модель не смогла объяснить.</p>
     <div class="stage-live" id="stageLive1" hidden>
@@ -423,7 +422,7 @@ footer p { margin: 4px 0; }
     <div id="chanOut" class="note"></div>
   </section>
 
-  <section class="step" id="s2" role="tabpanel" aria-labelledby="viewStage2" hidden>
+  <section class="step" id="s2" role="region" aria-labelledby="viewStage2" hidden>
     <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <div class="stage-live" id="stageLive2" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
@@ -433,7 +432,7 @@ footer p { margin: 4px 0; }
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
-  <section class="step" id="s3" role="tabpanel" aria-labelledby="viewStage3" hidden>
+  <section class="step" id="s3" role="region" aria-labelledby="viewStage3" hidden>
     <h2 tabindex="-1"><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
     <div class="stage-live" id="stageLive3" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus3" role="status" aria-live="polite">Подготовка…</p><span id="elapsed3" class="stage-elapsed">0 с</span></div>
@@ -451,7 +450,7 @@ footer p { margin: 4px 0; }
     </div>
   </section>
 
-  <section class="step" id="s4" role="tabpanel" aria-labelledby="viewStage4" hidden>
+  <section class="step" id="s4" role="region" aria-labelledby="viewStage4" hidden>
     <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <div class="stage-live" id="stageLive4" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
@@ -669,7 +668,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.1';
+  const APP_VERSION = '1.2.2';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -741,6 +740,9 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   // ---------------------------------------------------------------- данные
   /** Сброс панелей и состояния шагов 1–4 (новый спектр или смена модели измерения). */
   function resetSteps() {
+    stopAnalysisScroll();
+    for (let n = 1; n <= 4; n++) $('s' + n).hidden = true;
+    $('resultsHeading').hidden = true;
     showAnalysisStage(0);
     for (let n = 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('stageLive' + n).classList.remove('is-running'); }
     S.analysisStale=false;if($('analysisFreshness'))$('analysisFreshness').textContent='От измерения к параметрам';
@@ -1046,7 +1048,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 
   // ---------------------------------------------------------------- очистка панелей перед новым запуском шага k
   function clearFrom(k) {
-    for (let n = k + 1; n <= 4; n++) $('stageLive' + n).hidden = true;
+    for (let n = k + 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('s' + n).hidden = true; }
     if (k <= 1) { $('refOut').className = 'empty'; $('refOut').textContent = 'Идёт опорный фит…'; $('chanOut').textContent = ''; destroyChart('chRes'); S.ref = null; S.refFeat = null; }
     if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? '' : 'Сначала опорный фит.'; S.train = null; $('btn3').disabled = true; }
     if (k <= 3) { $('diagOut').className = 'empty'; $('diagOut').textContent = k === 3 ? 'Идёт диагноз…' : 'Сначала обучение.'; $('modelChoice').style.display = 'none'; S.probs = null; S.est = null; S.aiFlags = null; S.choice = null; $('btn4').disabled = true; }
@@ -1420,17 +1422,25 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       ['btnAll', 'btn1', 'btn2', 'btn3', 'btn4', 'dmBuild'].forEach(id => $(id).disabled = true);
       document.querySelectorAll('.appbar nav a').forEach(a => a.setAttribute('aria-disabled', 'true'));
       const actions = [null, step1, step2, step3, step4];
-      for (const n of stage ? [stage] : [1, 2, 3, 4]) {
+      const sequence = stage ? [stage] : [1, 2, 3, 4];
+      for (const n of sequence) {
         if (analysisAbort.signal.aborted) throw abortError();
+        clearFrom(n);
         showAnalysisStage(n); progressCard(n); stageStatus(`Шаг ${n} из 4 · ${stageNames[n]}…`); progressValue(0);
+        await yieldPaint(); await revealAnalysisProgress(n, true);
+        if (analysisAbort.signal.aborted) throw abortError();
         analysisStarted = Date.now();
         analysisTimer = setInterval(() => { $('elapsed' + n).textContent = Math.floor((Date.now() - analysisStarted) / 1000) + ' с'; }, 1000);
-        await yieldPaint(); showAnalysisStage(n, true); await actions[n]();
+        await actions[n]();
         clearInterval(analysisTimer); analysisTimer = null;
         $('elapsed' + n).textContent = fmt((Date.now() - analysisStarted) / 1000, 1) + ' с';
         $('stageLive' + n).classList.remove('is-running'); progressValue(1);
         $('stageStatus' + n).textContent = n === 3 ? 'Итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
         refreshStageNav(); await yieldPaint();
+        if (n !== sequence.at(-1)) {
+          $('analysisPosition').textContent = `Шаг ${n} готов`;
+          await analysisPause(analysisResultHold);
+        }
       }
       stageStatus('Готово.');
     } catch (error) {
@@ -1440,6 +1450,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     } finally {
       if (started) {
         clearInterval(analysisTimer); analysisTimer = null;
+        stopAnalysisScroll();
         for (let n = 1; n <= 4; n++) $('stageLive' + n).classList.remove('is-running');
         astraBusy = false; analysisAbort = null;
         document.body.classList.remove('analysis-running');

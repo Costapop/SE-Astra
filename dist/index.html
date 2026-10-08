@@ -432,14 +432,18 @@ footer details p { max-width:120ch; margin:10px 0; }
 @container (max-width:649px) { #figAnchPat:fullscreen .grid2x2 .chart { height:300px; } }
 @media(max-width:720px) { #figAnchPat:fullscreen { padding:16px; } #figAnchPat .fig-tools { margin-left:0; } }
 
-/* Analysis v1.2: one working stage, live computation, readable result tables. */
-.analysis-navigation { position:sticky; top:var(--barh,72px); z-index:8; display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface); border:1px solid var(--line2); border-radius:14px; box-shadow:var(--shadow); }
-.analysis-tabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; flex:1; min-width:0; }
-.analysis-tabs button { font-size:14px; line-height:1.3; padding:10px 6px; background:transparent; border:0; white-space:normal; }
-.analysis-tabs button[aria-selected="true"] { color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,var(--surface)); font-weight:650; }
-.analysis-tabs button.is-complete:not([aria-selected="true"]) { color:var(--text); }
-#btnCancel { color:var(--bad); font-size:14px; flex:none; }
-#page-analysis .step { scroll-margin-top:calc(var(--barh,72px) + 94px); }
+/* Continuous analysis feed with a persistent overview of every step. */
+.analysis-navigation { position:sticky; top:var(--barh,72px); z-index:8; display:grid; gap:4px; padding:8px; background:var(--surface); border:1px solid var(--line2); border-radius:14px; box-shadow:var(--shadow); }
+.analysis-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; flex:1; min-width:0; }
+.analysis-tabs button { font-size:14px; line-height:1.3; padding:8px 3px; background:transparent; border:0; white-space:normal; min-width:0; }
+[data-analysis-stage][aria-current="step"] { color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,var(--surface)); font-weight:650; box-shadow:inset 0 -2px var(--accent); }
+.analysis-tabs button.is-complete:not([aria-current="step"]) { color:var(--text); }
+.analysis-nav-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:32px; }
+#analysisPosition { color:var(--muted); font-size:14px; flex:1; white-space:nowrap; }
+#viewStage0 { min-height:32px; padding:4px 6px; font-size:14px; border:0; }
+#btnCancel { color:var(--bad); font-size:14px; flex:none; padding:4px 10px; min-height:32px; }
+#btnCancel[hidden] { display:block!important; visibility:hidden; pointer-events:none; }
+#page-analysis .step { scroll-margin-top:var(--analysis-offset,170px); min-height:calc(100svh - var(--analysis-offset,170px)); }
 #page-analysis .step>h2:focus { outline:none; }
 #page-analysis .step[hidden], #resultsHeading[hidden], .stage-live[hidden] { display:none; }
 .toolbar .stepbtns button.stage-active { background:var(--surface); opacity:1; box-shadow:inset 0 0 0 1px var(--accent); }
@@ -460,12 +464,13 @@ footer details p { max-width:120ch; margin:10px 0; }
 .viz-axis { stroke:var(--line); stroke-width:1; fill:none; }
 .fit-viz { display:block; width:100%; overflow:visible; }
 .live-prob-list { --prob-row-height:56px; position:relative; height:calc(5 * var(--prob-row-height)); margin:4px 0 0; }
-.live-prob-row { position:absolute; inset:0 0 auto; height:calc(var(--prob-row-height) - 4px); transform:translateY(calc(var(--prob-rank, 0) * var(--prob-row-height))); display:grid; grid-template-columns:20px minmax(0,1fr) 58px; grid-template-rows:1fr 4px; gap:3px 6px; align-items:center; padding:3px 0; font-size:14px; opacity:0; visibility:hidden; transition:opacity .18s ease; }
+.live-prob-row { position:absolute; inset:0 0 auto; height:calc(var(--prob-row-height) - 4px); transform:translateY(calc(var(--prob-rank, 0) * var(--prob-row-height))); display:grid; grid-template-columns:20px minmax(0,1fr); grid-template-rows:1fr 4px; gap:3px 6px; align-items:center; padding:3px 0; font-size:14px; opacity:0; visibility:hidden; }
 .live-rank { color:var(--muted); font-variant-numeric:tabular-nums; }
-.live-prob-name { line-height:1.3; overflow-wrap:anywhere; }
-.live-prob-value { text-align:right; white-space:nowrap; font-size:15px; font-variant-numeric:tabular-nums; }
-.live-prob-track { grid-column:2/4; height:5px; border-radius:4px; background:var(--line2); overflow:hidden; }
-.live-prob-bar { display:block; width:0; height:100%; background:var(--accent); border-radius:4px; transition:width .16s linear; }
+.live-prob-copy { line-height:1.3; min-width:0; }
+.live-prob-name { overflow-wrap:anywhere; }
+.live-prob-value { float:right; margin-left:6px; white-space:nowrap; font-size:15px; line-height:18px; font-variant-numeric:tabular-nums; }
+.live-prob-track { grid-column:2; height:5px; border-radius:4px; background:var(--line2); overflow:hidden; }
+.live-prob-bar { display:block; width:0; height:100%; background:var(--accent); border-radius:4px; transition:width .45s ease; }
 .all-probabilities { margin:16px 0; }
 .all-probabilities summary { color:var(--accent); font-size:15px; cursor:pointer; }
 .fit-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0 8px; }
@@ -499,11 +504,9 @@ footer details p { max-width:120ch; margin:10px 0; }
   #s4 .analysis-table td:empty { display:none; }
 }
 @media(max-width:720px) {
-  .analysis-navigation { gap:8px; flex-wrap:wrap; padding:8px; }
-  .analysis-tabs { flex-basis:100%; }
-  .analysis-tabs button { font-size:14px; padding:9px 3px; }
-  #btnCancel { margin-left:auto; padding:7px 12px; }
-  #page-analysis .step { scroll-margin-top:calc(var(--barh,62px) + 142px); }
+  .analysis-navigation { padding:6px; }
+  .analysis-tabs { gap:2px; }
+  .analysis-tabs button { font-size:14px; padding:6px 1px; }
   .stage-live { padding:14px; margin:14px 0; }
   .fit-metrics { gap:8px; }
   .fit-metrics b { font-size:21px; }
@@ -523,9 +526,9 @@ footer details p { max-width:120ch; margin:10px 0; }
 .stage-explanation { margin:12px 0; }
 .stage-explanation summary { color:var(--muted); font-size:14px; cursor:pointer; }
 @container analysis-workspace (max-width:600px) {
-  .analysis-tab-full { display:none; }
-  .analysis-tab-short { display:inline; }
-  .analysis-tabs button { min-height:40px; font-size:15px; }
+  .analysis-tabs button { min-height:48px; }
+  .analysis-tab-full { display:block; }
+  .analysis-tabs button .analysis-tab-full { overflow-wrap:normal; }
 }
 
 /* Compact live panels keep the full animation within the visible viewport. */
@@ -536,22 +539,22 @@ footer details p { max-width:120ch; margin:10px 0; }
 .stage-live .prob-title { margin:12px 0 4px; font-size:16px; line-height:1.4; font-weight:600; }
 #otherProbs,#fitScale,#fitPhase { margin:6px 0 0; font-size:14px; line-height:1.4; }
 #otherProbs { min-height:20px; }
-.analysis-running #runbar .status,.analysis-running #runbar .tb-progress { display:none; }
+.analysis-running #runbar .status,.analysis-running #runbar .tb-progress { visibility:hidden; }
 #s2:has(.stage-live.is-running) #trainOut,#s3:has(.stage-live.is-running) #diagOut.empty,#s4:has(.stage-live.is-running) #finOut.empty { display:none; }
-.analysis-running .analysis-navigation { flex-wrap:nowrap; gap:8px; padding:8px; }
-.analysis-running .analysis-tabs { flex-basis:0; grid-template-columns:1.5fr repeat(4,minmax(0,1fr)); }
-.analysis-running .analysis-tabs button { min-height:36px; padding:6px 3px; font-size:14px; }
-.analysis-running #btnCancel { margin-left:0; padding:7px 10px; }
 @container (max-width:460px) { .fit-metrics b { font-size:18px; } }
-@media (max-width:720px) { .analysis-running .appbar .tools { display:none; } }
+@media (max-width:720px) {
+  .appbar { flex-wrap:nowrap; gap:12px; padding:0 12px; }
+  .appbar .brand { gap:5px; }
+  .appbar .brand-symbol { display:none; }
+  .appbar .brand-name { font-size:19px; }
+  .appbar nav { gap:12px; }
+}
 @media (max-height:540px) {
-  .analysis-running .appbar { display:none; }
-  .analysis-running .analysis-navigation { top:0; padding:4px 8px; }
-  .analysis-running #btnCancel { padding:4px 10px; }
-  .analysis-running .analysis-tabs { display:block; }
-  .analysis-running .analysis-tabs button:not([aria-selected="true"]) { display:none; }
-  .analysis-running .analysis-tab-full { display:inline; }
-  .analysis-running .analysis-tab-short { display:none; }
+  body:has(#page-analysis:not([hidden])) .appbar { position:relative; }
+  .analysis-navigation { top:0; padding:4px 8px; display:flex; align-items:center; }
+  .analysis-nav-actions { flex:none; }
+  #analysisPosition { display:none; }
+  .analysis-tabs button { min-height:36px; }
   #stageLive3,#stageLive4 { padding:8px 12px; }
   .live-prob-list { --prob-row-height:46px; }
   .stage-live .prob-title { margin:6px 0 2px; }
@@ -561,8 +564,8 @@ footer details p { max-width:120ch; margin:10px 0; }
   .fit-viz { height:90px; margin-top:4px; }
 }
 @media (max-height:540px) and (min-width:680px) {
-  .analysis-running #analysisControls { display:none; }
-  .analysis-running #page-analysis .wrap { grid-template-columns:minmax(0,1fr); }
+  #page-analysis .wrap { display:block; }
+  #analysisControls { position:static; max-height:none; margin-bottom:20px; }
   .live-prob-list { --prob-row-height:42px; }
 }
 
@@ -571,7 +574,7 @@ footer details p { max-width:120ch; margin:10px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.1</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.2</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -727,17 +730,16 @@ footer details p { max-width:120ch; margin:10px 0; }
     <div id="globalStatus" class="status" role="status" aria-live="polite">Готово к анализу · 800 обучающих примеров</div>
     <div class="tb-progress" aria-hidden="true"><div id="runProgress"></div></div>
   </div>
-  <div class="analysis-navigation">
-    <div class="analysis-tabs" role="tablist" aria-label="Разделы анализа">
-      <button id="viewStage0" role="tab" data-analysis-stage="0" aria-controls="s0" aria-selected="true" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button>
-      <button id="viewStage1" role="tab" data-analysis-stage="1" aria-controls="s1" aria-selected="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
-      <button id="viewStage2" role="tab" data-analysis-stage="2" aria-controls="s2" aria-selected="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
-      <button id="viewStage3" role="tab" data-analysis-stage="3" aria-controls="s3" aria-selected="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
-      <button id="viewStage4" role="tab" data-analysis-stage="4" aria-controls="s4" aria-selected="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
+  <nav class="analysis-navigation" aria-label="Шаги анализа">
+    <div class="analysis-tabs">
+      <button id="viewStage1" data-analysis-stage="1" aria-controls="s1" aria-current="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
+      <button id="viewStage2" data-analysis-stage="2" aria-controls="s2" aria-current="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
+      <button id="viewStage3" data-analysis-stage="3" aria-controls="s3" aria-current="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
+      <button id="viewStage4" data-analysis-stage="4" aria-controls="s4" aria-current="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
     </div>
-    <button id="btnCancel" type="button" hidden>Остановить</button>
-  </div>
-  <section class="step spectrum-card" id="s0" role="tabpanel" aria-labelledby="viewStage0">
+    <div class="analysis-nav-actions"><button id="viewStage0" data-analysis-stage="0" aria-controls="s0" aria-current="step" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button><span id="analysisPosition">Измеренный спектр</span><button id="btnCancel" type="button" hidden>Остановить</button></div>
+  </nav>
+  <section class="step spectrum-card" id="s0" role="region" aria-labelledby="viewStage0">
 <div class="sample-summary" aria-label="Текущие условия"><div><span>Материал</span><b id="summaryMaterial">—</b></div><div><span>Подложка</span><b id="summarySubstrate">—</b></div><div><span>Угол падения</span><b id="summaryAngle">—</b></div><div><span>Диапазон</span><b id="summaryRange">—</b></div></div>
     <h2 tabindex="-1">Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
     <p class="lead">Экспериментальные данные и физическая модель.</p>
@@ -747,7 +749,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   </section>
 
   <div class="results-heading" id="resultsHeading" hidden><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
-  <section class="step" id="s1" role="tabpanel" aria-labelledby="viewStage1" hidden>
+  <section class="step" id="s1" role="region" aria-labelledby="viewStage1" hidden>
     <h2 tabindex="-1"><span class="num">1</span>Опорный фит: однородная плёнка</h2>
     <p class="lead">Толщина ищется грубым перебором в заданном разбросе, затем метод Левенберга–Марквардта с аналитическим якобианом (формулы Фурмана–Тихонравова, разд. 1.4.1) по d, A, A<sub>uv</sub>, E<sub>g</sub> из трёх лучших стартов. Остаток (измерено − модель) в единицах σ — то, что модель не смогла объяснить.</p>
     <div class="stage-live" id="stageLive1" hidden>
@@ -760,7 +762,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     <div id="chanOut" class="note"></div>
   </section>
 
-  <section class="step" id="s2" role="tabpanel" aria-labelledby="viewStage2" hidden>
+  <section class="step" id="s2" role="region" aria-labelledby="viewStage2" hidden>
     <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <div class="stage-live" id="stageLive2" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
@@ -770,7 +772,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
-  <section class="step" id="s3" role="tabpanel" aria-labelledby="viewStage3" hidden>
+  <section class="step" id="s3" role="region" aria-labelledby="viewStage3" hidden>
     <h2 tabindex="-1"><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
     <div class="stage-live" id="stageLive3" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus3" role="status" aria-live="polite">Подготовка…</p><span id="elapsed3" class="stage-elapsed">0 с</span></div>
@@ -788,7 +790,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     </div>
   </section>
 
-  <section class="step" id="s4" role="tabpanel" aria-labelledby="viewStage4" hidden>
+  <section class="step" id="s4" role="region" aria-labelledby="viewStage4" hidden>
     <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <div class="stage-live" id="stageLive4" hidden>
       <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
@@ -2265,7 +2267,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.1';
+  const APP_VERSION = '1.2.2';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -2337,6 +2339,9 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   // ---------------------------------------------------------------- данные
   /** Сброс панелей и состояния шагов 1–4 (новый спектр или смена модели измерения). */
   function resetSteps() {
+    stopAnalysisScroll();
+    for (let n = 1; n <= 4; n++) $('s' + n).hidden = true;
+    $('resultsHeading').hidden = true;
     showAnalysisStage(0);
     for (let n = 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('stageLive' + n).classList.remove('is-running'); }
     S.analysisStale=false;if($('analysisFreshness'))$('analysisFreshness').textContent='От измерения к параметрам';
@@ -2642,7 +2647,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 
   // ---------------------------------------------------------------- очистка панелей перед новым запуском шага k
   function clearFrom(k) {
-    for (let n = k + 1; n <= 4; n++) $('stageLive' + n).hidden = true;
+    for (let n = k + 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('s' + n).hidden = true; }
     if (k <= 1) { $('refOut').className = 'empty'; $('refOut').textContent = 'Идёт опорный фит…'; $('chanOut').textContent = ''; destroyChart('chRes'); S.ref = null; S.refFeat = null; }
     if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? '' : 'Сначала опорный фит.'; S.train = null; $('btn3').disabled = true; }
     if (k <= 3) { $('diagOut').className = 'empty'; $('diagOut').textContent = k === 3 ? 'Идёт диагноз…' : 'Сначала обучение.'; $('modelChoice').style.display = 'none'; S.probs = null; S.est = null; S.aiFlags = null; S.choice = null; $('btn4').disabled = true; }
@@ -3016,17 +3021,25 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
       ['btnAll', 'btn1', 'btn2', 'btn3', 'btn4', 'dmBuild'].forEach(id => $(id).disabled = true);
       document.querySelectorAll('.appbar nav a').forEach(a => a.setAttribute('aria-disabled', 'true'));
       const actions = [null, step1, step2, step3, step4];
-      for (const n of stage ? [stage] : [1, 2, 3, 4]) {
+      const sequence = stage ? [stage] : [1, 2, 3, 4];
+      for (const n of sequence) {
         if (analysisAbort.signal.aborted) throw abortError();
+        clearFrom(n);
         showAnalysisStage(n); progressCard(n); stageStatus(`Шаг ${n} из 4 · ${stageNames[n]}…`); progressValue(0);
+        await yieldPaint(); await revealAnalysisProgress(n, true);
+        if (analysisAbort.signal.aborted) throw abortError();
         analysisStarted = Date.now();
         analysisTimer = setInterval(() => { $('elapsed' + n).textContent = Math.floor((Date.now() - analysisStarted) / 1000) + ' с'; }, 1000);
-        await yieldPaint(); showAnalysisStage(n, true); await actions[n]();
+        await actions[n]();
         clearInterval(analysisTimer); analysisTimer = null;
         $('elapsed' + n).textContent = fmt((Date.now() - analysisStarted) / 1000, 1) + ' с';
         $('stageLive' + n).classList.remove('is-running'); progressValue(1);
         $('stageStatus' + n).textContent = n === 3 ? 'Итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
         refreshStageNav(); await yieldPaint();
+        if (n !== sequence.at(-1)) {
+          $('analysisPosition').textContent = `Шаг ${n} готов`;
+          await analysisPause(analysisResultHold);
+        }
       }
       stageStatus('Готово.');
     } catch (error) {
@@ -3036,6 +3049,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     } finally {
       if (started) {
         clearInterval(analysisTimer); analysisTimer = null;
+        stopAnalysisScroll();
         for (let n = 1; n <= 4; n++) $('stageLive' + n).classList.remove('is-running');
         astraBusy = false; analysisAbort = null;
         document.body.classList.remove('analysis-running');
@@ -3550,12 +3564,24 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   }
   document.querySelectorAll('#dmNav a').forEach(a => a.addEventListener('click', (ev) => { ev.preventDefault(); const id = a.getAttribute('href').slice(1); history.replaceState(null, '', '#' + id); const el = $(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
 
-  // The analysis workspace shows one stage; computation runs in a reusable Worker.
+  // Completed stages stay in a continuous feed; computation runs in a reusable Worker.
 let analysisWorker = null, analysisRequest = 0, analysisPending = null, analysisAbort = null;
 let analysisStage = 0, fitHistory = [], analysisStarted = 0, analysisTimer = null;
 const stageNames = ['Спектр', 'Опорный фит', 'Обучение ИИ', 'Диагноз', 'Окончательный фит'];
 const abortError = () => new DOMException('Расчёт остановлен.', 'AbortError');
 const yieldPaint = () => new Promise(resolve => setTimeout(resolve, 24));
+const analysisResultHold = 2400;
+let analysisScroll = null, analysisScrollFrame = 0;
+function analysisPause(ms) {
+  const signal = analysisAbort?.signal;
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(abortError()); return; }
+    const finish = () => { signal?.removeEventListener('abort', cancel); resolve(); };
+    const timer = setTimeout(finish, ms);
+    const cancel = () => { clearTimeout(timer); signal?.removeEventListener('abort', cancel); reject(abortError()); };
+    signal?.addEventListener('abort', cancel, { once: true });
+  });
+}
 function stopAnalysisWorker(error) {
   if (analysisWorker) analysisWorker.terminate();
   analysisWorker = null;
@@ -3592,23 +3618,59 @@ function analysisTask(type, args, onProgress) {
 }
 window.addEventListener('pagehide', () => { analysisAbort?.abort(); stopAnalysisWorker(abortError()); });
 
-function revealAnalysisProgress(n = analysisStage) {
-  const card = $('stageLive' + n);
-  if (!card || card.hidden || n < 2) return;
+function analysisNavigationOffset() {
   const nav = document.querySelector('.analysis-navigation');
   const header = document.querySelector('.appbar');
-  const top = Math.max(0, header.getBoundingClientRect().bottom) + nav.getBoundingClientRect().height + 10;
-  window.scrollTo({ top: Math.max(0, window.scrollY + card.getBoundingClientRect().top - top), behavior: 'instant' });
+  const headerHeight = getComputedStyle(header).position === 'sticky' ? header.getBoundingClientRect().height : 0;
+  nav.style.top = headerHeight + 'px';
+  const top = headerHeight + nav.getBoundingClientRect().height + 10;
+  document.querySelector('.steps').style.setProperty('--analysis-offset', top + 'px');
+  return top;
 }
-window.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
-window.visualViewport?.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
+function stopAnalysisScroll() { analysisScroll?.(); }
+function revealAnalysisProgress(n = analysisStage, smooth = false) {
+  const section = $('s' + n), card = $('stageLive' + n);
+  if (section.hidden) return Promise.resolve();
+  stopAnalysisScroll();
+  const top = analysisNavigationOffset(), sectionTop = section.getBoundingClientRect().top;
+  // Keep the heading in view when the entire live panel fits below it.
+  const target = card && !card.hidden && card.getBoundingClientRect().bottom - sectionTop > innerHeight - top - 12 ? card : section;
+  const destination = Math.max(0, window.scrollY + target.getBoundingClientRect().top - top);
+  if (!smooth || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    window.scrollTo({ top: destination, behavior: 'instant' }); return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    const start = window.scrollY, time = performance.now(), signal = analysisAbort?.signal;
+    const finish = () => { cancelAnimationFrame(analysisScrollFrame); analysisScroll = null; signal?.removeEventListener('abort', finish); resolve(); };
+    analysisScroll = finish; signal?.addEventListener('abort', finish, { once: true });
+    const tick = now => {
+      const t = Math.min(1, (now - time) / 520), ease = t * t * (3 - 2 * t);
+      window.scrollTo({ top: start + (destination - start) * ease, behavior: 'instant' });
+      if (t < 1) analysisScrollFrame = requestAnimationFrame(tick); else finish();
+    };
+    analysisScrollFrame = requestAnimationFrame(tick);
+  });
+}
+window.addEventListener('wheel', stopAnalysisScroll, { passive: true });
+window.addEventListener('touchstart', stopAnalysisScroll, { passive: true });
+let analysisResizeFrame = 0;
+function resizeAnalysisView() {
+  cancelAnimationFrame(analysisResizeFrame);
+  analysisResizeFrame = requestAnimationFrame(() => {
+    analysisNavigationOffset();
+    if (astraBusy) revealAnalysisProgress();
+  });
+}
+window.addEventListener('resize', resizeAnalysisView);
+window.visualViewport?.addEventListener('resize', resizeAnalysisView);
 
 function refreshStageNav() {
   const done = [S.data, S.ref, S.train, S.probs, S.fin];
   document.querySelectorAll('[data-analysis-stage]').forEach(b => {
     const n = Number(b.dataset.analysisStage), selected = n === analysisStage;
-    b.disabled = astraBusy ? !selected : !done[n];
-    b.setAttribute('aria-selected', String(selected)); b.tabIndex = selected ? 0 : -1;
+    b.disabled = !selected && !done[n];
+    b.setAttribute('aria-current', selected ? 'step' : 'false');
+    b.tabIndex = b.disabled ? -1 : 0;
     b.classList.toggle('is-complete', !!done[n] && n > 0);
   });
   [1, 2, 3, 4].forEach(n => {
@@ -3616,31 +3678,46 @@ function refreshStageNav() {
     $('btn' + n).setAttribute('aria-current', n === analysisStage ? 'step' : 'false');
   });
   $('btnCancel').hidden = !astraBusy;
+  $('analysisPosition').textContent = analysisStage ? `Шаг ${analysisStage} из 4` : 'Начало';
 }
 function showAnalysisStage(n, scroll = false) {
   analysisStage = n;
-  for (let i = 0; i <= 4; i++) $('s' + i).hidden = i !== n;
-  $('resultsHeading').hidden = n === 0;
+  $('s' + n).hidden = false;
+  if (n) $('resultsHeading').hidden = false;
   refreshStageNav();
   if (scroll) {
-    const section = $('s' + n);
-    if (n >= 2 && !$('stageLive' + n).hidden) revealAnalysisProgress(n);
-    else section.scrollIntoView?.({ behavior: 'instant', block: 'start' });
-    section.querySelector('h2').focus({ preventScroll: true });
+    $('s' + n).querySelector('h2').focus({ preventScroll: true });
+    revealAnalysisProgress(n, true);
   }
   requestAnimationFrame(() => { for (const c of Object.values(S.charts)) if (c.canvas.closest('#s' + n)) c.resize(); });
 }
 document.querySelectorAll('[data-analysis-stage]').forEach(b => {
-  b.addEventListener('click', () => showAnalysisStage(Number(b.dataset.analysisStage), true));
+  b.addEventListener('click', () => {
+    const n = Number(b.dataset.analysisStage);
+    if (astraBusy) revealAnalysisProgress(n, true); else showAnalysisStage(n, true);
+  });
   b.addEventListener('keydown', e => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-    const tabs = [...document.querySelectorAll('[data-analysis-stage]')].filter(t => !t.disabled);
+    const tabs = [...document.querySelectorAll('[data-analysis-stage]')].filter(t => !t.disabled).sort((a, b) => Number(a.dataset.analysisStage) - Number(b.dataset.analysisStage));
     let i = tabs.indexOf(b);
     i = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
     e.preventDefault(); tabs[i].click(); tabs[i].focus();
   });
 });
 $('btnCancel').addEventListener('click', () => analysisAbort?.abort());
+// When reviewing the finished feed, the legend follows the section on screen.
+let analysisSpyFrame = 0;
+window.addEventListener('scroll', () => {
+  if (analysisSpyFrame || astraBusy || analysisScroll || currentPage !== 'analysis') return;
+  analysisSpyFrame = requestAnimationFrame(() => {
+    analysisSpyFrame = 0;
+    if (astraBusy || analysisScroll || currentPage !== 'analysis') return;
+    const top = analysisNavigationOffset() + 40;
+    const visible = [...document.querySelectorAll('#page-analysis main>.step')].filter(s => !s.hidden);
+    const section = visible.filter(s => s.getBoundingClientRect().top <= top).at(-1);
+    if (section && Number(section.id.slice(1)) !== analysisStage) { analysisStage = Number(section.id.slice(1)); refreshStageNav(); }
+  });
+}, { passive: true });
 
 function stageStatus(text) {
   $('globalStatus').textContent = text;
@@ -3650,6 +3727,8 @@ function progressCard(stage) {
   const el = $('stageLive' + stage); el.hidden = false; el.classList.add('is-running');
   $('stageStatus' + stage).textContent = 'Подготовка…';
   $('elapsed' + stage).textContent = '0 с';
+  if (stage === 3) { prepareInference(); $('otherProbs').textContent = ''; }
+  if (stage === 4) { $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…'; $('fitPhase').textContent = 'Перебор стартов, точный фит и оценка погрешностей.'; }
 }
 function progressValue(fraction) {
   if (!Number.isFinite(fraction)) return;
@@ -3680,29 +3759,26 @@ function renderInferenceFrame(frame, final = false) {
     row.querySelector('.live-prob-bar').style.width = (100 * frame.probs[i]) + '%';
   }
   $('otherProbs').textContent = 'Остальные 7 комбинаций: ' + fmt(100 * order.slice(5).reduce((s, i) => s + frame.probs[i], 0), 1) + ' %';
-  stageStatus(final ? 'Итоговые вероятности' : 'Определяем вероятности · ' + Math.round(100 * frame.fraction) + ' %');
+  stageStatus(final ? 'Итоговые вероятности' : 'Определяем вероятности · ' + Math.round(100 * frame.fraction) + '\u00a0%');
   progressValue(frame.fraction);
 }
 function prepareInference() {
   $('inferenceTop').innerHTML = E.CLASSES.map((c, i) => {
     const parts = [c.g ? 'градиент n' + (c.g > 0 ? '↑' : '↓') : '', c.r ? 'шероховатость' : '', c.a ? 'поглощение' : ''].filter(Boolean);
     const name = parts.length ? parts.join(', ') : 'однородная плёнка';
-    return `<div class="live-prob-row" id="probLive${i}" aria-hidden="true"><span class="live-rank"></span><span class="live-prob-name" title="${c.name}">${name}</span><b class="live-prob-value">—</b><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`;
+    return `<div class="live-prob-row" id="probLive${i}" aria-hidden="true"><span class="live-rank"></span><div class="live-prob-copy"><b class="live-prob-value">—</b><span class="live-prob-name" title="${c.name}">${name}</span></div><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`;
   }).join('');
 }
 async function animateInference(frames) {
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const duration = reduced ? 0 : 2200, started = performance.now();
-  let previous = -1;
-  do {
+  // Sample actual forward-pass frames at a readable pace, without invented values.
+  const count = reduced ? 1 : Math.min(8, frames.length);
+  for (let k = 0; k < count; k++) {
     if (analysisAbort?.signal.aborted) throw abortError();
-    const i = duration ? Math.min(frames.length - 1, Math.floor((performance.now() - started) / duration * (frames.length - 1))) : frames.length - 1;
-    if (i !== previous) { renderInferenceFrame(frames[i], i === frames.length - 1); previous = i; }
-    if (i === frames.length - 1) break;
-    await new Promise(resolve => setTimeout(resolve, 32));
-  } while (true);
-  if (!reduced) await new Promise(resolve => setTimeout(resolve, 200));
-  if (analysisAbort?.signal.aborted) throw abortError();
+    const i = count === 1 ? frames.length - 1 : Math.round(k * (frames.length - 1) / (count - 1));
+    renderInferenceFrame(frames[i], k === count - 1);
+    if (k < count - 1) await analysisPause(600);
+  }
 }
 
 function fitMetric(value, digits) {

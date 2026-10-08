@@ -1,9 +1,21 @@
-// The analysis workspace shows one stage; computation runs in a reusable Worker.
+// Completed stages stay in a continuous feed; computation runs in a reusable Worker.
 let analysisWorker = null, analysisRequest = 0, analysisPending = null, analysisAbort = null;
 let analysisStage = 0, fitHistory = [], analysisStarted = 0, analysisTimer = null;
 const stageNames = ['Спектр', 'Опорный фит', 'Обучение ИИ', 'Диагноз', 'Окончательный фит'];
 const abortError = () => new DOMException('Расчёт остановлен.', 'AbortError');
 const yieldPaint = () => new Promise(resolve => setTimeout(resolve, 24));
+const analysisResultHold = 2400;
+let analysisScroll = null, analysisScrollFrame = 0;
+function analysisPause(ms) {
+  const signal = analysisAbort?.signal;
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(abortError()); return; }
+    const finish = () => { signal?.removeEventListener('abort', cancel); resolve(); };
+    const timer = setTimeout(finish, ms);
+    const cancel = () => { clearTimeout(timer); signal?.removeEventListener('abort', cancel); reject(abortError()); };
+    signal?.addEventListener('abort', cancel, { once: true });
+  });
+}
 function stopAnalysisWorker(error) {
   if (analysisWorker) analysisWorker.terminate();
   analysisWorker = null;
@@ -40,23 +52,59 @@ function analysisTask(type, args, onProgress) {
 }
 window.addEventListener('pagehide', () => { analysisAbort?.abort(); stopAnalysisWorker(abortError()); });
 
-function revealAnalysisProgress(n = analysisStage) {
-  const card = $('stageLive' + n);
-  if (!card || card.hidden || n < 2) return;
+function analysisNavigationOffset() {
   const nav = document.querySelector('.analysis-navigation');
   const header = document.querySelector('.appbar');
-  const top = Math.max(0, header.getBoundingClientRect().bottom) + nav.getBoundingClientRect().height + 10;
-  window.scrollTo({ top: Math.max(0, window.scrollY + card.getBoundingClientRect().top - top), behavior: 'instant' });
+  const headerHeight = getComputedStyle(header).position === 'sticky' ? header.getBoundingClientRect().height : 0;
+  nav.style.top = headerHeight + 'px';
+  const top = headerHeight + nav.getBoundingClientRect().height + 10;
+  document.querySelector('.steps').style.setProperty('--analysis-offset', top + 'px');
+  return top;
 }
-window.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
-window.visualViewport?.addEventListener('resize', () => { if (astraBusy && analysisStage >= 2) requestAnimationFrame(() => revealAnalysisProgress()); });
+function stopAnalysisScroll() { analysisScroll?.(); }
+function revealAnalysisProgress(n = analysisStage, smooth = false) {
+  const section = $('s' + n), card = $('stageLive' + n);
+  if (section.hidden) return Promise.resolve();
+  stopAnalysisScroll();
+  const top = analysisNavigationOffset(), sectionTop = section.getBoundingClientRect().top;
+  // Keep the heading in view when the entire live panel fits below it.
+  const target = card && !card.hidden && card.getBoundingClientRect().bottom - sectionTop > innerHeight - top - 12 ? card : section;
+  const destination = Math.max(0, window.scrollY + target.getBoundingClientRect().top - top);
+  if (!smooth || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    window.scrollTo({ top: destination, behavior: 'instant' }); return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    const start = window.scrollY, time = performance.now(), signal = analysisAbort?.signal;
+    const finish = () => { cancelAnimationFrame(analysisScrollFrame); analysisScroll = null; signal?.removeEventListener('abort', finish); resolve(); };
+    analysisScroll = finish; signal?.addEventListener('abort', finish, { once: true });
+    const tick = now => {
+      const t = Math.min(1, (now - time) / 520), ease = t * t * (3 - 2 * t);
+      window.scrollTo({ top: start + (destination - start) * ease, behavior: 'instant' });
+      if (t < 1) analysisScrollFrame = requestAnimationFrame(tick); else finish();
+    };
+    analysisScrollFrame = requestAnimationFrame(tick);
+  });
+}
+window.addEventListener('wheel', stopAnalysisScroll, { passive: true });
+window.addEventListener('touchstart', stopAnalysisScroll, { passive: true });
+let analysisResizeFrame = 0;
+function resizeAnalysisView() {
+  cancelAnimationFrame(analysisResizeFrame);
+  analysisResizeFrame = requestAnimationFrame(() => {
+    analysisNavigationOffset();
+    if (astraBusy) revealAnalysisProgress();
+  });
+}
+window.addEventListener('resize', resizeAnalysisView);
+window.visualViewport?.addEventListener('resize', resizeAnalysisView);
 
 function refreshStageNav() {
   const done = [S.data, S.ref, S.train, S.probs, S.fin];
   document.querySelectorAll('[data-analysis-stage]').forEach(b => {
     const n = Number(b.dataset.analysisStage), selected = n === analysisStage;
-    b.disabled = astraBusy ? !selected : !done[n];
-    b.setAttribute('aria-selected', String(selected)); b.tabIndex = selected ? 0 : -1;
+    b.disabled = !selected && !done[n];
+    b.setAttribute('aria-current', selected ? 'step' : 'false');
+    b.tabIndex = b.disabled ? -1 : 0;
     b.classList.toggle('is-complete', !!done[n] && n > 0);
   });
   [1, 2, 3, 4].forEach(n => {
@@ -64,31 +112,46 @@ function refreshStageNav() {
     $('btn' + n).setAttribute('aria-current', n === analysisStage ? 'step' : 'false');
   });
   $('btnCancel').hidden = !astraBusy;
+  $('analysisPosition').textContent = analysisStage ? `Шаг ${analysisStage} из 4` : 'Начало';
 }
 function showAnalysisStage(n, scroll = false) {
   analysisStage = n;
-  for (let i = 0; i <= 4; i++) $('s' + i).hidden = i !== n;
-  $('resultsHeading').hidden = n === 0;
+  $('s' + n).hidden = false;
+  if (n) $('resultsHeading').hidden = false;
   refreshStageNav();
   if (scroll) {
-    const section = $('s' + n);
-    if (n >= 2 && !$('stageLive' + n).hidden) revealAnalysisProgress(n);
-    else section.scrollIntoView?.({ behavior: 'instant', block: 'start' });
-    section.querySelector('h2').focus({ preventScroll: true });
+    $('s' + n).querySelector('h2').focus({ preventScroll: true });
+    revealAnalysisProgress(n, true);
   }
   requestAnimationFrame(() => { for (const c of Object.values(S.charts)) if (c.canvas.closest('#s' + n)) c.resize(); });
 }
 document.querySelectorAll('[data-analysis-stage]').forEach(b => {
-  b.addEventListener('click', () => showAnalysisStage(Number(b.dataset.analysisStage), true));
+  b.addEventListener('click', () => {
+    const n = Number(b.dataset.analysisStage);
+    if (astraBusy) revealAnalysisProgress(n, true); else showAnalysisStage(n, true);
+  });
   b.addEventListener('keydown', e => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-    const tabs = [...document.querySelectorAll('[data-analysis-stage]')].filter(t => !t.disabled);
+    const tabs = [...document.querySelectorAll('[data-analysis-stage]')].filter(t => !t.disabled).sort((a, b) => Number(a.dataset.analysisStage) - Number(b.dataset.analysisStage));
     let i = tabs.indexOf(b);
     i = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
     e.preventDefault(); tabs[i].click(); tabs[i].focus();
   });
 });
 $('btnCancel').addEventListener('click', () => analysisAbort?.abort());
+// When reviewing the finished feed, the legend follows the section on screen.
+let analysisSpyFrame = 0;
+window.addEventListener('scroll', () => {
+  if (analysisSpyFrame || astraBusy || analysisScroll || currentPage !== 'analysis') return;
+  analysisSpyFrame = requestAnimationFrame(() => {
+    analysisSpyFrame = 0;
+    if (astraBusy || analysisScroll || currentPage !== 'analysis') return;
+    const top = analysisNavigationOffset() + 40;
+    const visible = [...document.querySelectorAll('#page-analysis main>.step')].filter(s => !s.hidden);
+    const section = visible.filter(s => s.getBoundingClientRect().top <= top).at(-1);
+    if (section && Number(section.id.slice(1)) !== analysisStage) { analysisStage = Number(section.id.slice(1)); refreshStageNav(); }
+  });
+}, { passive: true });
 
 function stageStatus(text) {
   $('globalStatus').textContent = text;
@@ -98,6 +161,8 @@ function progressCard(stage) {
   const el = $('stageLive' + stage); el.hidden = false; el.classList.add('is-running');
   $('stageStatus' + stage).textContent = 'Подготовка…';
   $('elapsed' + stage).textContent = '0 с';
+  if (stage === 3) { prepareInference(); $('otherProbs').textContent = ''; }
+  if (stage === 4) { $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…'; $('fitPhase').textContent = 'Перебор стартов, точный фит и оценка погрешностей.'; }
 }
 function progressValue(fraction) {
   if (!Number.isFinite(fraction)) return;
@@ -128,29 +193,26 @@ function renderInferenceFrame(frame, final = false) {
     row.querySelector('.live-prob-bar').style.width = (100 * frame.probs[i]) + '%';
   }
   $('otherProbs').textContent = 'Остальные 7 комбинаций: ' + fmt(100 * order.slice(5).reduce((s, i) => s + frame.probs[i], 0), 1) + ' %';
-  stageStatus(final ? 'Итоговые вероятности' : 'Определяем вероятности · ' + Math.round(100 * frame.fraction) + ' %');
+  stageStatus(final ? 'Итоговые вероятности' : 'Определяем вероятности · ' + Math.round(100 * frame.fraction) + '\u00a0%');
   progressValue(frame.fraction);
 }
 function prepareInference() {
   $('inferenceTop').innerHTML = E.CLASSES.map((c, i) => {
     const parts = [c.g ? 'градиент n' + (c.g > 0 ? '↑' : '↓') : '', c.r ? 'шероховатость' : '', c.a ? 'поглощение' : ''].filter(Boolean);
     const name = parts.length ? parts.join(', ') : 'однородная плёнка';
-    return `<div class="live-prob-row" id="probLive${i}" aria-hidden="true"><span class="live-rank"></span><span class="live-prob-name" title="${c.name}">${name}</span><b class="live-prob-value">—</b><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`;
+    return `<div class="live-prob-row" id="probLive${i}" aria-hidden="true"><span class="live-rank"></span><div class="live-prob-copy"><b class="live-prob-value">—</b><span class="live-prob-name" title="${c.name}">${name}</span></div><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`;
   }).join('');
 }
 async function animateInference(frames) {
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const duration = reduced ? 0 : 2200, started = performance.now();
-  let previous = -1;
-  do {
+  // Sample actual forward-pass frames at a readable pace, without invented values.
+  const count = reduced ? 1 : Math.min(8, frames.length);
+  for (let k = 0; k < count; k++) {
     if (analysisAbort?.signal.aborted) throw abortError();
-    const i = duration ? Math.min(frames.length - 1, Math.floor((performance.now() - started) / duration * (frames.length - 1))) : frames.length - 1;
-    if (i !== previous) { renderInferenceFrame(frames[i], i === frames.length - 1); previous = i; }
-    if (i === frames.length - 1) break;
-    await new Promise(resolve => setTimeout(resolve, 32));
-  } while (true);
-  if (!reduced) await new Promise(resolve => setTimeout(resolve, 200));
-  if (analysisAbort?.signal.aborted) throw abortError();
+    const i = count === 1 ? frames.length - 1 : Math.round(k * (frames.length - 1) / (count - 1));
+    renderInferenceFrame(frames[i], k === count - 1);
+    if (k < count - 1) await analysisPause(600);
+  }
 }
 
 function fitMetric(value, digits) {
