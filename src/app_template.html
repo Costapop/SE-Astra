@@ -16,7 +16,7 @@
 :root {
   --bg: #F3F5F8; --surface: #FFFFFF; --surface2: #EAEFF4; --text: #17212C; --muted: #5E6C7A; --line: #D5DDE5; --line2: #E6EBF0;
   --accent: #1E6E8E; --accent-ink: #FFFFFF; --psi: #2F6FD6; --del: #D24A4A; --warn: #C27A18; --ok: #2E8B57; --shadow: 0 1px 2px rgba(23,33,44,.08);
-  /* категориальная палитра дефектов (проверена на различимость при нарушениях цветовосприятия) и сущностей фита */
+  /* категориальная палитра дефектов и моделей фита; ряды также различаются подписями и маркерами */
   --c-gradp: #EB6834; --c-gradn: #2A78D6; --c-rough: #199E70; --c-abs: #4A3AA7; --c-ref: #EB6834; --c-fin: #2A78D6;
   --barh: 52px; --font: 15px;
   box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.3</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.3.0</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -258,7 +258,7 @@ footer p { margin: 4px 0; }
     <label for="fileIn">Свой спектр: λ, Ψ, Δ и, при наличии, σΨ, σΔ</label>
     <div class="upload-zone" id="uploadZone"><span class="upload-icon" aria-hidden="true">＋</span><span>Выбрать файл или перетащить сюда</span><small>XLSX, XLS, CSV или TXT</small><input type="file" id="fileIn" accept=".xlsx,.xls,.csv,.txt" aria-label="Загрузить спектр"></div>
     <div class="checks" style="margin:10px 0 2px"><label><input type="checkbox" id="ckBack"> в измерении есть отражение от задней стороны подложки</label></div>
-    <p class="note">Плоскопараллельная прозрачная подложка: пучки, отражённые задней гранью, складываются с передним некогерентно. Доля и толщина — в «Априорных условиях»; они же используются в симуляторе и в обучении ИИ. Для поглощающей подложки (c-Si) вклад исчезает сам.</p>
+    <p class="note">Плоскопараллельная прозрачная подложка: пучки, отражённые задней гранью, складываются с передним некогерентно. Доля и толщина — в «Априорных условиях»; они же используются в симуляторе и в обучении ИИ. Поглощение подавляет вклад задней стороны в зависимости от длины волны и толщины подложки: c-Si непрозрачен в видимом диапазоне, но может пропускать свет в ближнем ИК.</p>
     <div id="dataInfo" class="status"></div>
   </div>
   <div class="card">
@@ -433,7 +433,7 @@ footer p { margin: 4px 0; }
       </div>
       <p class="training-note">Якоря HW/QW берутся из тех же спектров; используются остатки уже выполненного фита.</p>
     </div>
-    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. Подготовка разделена на два прохода: сначала моделирование и опорный фит всех спектров, затем поиск HW/QW-якорей и расчёт восьми признаков из остатка. Отдельного фита только по якорям нет. При недостатке якорей восемь дополнительных признаков равны нулю. Третья строка показывает 250 эпох обучения для контрольной выборки, 250 эпох итогового классификатора и три регрессии размеров дефектов; процент отражает выполненные операции, а не оставшееся время. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p></details>
+    <details class="stage-explanation"><summary>Как обучается модель</summary><p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной моделью с собственной дисперсией материала; на его остатке и учится логистическая регрессия. Подготовка разделена на два прохода: сначала моделирование и опорный фит всех спектров, затем поиск HW/QW-якорей и расчёт восьми признаков из остатка. Отдельного фита только по якорям нет. При недостатке якорей шесть якорных признаков равны нулю, а RMS остатков Ψ и Δ сохраняются. Третья строка показывает 250 эпох обучения для контрольной выборки, 250 эпох итогового классификатора и шесть регрессий размеров дефектов: три для контроля на отложенных примерах и три итоговые; процент отражает выполненные операции, а не оставшееся время. Поглощение меняет контраст и фазу полос; его отклик может перекрываться с откликами градиента и ошибок условий. Диагноз проверяется окончательным фитом.</p></details>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
@@ -446,7 +446,7 @@ footer p { margin: 4px 0; }
       <div class="live-prob-list" id="inferenceTop" aria-label="Пять наиболее вероятных комбинаций"></div>
       <p id="otherProbs" class="note"></p>
     </div>
-    <details class="stage-explanation"><summary>О диагнозе и выборе модели</summary><p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — вероятность каждого класса и оценка размеров дефектов регрессией. Модель для окончательного фита можно поправить вручную. Промежуточные вероятности учитывают часть признаков; последняя оценка использует все признаки модели. В кратких названиях n↑ и n↓ означают рост и снижение показателя к поверхности.</p></details>
+    <details class="stage-explanation"><summary>О диагнозе и выборе модели</summary><p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — выходные вероятности классов для заданных условий обучения и оценки размеров дефектов регрессией. Эти вероятности не калиброваны как уверенность в наличии дефекта в реальном образце. Модель для окончательного фита можно поправить вручную. Промежуточные вероятности учитывают часть признаков; последняя оценка использует все признаки модели. В кратких названиях n↑ и n↓ означают рост и снижение показателя к поверхности.</p></details>
     <div id="diagOut" class="empty">Сначала обучение.</div>
     <div class="checks" id="modelChoice" style="display:none">
       <label><input type="checkbox" id="ckGrad"> градиент показателя по глубине</label>
@@ -467,7 +467,7 @@ footer p { margin: 4px 0; }
       </div>
       <p id="fitScale" class="note">Ниже — лучше. Разрыв линии — новый старт, сетка или модель. Точка — текущее решение.</p><p id="fitPhase" class="note">Ожидаем первые расчёты…</p>
     </div>
-    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %, 160 при |δ| &gt; 12 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта ниже порога значимости с учётом систематики и численного минимума отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p><p class="note">На графике показано χ²/ν = Σr²/(2N − p), где r — остатки Ψ и Δ, делённые на их σ, N — число длин волн, p — число свободных параметров. Около 1 — остаток сопоставим с заданным шумом. Вертикальная шкала логарифмическая, поэтому равный сдвиг означает одинаковое отношение невязок. По горизонтали — суммарное число вызовов функции невязки при оптимизации, включая якобианы и повторы после вето; это не число итераций и не процент готовности. Систематические погрешности и проверка по скрытой истине считаются отдельно. Линии соединяют показанные состояния внутри одного запуска; быстрые промежуточные состояния прорежены. Итоговая точка соответствует результату в таблице. Нулевая невязка показана у нижней границы шкалы.</p></details>
+    <details class="stage-explanation"><summary>Как выполняется окончательный фит</summary><p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %, 160 при |δ| &gt; 12 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — проверяются на грубой модели, затем лучший уточняется на точной. Параметр дефекта ниже порога значимости с учётом систематики и численного минимума отбрасывается, и фит повторяется. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p><p class="note">На графике показано χ²/ν = Σr²/(2N − p), где r — остатки Ψ и Δ, делённые на их σ, N — число длин волн, p — число свободных параметров. Около 1 — остаток сопоставим с заданным шумом. Вертикальная шкала логарифмическая, поэтому равный сдвиг означает одинаковое отношение невязок. По горизонтали — суммарное число вызовов функции невязки при оптимизации, включая якобианы и повторы после вето; это не число итераций и не процент готовности. Систематические погрешности и проверка по скрытой истине считаются отдельно. Линии соединяют показанные состояния внутри одного запуска; быстрые промежуточные состояния прорежены. Итоговая точка соответствует результату в таблице. Нулевая невязка показана у нижней границы шкалы.</p></details>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
@@ -485,7 +485,7 @@ footer p { margin: 4px 0; }
 </div>
 <div class="page" id="page-demo" hidden>
 <div class="lead-box"><div class="page-heading"><div><p class="eyebrow">ФИЗИКА В ДЕТАЛЯХ</p><h1>Увидеть закономерности<span>.</span></h1></div><span class="local-badge">Иллюстрации и экспорт</span></div>
-  <p class="tagline">Наглядные картины для докладов и демонстраций: как выглядят отпечатки дефектов в остатке фита, почему полуволновые якоря читают их напрямую, что такое хвост поглощения в дисперсии плёнки, что делает со спектром задняя сторона подложки и каждый эффект прибора. Всё строится для текущего спектра и условий страницы «Анализ».</p>
+  <p class="tagline">Наглядные картины для докладов и демонстраций: как выглядят отпечатки дефектов в остатке фита, как фазовые якоря помогают сравнивать их, что такое хвост поглощения в дисперсии плёнки, что делает со спектром задняя сторона подложки и каждый эффект прибора. Всё строится для текущего спектра и условий страницы «Анализ».</p>
 </div>
 <div class="wrap">
 <aside>
@@ -544,19 +544,19 @@ footer p { margin: 4px 0; }
       </div>
       <div class="chart-legend legend-scale" id="fingerRamp" role="img" aria-label="Цвет точек — длина волны"><span class="legend-scale-title">Цвет точек · λ</span><span class="ramp"><span id="rampL0">400 нм</span><span class="ramp-bar"></span><span id="rampL1">800 нм</span></span></div>
       <div class="minis cols3" id="fingerGrid"></div>
-      <div class="fig-note" id="fingerGridNote">Оси каждой панели: по горизонтали — Ψ-остаток, по вертикали — Δ-остаток, в единицах σ; цветные точки в заголовке — дефекты класса. Каналы — те же величины, что читает ИИ: Ψ в HW-якорях (градиент), |Δ| в HW-якорях (шероховатость), перепад Ψ синие − красные якоря (поглощение).</div>
+      <div class="fig-note" id="fingerGridNote">Оси каждой панели: по горизонтали — Ψ-остаток, по вертикали — Δ-остаток, в единицах σ; цветные точки в заголовке — дефекты класса. Каналы — те же величины, которые использует классификатор: Ψ в HW-якорях (градиент), |Δ| в HW-якорях (шероховатость), перепад Ψ синие − красные якоря (поглощение).</div>
       <div class="fig-table hidden"></div>
     </figure>
   </section>
 
   <section class="step" id="dm-anchors">
     <h2><span class="num">2</span>Якорные точки: Ψ и Δ дефектов против голой подложки</h2>
-    <p class="lead">В полуволновых точках (HW; фаза полос кратна 360°) однородная прозрачная плёнка оптически «исчезает»: Ψ равен Ψ голой подложки при любых n и d. Поэтому отклонение Ψ от подложки в HW-якорях не зависит от того, как подобрана дисперсия, и читает дефекты напрямую: градиент сдвигает Ψ во всех HW-якорях примерно одинаково, поглощение — тем сильнее, чем ближе к синему краю, а шероховатость почти не трогает Ψ, но сдвигает Δ в HW- и четвертьволновых (QW) якорях.</p>
+    <p class="lead">HW и QW — условные метки фазовых якорей: разность Δ плёнки и подложки пересекает уровни 360°k и 180° + 360°k. В идеальной прозрачной однородной плёнке при истинном полуволновом условии коэффициенты отражения совпадают с голой подложкой; одного совпадения эллипсометрических фаз для этого недостаточно. Якорные отклики зависят от материала, угла и условий. Сравнивайте варианты с однородной плёнкой: отдельный канал не определяет дефект однозначно.</p>
     <div id="dmAnchorInfo" class="note"></div>
     <figure class="fig" data-fig="se-ai_anchors_psi_phase" id="figAnchSpec">
       <figcaption><span class="fig-title">Ψ(λ) и фаза полос: где стоят якоря</span><span class="fig-sub">вертикальные линии — HW (сплошные) и QW (пунктир) якоря однородной плёнки</span><span class="fig-tools"></span></figcaption>
       <div class="grid2"><div class="chart demo"><canvas id="cAnchPsi"></canvas></div><div class="chart demo"><canvas id="cAnchPhase"></canvas></div></div>
-      <div class="fig-note">Слева — Ψ подложки, однородной плёнки и плёнок с дефектами: в HW-якорях кривая однородной прозрачной плёнки касается кривой подложки (если материал поглощает на синем краю, касание там неполное — см. примечание к сводке). Справа — фаза полос φ = unwrap(Δ − Δ<sub>подл</sub>): HW-якоря — пересечения с уровнями k·360°, QW — с уровнями k·360° + 180°.</div>
+      <div class="fig-note">Слева — Ψ подложки, однородной плёнки и плёнок с дефектами. Совпадение Ψ плёнки и подложки в фазовом HW-якоре зависит от оптических условий; оно не гарантировано определением якоря. Справа — фаза полос φ = ±unwrap(Δ − Δ<sub>подл</sub>), знак выбран для возрастания с λ: HW-якоря — пересечения с уровнями k·360°, QW — с уровнями k·360° + 180°.</div>
       <div class="fig-table hidden"></div>
     </figure>
     <figure class="fig" data-fig="se-ai_anchors_patterns" id="figAnchPat">
@@ -568,7 +568,7 @@ footer p { margin: 4px 0; }
         <div class="chart demo short"><canvas id="cAnchPsiHW"></canvas></div><div class="chart demo short"><canvas id="cAnchPsiQW"></canvas></div>
         <div class="chart demo short"><canvas id="cAnchDelHW"></canvas></div><div class="chart demo short"><canvas id="cAnchDelQW"></canvas></div>
       </div>
-      <div class="fig-note">Ψ − Ψ<sub>подл</sub> и Δ − Δ<sub>подл</sub> (для QW — за вычетом 180°) точно в якорях однородной плёнки; в QW-якорях Ψ сравнивается с однородной плёнкой, потому что там плёнка не «исчезает». У однородной прозрачной плёнки в HW-якорях обе величины — нули (у материала с поглощением в диапазоне Ψ-отклонение однородной плёнки в синих якорях отлично от нуля — это не дефект); у градиента Ψ-отклонение в HW примерно постоянно по диапазону (его знак — знак δ), у поглощения оно растёт к синему краю, у шероховатости выражено Δ-отклонение.</div>
+      <div class="fig-note">Модель вычисляется в уточнённых фазовых якорях однородной плёнки. В HW показаны Ψ − Ψ<sub>подл</sub> и Δ − Δ<sub>подл</sub>; в QW — Ψ − Ψ<sub>однор</sub> и Δ − Δ<sub>подл</sub> − 180°. Разности Δ приведены к диапазону ±180°. Нулевой фазовый отклик однородной плёнки следует из определения якорей; нулевой Ψ-отклик в HW не гарантирован. Сравнение с однородным рядом отделяет отклик добавленного дефекта в выбранной модели; знак и форма этого отклика зависят от материала и условий.</div>
       <div class="fig-table hidden"></div>
     </figure>
     <div id="dmAnchorTable"></div>
@@ -584,9 +584,9 @@ footer p { margin: 4px 0; }
       <div class="fig-table hidden"></div>
     </figure>
     <figure class="fig" data-fig="se-ai_absorption_tail_eps2" id="figDispTail">
-      <figcaption><span class="fig-title">Хвост поглощения: k хвоста и мнимая часть ε по энергии фотона</span><span class="fig-tools"></span></figcaption>
+      <figcaption><span class="fig-title">Хвост поглощения: k хвоста и ε₂ = −Im ε по энергии фотона</span><span class="fig-tools"></span></figcaption>
       <div class="grid2"><div class="chart demo"><canvas id="cDispTail"></canvas></div><div class="chart demo"><canvas id="cDispEps"></canvas></div></div>
-      <div class="fig-note">Слева — k хвоста (k плёнки с хвостом минус k без него) для истины и окончательного фита. Справа — ε₂(E) в логарифмическом масштабе: основной осциллятор материала обращается в нуль ниже E<sub>g</sub>, хвост начинается с E<sub>t</sub> = 1.2 эВ; закрашена измеряемая область энергий.</div>
+      <div class="fig-note">Слева — k хвоста (k плёнки с хвостом минус k без него) для истины и окончательного фита. Справа — положительная величина потерь ε₂(E) = −Im ε в логарифмическом масштабе: основной осциллятор материала обращается в нуль ниже E<sub>g</sub>, хвост начинается с E<sub>t</sub> = 1.2 эВ; закрашена измеряемая область энергий.</div>
       <div class="fig-table hidden"></div>
     </figure>
     <div class="formula" id="dmFormula"></div>
@@ -677,12 +677,13 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.2.3';
+  const APP_VERSION = '1.3.0';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
   const numStr = (v, n) => { let t = Number(v).toFixed(n); if (/^-0(\.0*)?$/.test(t)) t = t.slice(1); return t.replace('-', MINUS); };   // без «−0.000»
   const fmt = (v, n) => (isFinite(v) ? numStr(v, n) : '—');
+  const errorLabel = (value, render) => Number.isFinite(value) && value >= 0 ? ` ± ${render(value)}` : ' (погрешность не определена)';
   const fmtK = (k, n) => (isFinite(k) ? numStr(1000 * k, n === undefined ? 2 : n) + '·10⁻³' : '—');   // k хвоста при 400 нм
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const CH = { psiHW: -8, psiHWsd: -7, delHW: -6, delQW: -5, rmsPsi: -4, rmsDel: -3, psiHWtrend: -2, psiQWtrend: -1 };   // позиции каналов в конце вектора признаков
@@ -954,7 +955,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     return o;
   }
   const pts = (x, y) => Array.from(x, (v, i) => ({ x: v, y: y[i] }));
-  const fmtVal = (v) => { if (v === null || v === undefined || !isFinite(v)) return '—'; const a = Math.abs(v); return numStr(v, a >= 100 ? 1 : a >= 1 ? 3 : 5); };
+  const fmtVal = (v) => { if (v === null || v === undefined || !isFinite(v)) return '—'; const a = Math.abs(v); return a > 0 && (a < 1e-5 || a >= 1e8) ? Number(v).toExponential(3).replace(/-/g, MINUS) : numStr(v, a >= 100 ? 1 : a >= 1 ? 3 : 5); };
   /** Таблица значений графиков фигуры (двойник графика для чтения и копирования). Строки — по общей оси x (числовой, отсортированной, или
    *  по подписям категорий); у точек отпечатков с полем lam (плоскость Ψ-остаток, Δ-остаток) строки — по длине волны, на ряд два столбца Ψ и Δ. */
   function figTableHtml(fig) {
@@ -964,13 +965,14 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       const labels = (c.data.labels && c.data.labels.length) ? c.data.labels : null;                       // Chart.js хранит labels = [] и у числовых осей
       const byLam = ds.some(d => (d.data || []).some(p => p && typeof p === 'object' && p.lam !== undefined));
       const xt = byLam ? 'λ, нм' : ((c.options.scales && c.options.scales.x && c.options.scales.x.title && c.options.scales.x.title.text) || (labels ? '' : 'x'));
-      const cols = byLam ? ds.flatMap(d => [`${d.label}: Ψ`, `${d.label}: Δ`]) : ds.map(d => d.label || '');
+      const axisTitle = key => c.options.scales?.[key]?.title?.text || '';
+      const cols = byLam ? ds.flatMap(d => [`${d.label}: ${axisTitle('x') || 'Ψ'}`, `${d.label}: ${axisTitle('y') || 'Δ'}`]) : ds.map(d => [d.label, axisTitle(d.yAxisID || 'y')].filter(Boolean).join(' · '));
       ds.forEach((d, j) => (d.data || []).forEach((p, i) => {
-        let k, y; if (typeof p === 'number') { k = labels ? labels[i] : i; y = p; } else { if (!p) return; if (byLam) { if (!isFinite(p.lam)) return; k = +(+p.lam).toFixed(4); } else { if (!isFinite(p.x)) return; k = +(+p.x).toFixed(4); } y = p.y; }
+        let k, y; if (typeof p === 'number') { k = labels ? labels[i] : i; y = p; } else { if (!p) return; if (byLam) { if (!isFinite(p.lam)) return; k = +p.lam; } else { if (!isFinite(p.x)) return; k = +p.x; } y = p.y; }
         if (!xs.has(k)) xs.set(k, new Array(cols.length).fill(''));
         if (byLam) { xs.get(k)[2 * j] = fmtVal(p.x); xs.get(k)[2 * j + 1] = fmtVal(y); } else xs.get(k)[j] = fmtVal(y); }));
       const keys = [...xs.keys()]; if (!labels) keys.sort((a, b) => a - b);
-      const title = (c.options.plugins && c.options.plugins.title && c.options.plugins.title.text) || (ids.length > 1 && ds.length === 1 ? ds[0].label : '') || '';
+      const title = (c.options.plugins && c.options.plugins.title && c.options.plugins.title.text) || (ids.length > 1 ? [axisTitle('y'), axisTitle('y2')].filter(Boolean).join(' / ') : '') || '';
       return `${ids.length > 1 && title ? `<p class="note" style="margin:6px 8px 2px"><b>${esc(Array.isArray(title) ? title.join(' · ') : title)}</b></p>` : ''}<table><thead><tr><th class="${labels ? '' : 'num'}">${esc(xt)}</th>${cols.map(t => `<th class="num">${esc(t)}</th>`).join('')}</tr></thead><tbody>${keys.map(k => `<tr><td class="${labels ? '' : 'num'}">${labels ? esc(k) : fmtVal(k)}</td>${xs.get(k).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     }).join('');
   }
@@ -979,7 +981,38 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     if (!chart || !chart.canvas || !chart.canvas.toBlob) return;
     const dpr = chart.options.devicePixelRatio, external = chart.$astraLegend, legend = chart.options.plugins.legend;
     const saved = { display: legend.display, position: legend.position, align: legend.align, labels: { ...legend.labels }, title: { ...legend.title } };
+    // Chart.js exposes resolved options through a Proxy that cannot be spread.
+    // Keep the original plain configuration while replacing its title for export.
+    const savedTitle = chart.config.options.plugins.title;
+    const axisTitles = Object.values(chart.options.scales || {}).filter(scale => scale.title && scale.title.text).map(scale => [scale.title, scale.title.display]);
+    const exportWidth = external ? Math.max(960, chart.width) : chart.width;
+    const plainText = el => el ? Array.from(el.childNodes, node => node.nodeName === 'BR' ? '\n' : node.textContent).join('').replace(/[\t ]+/g, ' ').trim() : '';
+    const mini = chart.canvas.closest('.mini'), fig = chart.canvas.closest('figure.fig');
+    const headings = [plainText(fig?.querySelector('.fig-title'))];
+    if (mini) headings.push(plainText(mini.querySelector('.mini-title')), plainText(mini.querySelector('.mini-sub')));
+    else {
+      headings.push(plainText(chart.canvas.closest('.plot-panel')?.querySelector('h3, h4, .plot-title')));
+      if (savedTitle?.display) headings.push(...(Array.isArray(savedTitle.text) ? savedTitle.text : [savedTitle.text]));
+    }
+    // Canvas titles are plain text. Wrap using the actual export font so each
+    // downloaded panel retains its effect/class and parameter values at any width.
+    const titleFont = { size: 16, weight: '600', lineHeight: 1.35 }, ctx = chart.ctx, previousFont = ctx?.font;
+    if (ctx) ctx.font = `600 16px ${Chart.defaults?.font?.family || 'sans-serif'}`;
+    const measure = text => ctx?.measureText ? ctx.measureText(text).width : text.length * 8.4;
+    const titleLines = [], maxWidth = Math.max(160, exportWidth - 64);
+    for (const heading of headings.filter(Boolean)) for (const paragraph of String(heading).split('\n')) {
+      let line = '';
+      for (const word of paragraph.trim().split(/\s+/)) {
+        if (line && measure(line + ' ' + word) > maxWidth) { titleLines.push(line); line = ''; }
+        if (measure(word) <= maxWidth) { line += (line ? ' ' : '') + word; continue; }
+        for (const letter of word) { if (line && measure(line + letter) > maxWidth) { titleLines.push(line); line = ''; } line += letter; }
+      }
+      if (line) titleLines.push(line);
+    }
+    if (ctx) ctx.font = previousFont;
+    if (titleLines.length) chart.options.plugins.title = { display: true, text: titleLines, align: 'start', color: css('--text'), font: titleFont, padding: { top: 12, bottom: 16 } };
     chart.options.devicePixelRatio = 3;
+    axisTitles.forEach(([title]) => { title.display = true; });
     // Every exported panel is self-contained, including panels with a shared HTML legend.
     if (external) {
       legend.display = true; legend.position = 'bottom'; legend.align = 'start';
@@ -990,12 +1023,12 @@ const EXAMPLES = /*__EXAMPLES__*/[];
         legend.labels.usePointStyle = true;
         legend.labels.generateLabels = () => [0, 0.5, 1].map(t => ({ text: `${fmt(first + t * (last - first), 0)} нм`, fillStyle: lamColor(t), strokeStyle: lamColor(t), lineWidth: 0, pointStyle: 'circle', hidden: false, datasetIndex: 0 }));
       }
-      chart.resize(Math.max(960, chart.width), Math.max(560, chart.height));
+      chart.resize(exportWidth, Math.max(560, chart.height));
     }
     else chart.resize();
     chart.update('none');
     const file = name.replace(/[\\/:*?"<>|]+/g, '_') + '.png';
-    const restore = () => { chart.options.devicePixelRatio = dpr; Object.assign(chart.options.plugins.legend, saved); chart.resize(); chart.update('none'); };
+    const restore = () => { chart.options.devicePixelRatio = dpr; Object.assign(chart.options.plugins.legend, saved); if (savedTitle) chart.options.plugins.title = savedTitle; else delete chart.options.plugins.title; axisTitles.forEach(([title, display]) => { title.display = display; }); chart.resize(); chart.update('none'); };
     chart.canvas.toBlob((blob) => {
       restore(); if (!blob) return;
       const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = file; document.body.appendChild(a); a.click(); a.remove();
@@ -1037,15 +1070,16 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   function drawFinger(r0, r1) {
     makeChart('chFinger', () => {
       const n = S.data.lam.length;
-      const o = baseOpts('Ψ-остаток, σ', 'Δ-остаток, σ'); o.interaction = { mode: 'nearest', intersect: false }; o.plugins.guides = { xLines: [{ x: 0, color: css('--line') }], yLines: [{ y: 0, color: css('--line') }] };
-      const ds = [{ label: 'опорный фит', data: pts(Array.from(r0.slice(0, n)), Array.from(r0.slice(n))), backgroundColor: css('--muted'), pointRadius: 2.2, showLine: false }];
-      if (r1) ds.push({ label: 'окончательный фит', data: pts(Array.from(r1.slice(0, n)), Array.from(r1.slice(n))), backgroundColor: css('--ok'), pointRadius: 2.2, showLine: false });
+      const o = residualPlaneOpts(); o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam); o.plugins.guides = { xLines: [{ x: 0, color: css('--line') }], yLines: [{ y: 0, color: css('--line') }] };
+      const tr = r => Array.from(S.data.lam, (lam, i) => ({ x: r[i], y: r[n + i], lam }));
+      const ds = [{ label: 'опорный фит', data: tr(r0), backgroundColor: css('--muted'), pointRadius: 2.2, showLine: false }];
+      if (r1) ds.push({ label: 'окончательный фит', data: tr(r1), backgroundColor: css('--ok'), pointRadius: 2.2, showLine: false });
       return new Chart($('chFinger'), { type: 'scatter', data: { datasets: ds }, options: o });
     });
   }
   function drawN(curves) {
-    const withK = curves.some(c => c.k && c.k.some(v => v > 1e-6));
-    $('chNTitle').textContent = withK ? 'Показатель преломления n (сплошные) и поглощения k (точки) плёнки' : 'Показатель преломления плёнки';
+    const withK = curves.some(c => c.k && c.k.some(v => v > 0));
+    $('chNTitle').textContent = withK ? 'Показатель преломления n (линии) и коэффициент экстинкции k (точки) плёнки' : 'Показатель преломления плёнки';
     makeChart('chN', () => {
       const o = baseOpts('Длина волны, нм', 'n', withK ? 'k' : undefined);
       const colors = [css('--c-ref'), css('--c-fin'), css('--text')];
@@ -1067,8 +1101,6 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   // ---------------------------------------------------------------- шаг 1
   const matOf = (P) => Object.assign({}, S.cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg, Ak: P.Ak || 0 });
   const cfgRef = () => Object.assign({}, S.cfg, { band: null });               // конфигурация опорного фита и обучения: без полосы в модели
-  // кривые модели для графика — с тем же числом подслоёв, что и в фите (40/80/160 по |δ|), и с той же полосой (band), что и в данном фите
-  function modelCurves(P, band) { return E.modelPsiDelta(S.data.lam, S.cfg.Nsub, S.cfg.phi, P.d, matOf(P), P.delta || 0, P.dRough || 0, E.subLayersFor(P.delta || 0), S.cfg.back, band || null); }
   async function step1() {
     S.analysisStale=false;$('analysisFreshness').textContent='От измерения к параметрам';
     if (!S.data) return; clearFrom(1); readCfg();
@@ -1078,10 +1110,10 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     drawResidual('chRes', ref.resid, 'Остаток опорного фита однородной плёнки');
     const x = result.feature; S.refFeat = x;
     const tagChi = ref.chi2 < 2 ? 'ok' : (ref.chi2 < 10 ? 'warn' : 'bad');
-    $('refOut').className = ''; $('refOut').innerHTML = T(`<span class="tag ${tagChi}">χ²/ν = ${fmt(ref.chi2, 2)}</span><span class="tag">d = ${fmt(ref.P.d, 2)} ± ${fmt(ref.E.d, 2)} нм</span><span class="tag">A = ${fmt(ref.P.A, 1)}</span><span class="tag">A_uv = ${fmt(ref.P.Auv, 1)}</span><span class="tag">E_g = ${fmt(ref.P.Eg, 3)} эВ</span><span class="tag">${fmt(ms, 0)} мс</span>
-      <p class="note">${ref.chi2 < 2 ? 'Однородная прозрачная модель описывает спектр в пределах шума: дефектов, различимых на этом уровне шума, скорее всего нет — ИИ подтвердит или опровергнет.' : 'Однородная прозрачная модель отвергнута: остаток структурирован. Что именно не так — решает ИИ по форме остатка (шаги 2–3).'}</p>`);
-    const nHW = (() => { const { HW } = E.anchors(S.data.lam, S.data.del, S.cfg.subDel); return HW.length; })();
-    $('chanOut').innerHTML = T(nHW >= 2 ? `<b>Каналы якорей</b> (полуволновые точки найдены по Δ, их ${nHW}): Ψ в HW-якорях ${fmt(chan(x, 'psiHW'), 1)} ± ${fmt(chan(x, 'psiHWsd'), 1)} σ — канал градиента (знак: минус при росте n к поверхности); |Δ| в HW ${fmt(chan(x, 'delHW'), 1)} σ и в QW ${fmt(chan(x, 'delQW'), 1)} σ — канал шероховатости; перепад Ψ-остатка между синими и красными якорями HW ${fmt(chan(x, 'psiHWtrend'), 1)} σ и QW ${fmt(chan(x, 'psiQWtrend'), 1)} σ — канал поглощения (затухание контраста полос к синему краю; у градиента сдвиг Ψ в HW примерно одинаков по диапазону, у поглощения растёт к синему); RMS остатка Ψ/Δ ${fmt(chan(x, 'rmsPsi'), 1)}/${fmt(chan(x, 'rmsDel'), 1)} σ.` : 'Полуволновых якорей меньше двух (тонкая плёнка или узкий диапазон): каналы якорей не используются, ИИ работает по сырому остатку.');
+    $('refOut').className = ''; $('refOut').innerHTML = T(`<span class="tag ${tagChi}">χ²/ν = ${fmt(ref.chi2, 2)}</span><span class="tag">d = ${fmt(ref.P.d, 2)} нм${errorLabel(ref.E.d, v => fmt(v, 2) + ' нм')}</span><span class="tag">A = ${fmt(ref.P.A, 1)}</span><span class="tag">A_uv = ${fmt(ref.P.Auv, 1)}</span><span class="tag">E_g = ${fmt(ref.P.Eg, 3)} эВ</span><span class="tag">${fmt(ms, 0)} мс</span>
+      <p class="note">${ref.chi2 < 2 ? 'Невязка однородной модели сопоставима с заданным шумом. Это предварительная оценка: проверьте структуру остатков и результаты следующих шагов.' : 'Невязка однородной модели превышает заданный шум. Возможны дефекты, неточные условия измерения или ограничения дисперсии; классификатор на шагах 2–3 сравнит доступные модели.'}</p>`);
+    const refAnchors = E.anchors(S.data.lam, S.data.del, S.cfg.subDel), nHW = refAnchors.HW.length, nQW = refAnchors.QW.length;
+    $('chanOut').innerHTML = T(nHW >= 2 && nQW >= 1 ? `<b>Каналы якорей</b> (фазовые HW-якоря найдены по Δ, их ${nHW}): Ψ в HW-якорях ${fmt(chan(x, 'psiHW'), 1)} ± ${fmt(chan(x, 'psiHWsd'), 1)} σ — признак, чувствительный к градиенту (знак зависит от геометрии и определения остатка); |Δ| в HW ${fmt(chan(x, 'delHW'), 1)} σ и в QW ${fmt(chan(x, 'delQW'), 1)} σ — признаки, чувствительные к шероховатости; перепад Ψ-остатка между синими и красными якорями HW ${fmt(chan(x, 'psiHWtrend'), 1)} σ и QW ${fmt(chan(x, 'psiQWtrend'), 1)} σ — спектральные признаки, чувствительные к поглощению. Каналы зависят также от других дефектов и условий; их интерпретируют совместно с полным остатком и фитом. RMS остатка Ψ/Δ ${fmt(chan(x, 'rmsPsi'), 1)}/${fmt(chan(x, 'rmsDel'), 1)} σ.` : 'Недостаточно якорей: нужно не менее двух HW и одного QW (например, плёнка слишком тонкая или диапазон узок). Поэтому шесть якорных признаков не используются; классификатор получает спектральные остатки и их RMS.');
     $('btn2').disabled = false; $('btn3').disabled = true; $('btn4').disabled = true; S.train = null; S.probs = null;
     S.cfgDirty = false; if (S.onFitChange) S.onFitChange();                   // иллюстрации строятся на опорном фите — пометить устаревшими
   }
@@ -1092,8 +1124,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     clearFrom(2); $('trainOut').className = '';
     const N = +$('nTrain').value, K = E.CLASSES.length;
     S.train = await analysisTask('train', { data: S.data, cfg: cfgRef(), prior: S.prior, nuis: S.nuis, N, seed: +$('seed').value || 7 }, trainingProgress);
-    $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">регрессия: δ ± ${fmt(S.train.rmseD, 2)} %, слой ± ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ± ${fmtK(S.train.rmseK)}</span>
-      <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» занижена примерами с дефектами ниже порога обнаружения — их не видно ни одному методу; с двенадцатью классами на класс приходится N/12 примеров, и точность растёт с N заметно дольше, чем с шестью. Оценки регрессии в обучении внутри заданного разброса толщины и дисперсии ±5 %; при выходе за него нужно переобучение.</p>`);
+    $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">RMSE на отложенных примерах: δ ${fmt(S.train.rmseD, 2)} п.п., EMA-слой ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ${fmtK(S.train.rmseK)}</span>
+      <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» включает примеры с дефектами, слабо различимыми при заданном шуме и неопределённости условий; при двенадцати классах на каждый приходится примерно N/12 примеров. Увеличение выборки не гарантирует монотонного роста точности. RMSE — среднеквадратичная ошибка на отложенных примерах, а не погрешность результата измерения. Оценки применимы к заданному диапазону толщины и дисперсии; при его изменении нужно переобучение.</p>`);
     $('btn3').disabled = false;
   }
 
@@ -1139,8 +1171,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       if (!changed) break; result = await fit(pass + 1); fin = result.fin;
     }
     const ms = performance.now() - t; S.fin = fin; S.finFlags = flags;
-    const sysOf = (k) => (fin.sys && fin.sys.total && isFinite(fin.sys.total[k])) ? fin.sys.total[k] : 0;
-    const pm = (k, v, e, digits, scale) => `${fmt(scale * v, digits)} ± ${fmt(scale * e, digits)}${fin.sys ? ` <span class="note">(сист. ± ${fmt(scale * sysOf(k), digits)})</span>` : ''}`;
+    const sysOf = (k) => fin.sys && fin.sys.total ? fin.sys.total[k] : NaN;
+    const pm = (k, v, e, digits, scale) => `${fmt(scale * v, digits)}${errorLabel(e, x => fmt(scale * x, digits))}${fin.sys ? ` <span class="note">(сист.${errorLabel(sysOf(k), x => fmt(scale * x, digits))})</span>` : ''}`;
     const c = result.curves; drawSpectrum({ label: 'окончательная модель', psi: c.psi, del: c.del });
     drawResidual('chResFin', fin.resid, 'Остаток окончательного фита'); drawFinger(S.ref.resid, fin.resid);
     const mRef = matOf(S.ref.P), mFin = matOf(fin.P), nkRef = E.filmNK(S.data.lam, mRef), nkFin = E.filmNK(S.data.lam, mFin); S.finMat = mFin;   // снимок дисперсии окончательного фита (для иллюстраций при изменённых условиях)
@@ -1149,15 +1181,15 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const nAt = (m, l) => E.filmNK([l], m).n[0], kAt = (m, l) => E.filmNK([l], m).k[0];
     const rows = [['Модель', modelName + (S.cfg.band ? ` (полоса ${fmt(S.cfg.band.bw, 1)} нм в модели)` : ''), ''], ['χ²/ν', `${fitMetric(fin.chi2, 3)} (опорный: ${fitMetric(S.ref.chi2, 3)})`, ''], ['Толщина d, нм', pm('d', fin.P.d, fin.E.d, 2, 1), `опорный: ${fmt(S.ref.P.d, 2)}`]];
     if (flags.grad) rows.push(['Градиент δ, %', pm('delta', fin.P.delta, fin.E.delta, 3, 100), fin.P.delta > 0 ? 'n растёт к поверхности' : 'n падает к поверхности']);
-    if (flags.rough) rows.push(['EMA-слой шероховатости, нм', pm('dRough', fin.P.dRough, fin.E.dRough, 3, 1), 'Бруггеман 50/50; σ_rms ≈ 0.5–0.7 толщины']);
-    if (flags.abs) rows.push(['Поглощение: k хвоста при 400 нм', `${fmtK(fin.P.k400)} ± ${fmtK(fin.E.k400)}${fin.sys ? ` <span class="note">(сист. ± ${fmtK(sysOf('k400'))})</span>` : ''}`, `сила хвоста A_k = ${fmt(fin.P.Ak, 4)} эВ, порог E_t = ${E.TAIL_ET} эВ; k₄₀₀ — по найденной дисперсии; k плёнки при 550 нм ${fmt(kAt(mFin, 550), 5)}`]);
-    rows.push(['A, E_g, A_uv', `${fmt(fin.P.A, 1)}, ${fmt(fin.P.Eg, 3)} эВ, ${fmt(fin.P.Auv, 1)}`, `опорный: ${fmt(S.ref.P.A, 1)}, ${fmt(S.ref.P.Eg, 3)}, ${fmt(S.ref.P.Auv, 1)}`]);
+    if (flags.rough) rows.push(['EMA-слой шероховатости, нм', pm('dRough', fin.P.dRough, fin.E.dRough, 3, 1), 'Бруггеман 50/50; связь с σ_rms зависит от морфологии']);
+    if (flags.abs) rows.push(['Поглощение: k хвоста при 400 нм', `${fmtK(fin.P.k400)}${errorLabel(fin.E.k400, x => fmtK(x))}${fin.sys ? ` <span class="note">(сист.${errorLabel(sysOf('k400'), x => fmtK(x))})</span>` : ''}`, `сила хвоста A_k = ${fmt(fin.P.Ak, 4)} эВ, порог E_t = ${E.TAIL_ET} эВ; k₄₀₀ — по найденной дисперсии; k плёнки при 550 нм ${fmt(kAt(mFin, 550), 5)}`]);
+    rows.push(['A, E_g, A_uv', `${fmt(fin.P.A, 1)} эВ, ${fmt(fin.P.Eg, 3)} эВ, ${fmt(fin.P.Auv, 1)} эВ²`, `опорный: ${fmt(S.ref.P.A, 1)} эВ, ${fmt(S.ref.P.Eg, 3)} эВ, ${fmt(S.ref.P.Auv, 1)} эВ²`]);
     for (const l of [450, 550, 650, 750]) if (l >= S.data.lam[0] && l <= S.data.lam[S.data.lam.length - 1]) rows.push([`n(${l} нм)`, fmt(nAt(mFin, l), 4), `опорный: ${fmt(nAt(mRef, l), 4)}`]);
     const n = S.data.lam.length, rp = Array.from(fin.resid.slice(0, n)), rd = Array.from(fin.resid.slice(n)); const rms = a => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
     const sysParts = fin.sys && fin.sys.parts ? Object.entries(fin.sys.parts).map(([q, v]) => `${{ phi: 'угол', backF: 'доля', bw: 'полоса', off: 'шкала λ' }[q] || q}: Δd ${fmt(v.d, 2)} нм${flags.grad ? `, Δδ ${fmt(100 * v.delta, 3)} %` : ''}${flags.rough ? `, Δслой ${fmt(v.dRough, 3)} нм` : ''}${flags.abs ? `, Δk₄₀₀ ${fmtK(v.k400)}` : ''}`).join('; ') : '';
     $('finOut').className = ''; $('finOut').innerHTML = T(`<table><thead><tr><th>параметр</th><th class="num">окончательный фит</th><th>примечание</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="note">${r[2]}</td></tr>`).join('')}</tbody></table>
       <p class="note">${veto.length ? '<b>Вето:</b> ' + veto.join('; ') + '. ' : ''}RMS остатка после фита: Ψ ${fitMetric(rms(rp), 3)} σ, Δ ${fitMetric(rms(rd), 3)} σ; χ²/ν = Σr²/(2N − p) = ${fitMetric(fin.chi2, 3)}, где N = ${n}, p = ${fin.free.length}, ν = ${fin.dof}. Около 1 — остаток сопоставим с заданным шумом; существенно выше 1 — нужно проверить модель, условия и оценку σ.</p>
-      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Вето убирает дефект ниже max(√((3σ)² + сист.²), численный минимум). Минимумы: шероховатость 0,03 нм, |δ| 0,03 %, A_k 0,0003 эВ: дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). ${flags.grad ? `Градиент: ${fin.profileLayers} подслоёв` : 'Однородный профиль плёнки'}. У итоговой модели ${fin.starts} стартов, ${fin.runs} запусков оптимизации и ${fin.iterations} итераций. Всего вызовов невязки при оптимизации с повторами после вето: ${fitEvaluations}; время фита с оценкой погрешностей и повторами: ${fmt(ms, 0)} мс.</p>`);
+      <p class="note">Первое ± — формальная погрешность из ${S.cfg.back ? 'численного якобиана (с задней стороной подложки)' : 'аналитического якобиана'}; «сист.» — линейное распространение заявленных неопределённостей условий: угол ±${S.nuis.phiErr}°${S.cfg.back ? `, доля задней стороны ±${S.nuis.backFerr}` : ''}${S.cfg.band ? `, полоса ±${S.nuis.bwErr} нм` : ''}, шкала λ ±${S.nuis.offErr} нм${sysParts ? ' (вклады: ' + sysParts + ')' : ''}. Эта систематика не включает неопределённость формы дисперсии и фиксированных E₀, C, E_uv: при большом χ²/ν смещение параметров может превышать обе оценки ±. ${!fin.cov ? 'Ковариация недоступна: формальная значимость дефектов не определена, автоматическое вето по неопределённой погрешности не применяется. ' : ''}Вето убирает дефект ниже max(√((3σ)² + сист.²), численный минимум). Минимумы: шероховатость 0,03 нм, |δ| 0,03 %, A_k 0,0003 эВ: дефект должен быть виден и сквозь формальную погрешность, и сквозь заявленные неопределённости условий; уменьшить порог можно, уточнив угол и долю задней стороны (калибровка по подложке-свидетелю, второй угол). ${flags.grad ? `Градиент: ${fin.profileLayers} подслоёв` : 'Однородный профиль плёнки'}. У итоговой модели ${fin.starts} стартов, ${fin.runs} запусков оптимизации и ${fin.iterations} итераций. Всего вызовов невязки при оптимизации с повторами после вето: ${fitEvaluations}; время фита с оценкой погрешностей и повторами: ${fmt(ms, 0)} мс.</p>`);
     if (S.example) {
       const Tt = S.example.truth, tk = Tt.k400 || 0; const cT = E.classIndex(Math.sign(Tt.delta), Tt.dRough > 0 ? 1 : 0, tk > 0 ? 1 : 0);
       const bestCls = E.classIndex(flags.grad ? Math.sign(fin.P.delta) : 0, flags.rough ? 1 : 0, flags.abs ? 1 : 0);
@@ -1212,7 +1244,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     }
     if (Tt.d < S.prior.dMin || Tt.d > S.prior.dMax) F.push(`Истинная толщина ${fmt(Tt.d, 1)} нм вне априорного разброса [${fmt(S.prior.dMin, 0)}, ${fmt(S.prior.dMax, 0)}] нм: перебор толщины мог попасть в соседний порядок полос.`);
     if (Math.abs(dev.d) > 20) F.push(`Толщина ошибочна на ${fmt(dev.d, 0)} нм — это порядок полосы (λ/2n), а не точность фита: неверный порядок интерференции или толщина вне разброса.`);
-    if (Math.abs(Tt.phiTrue - S.cfg.phi) > S.nuis.phiErr + 1e-9) F.push(`Фактический угол отличается от номинала на ${fmt(Tt.phiTrue - S.cfg.phi, 3)}°, больше заявленной неопределённости ±${S.nuis.phiErr}°: ошибка угла сдвигает линию подложки и имитирует градиент (≈0.3 % на 0.1° при 60–65°), поэтому ИИ обучался на остатках другого прибора. Лекарство — калибровка угла по подложке-свидетелю или второй угол.`);
+    if (Math.abs(Tt.phiTrue - S.cfg.phi) > S.nuis.phiErr + 1e-9) F.push(`Фактический угол отличается от номинала на ${fmt(Tt.phiTrue - S.cfg.phi, 3)}°, больше заявленной неопределённости ±${S.nuis.phiErr}°: ошибка угла сдвигает линию подложки и имитирует градиент (≈0.3 % на 0.1° при 60–65°), поэтому ИИ обучался на остатках другого прибора. Рекомендуется калибровка угла по подложке-свидетелю или второй угол.`);
     if (Math.abs(Tt.bw - S.nuis.bw) > 0.3) F.push(`Полоса прибора в истине ${Tt.bw} нм, а заданная (генератор обучения и модель окончательного фита) ${S.nuis.bw} нм: обучающие остатки моделировали другой прибор, а фит учитывал не ту полосу.`);
     if (Tt.back && !S.cfg.back) F.push(`В измерении есть отражение от задней стороны подложки (доля ${fmt(Tt.back.f, 2)}), а в модели оно выключено: без него однородная плёнка не описывает спектр (Ψ отличается на градусы), и ИИ, и фит приписывают разницу дефектам. Включите флажок в панели «Спектр».`);
     if (!Tt.back && S.cfg.back) F.push(`В модели включена задняя сторона подложки (доля ${fmt(S.cfg.back.f, 2)}), а в измерении её нет — та же ошибка с обратным знаком.`);
@@ -1256,7 +1288,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     if (!(mTrue.Eg > 1 && mTrue.Eg < mTrue.E0 - 0.1 && 4 * mTrue.E0 * mTrue.E0 > mTrue.C * mTrue.C)) { $('simStatus').textContent = 'Параметры дисперсии физически недопустимы (нужно E_g < E₀, C < 2E₀).'; return; }
     const d = +$('simD').value, delta = (+$('simDelta').value || 0) / 100, dRough = Math.max(0, +$('simRough').value || 0), k400 = Math.max(0, (+$('simK').value || 0) / 1000);
     if (Math.abs(delta) > 0.20) { $('simStatus').textContent = 'Градиент ограничен ±20 % (линейный профиль n(z) с большим перепадом физически сомнителен и выходит за границы фита).'; return; }
-    if (k400 > E.K400_MAX) { $('simStatus').textContent = `Поглощение ограничено k₄₀₀ ≤ ${fmtK(E.K400_MAX, 0)} — граница окончательного фита.`; return; }
+    if (k400 > E.K400_MAX) { $('simStatus').textContent = `Поглощение ограничено k₄₀₀ ≤ ${fmtK(E.K400_MAX, 0)} — предел генерации хвоста при выбранной дисперсии.`; return; }
     if (k400 > 0) mTrue.Ak = E.tailAk(mTrue, k400);
     const phiTrue = phiNom + (+$('simDphi').value || 0), bw = Math.max(0, +$('simBw').value || 0), off = +$('simOff').value || 0;
     const rng = E.makeRng((+$('simSeed').value || 1) >>> 0);
@@ -1276,7 +1308,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     setData({ lam, psi: Array.from(s.psi), del: Array.from(s.del), sigPsi, sigDel, hasSigma: true }, example);
     const dNom = +$('dNom').value, rg = +$('dRange').value / 100;
     const inRange = d >= dNom * (1 - rg) && d <= dNom * (1 + rg);
-    const kNote = k400 > 0 ? (() => { const nk = E.filmNK([lam[0], 550], mTrue), nk0 = E.filmNK([lam[0], 550], Object.assign({}, mTrue, { Ak: 0 })); return ` Хвост поглощения: k(${lam[0]} нм) = ${fmt(nk.k[0], 4)} (без хвоста ${fmt(nk0.k[0], 4)}), k(550) = ${fmt(nk.k[1], 5)}; множитель контраста полос на синем краю от хвоста ≈ ${fmt(Math.exp(-4 * Math.PI * (nk.k[0] - nk0.k[0]) * d / lam[0]), 3)} (exp(−4πk·d/λ) за двойной проход).`; })() : '';
+    const kNote = k400 > 0 ? (() => { const nk = E.filmNK([lam[0], 550], mTrue), nk0 = E.filmNK([lam[0], 550], Object.assign({}, mTrue, { Ak: 0 })); return ` Хвост поглощения: k(${lam[0]} нм) = ${fmt(nk.k[0], 4)} (без хвоста ${fmt(nk0.k[0], 4)}), k(550) = ${fmt(nk.k[1], 5)}; оценка ослабления амплитуды на синем краю от хвоста при нормальном падении ≈ ${fmt(Math.exp(-4 * Math.PI * (nk.k[0] - nk0.k[0]) * d / lam[0]), 3)} (exp(−4πΔk·d/λ), двойной проход; точная модель учитывает наклонное падение и многократные отражения).`; })() : '';
     const backNote = backTrue ? ` Задняя сторона подложки: истинная доля ${fmt(backTrue.f, 2)} (в модели ${fmt(backPrior.f, 2)}), толщина ${fmt(backPrior.ds / 1e6, 2)} мм${cont === false && delta !== 0 ? '; градиент — лестница из 160 подслоёв' : ''}.` : '';
     $('simStatus').textContent = `Сгенерировано ${lam.length} точек. ` + (inRange ? 'Истинная толщина внутри априорного разброса.' : 'Внимание: истинная толщина вне априорного разброса — опорный фит её не найдёт; поправьте номинал или разброс.') + kNote + backNote;
     $('btnCsv').disabled = false;
@@ -1335,27 +1367,27 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   const FIELD_HELP = {
     matSel: ['material', 'Материал плёнки из справочника: задаёт стартовую дисперсию (Тауц–Лоренц + УФ-полюс) для фита и базовые параметры истины в симуляторе. Материал должен быть прозрачен или слабо поглощать в диапазоне измерения; SiNₓ:H, CeO₂ и WO₃ имеют край поглощения на синем краю (параметры подобраны по литературным n, k). Для материалов с E_g ниже ≈ 2 эВ дефект «поглощение» неотличим от собственного края.'],
     mA: ['dispersion', 'Сила осциллятора Тауца–Лоренца, эВ: масштаб ε₂ и основной вклад в n. В фите свободна.'],
-    mE0: ['dispersion', 'Энергия пика осциллятора E₀, эВ (положение основной полосы поглощения в УФ). В фите фиксирована справочным значением.'],
+    mE0: ['dispersion', 'Резонансная энергия осциллятора E₀, эВ (положение основной полосы поглощения в УФ). В фите фиксирована справочным значением.'],
     mC: ['dispersion', 'Ширина осциллятора C, эВ. В фите фиксирована; должно быть C < 2E₀.'],
-    mEg: ['edge', 'Край поглощения по Тауцу E_g, эВ: ниже него ε₂ = 0, плёнка прозрачна. В фите свободна; должно быть E_g < E₀.'],
+    mEg: ['edge', 'Край поглощения по Тауцу E_g, эВ: ниже него вклад основного осциллятора в ε₂ равен нулю; дополнительный хвост поглощения учитывается отдельно. В фите свободна; должно быть E_g < E₀.'],
     mAuv: ['dispersion', 'Сила УФ-полюса Зельмейера, эВ²: заменяет переходы выше измеряемого диапазона, добавляет к n без поглощения. В фите свободна, ≥ 0.'],
     mEuv: ['dispersion', 'Энергия УФ-полюса E_uv, эВ (обычно 11–16 эВ). В фите фиксирована.'],
     subSel: ['substrate', 'Подложка: её n(λ), k(λ) берутся из формул или таблицы и в фите не варьируются. Без флажка в панели «Спектр» подложка полубесконечная; с флажком отражение от её задней грани складывается некогерентно с заданной долей.'],
     backF: ['backside', 'Доля света, отражённого задней гранью подложки и попавшего в детектор (0 — нет, 1 — плоскопараллельная подложка, весь пучок собран). Задана из независимого измерения (например, по голой подложке) и в фите не варьируется. Пучки задней стороны складываются с передним некогерентно (суммируются матрицы Мюллера), поэтому Ψ, Δ становятся «эффективными», а образец — частично деполяризующим.'],
     backFerr: ['pm', 'Неопределённость заданной доли: в обучающей выборке истинная доля каждого примера разыгрывается равномерно в этих пределах, а фит использует заданную; так ИИ учится не принимать ошибку доли за дефект. Та же величина — предельное отклонение доли в оценке систематики окончательного фита (ошибка доли 0.01 сдвигает δ примерно на 0.07 % и d на 0.4 нм для плёнки ~0.8 мкм).'],
-    backDs: ['thickness', 'Толщина подложки, мм: нужна только для затухания пучка в поглощающей подложке (для стекла и кварца k = 0 — не влияет; для c-Si 0.5 мм вклад задней стороны ≈ 0).'],
+    backDs: ['thickness', 'Толщина подложки, мм: нужна для затухания пучка в поглощающей подложке. Для стекла и кварца модель использует k = 0. Для c-Si 0.5 мм вклад задней стороны пренебрежимо мал в видимом диапазоне, но может быть значим в ближнем ИК.'],
     simBackF: ['backside', 'Истинная доля задней стороны в симуляторе. Пусто — совпадает с заданной в «Априорных условиях»; иначе имитирует ошибку независимого измерения доли. Действует только при включённом флажке в панели «Спектр».'],
     phi: ['angle', 'Номинальный угол падения, градусы: используется во всех фитах как точное значение. В симуляторе к нему добавляется «ошибка угла».'],
     phiErr: ['pm', 'Заявленная неопределённость угла, градусы: полуширина случайного разброса угла при генерации обучающих остатков (в фите угол не варьируется) и предельное отклонение в оценке систематики окончательного фита («сист.»). Ошибка угла имитирует градиент: ≈0.3 % на 0.1° при 60–65°.'],
     dNom: ['thickness', 'Номинальная толщина плёнки, нм — центр априорного интервала, в котором перебирается порядок интерференционных полос и генерируется обучающая выборка.'],
     dRange: ['percent', 'Разброс толщины, ±% от номинала: ширина априорного интервала. Слишком узкий — истинная толщина может оказаться снаружи; слишком широкий — больше примеров нужно для обучения.'],
-    bw: ['bandwidth', 'Паспортная спектральная полоса прибора, нм (FWHM): центр разброса ±0.3 нм при генерации обучающих остатков и полоса в модели окончательного фита (усреднение интенсивностей I_p, I_s, r_p r_s* по гауссовой полосе, второй порядок по σ; фит в 2 раза медленнее). Опорный фит и обучение идут без полосы — её след в остатке одинаков для измерения и обучающих примеров. 0 — полоса не учитывается.'],
+    bw: ['bandwidth', 'Паспортная спектральная полоса прибора, нм (FWHM): центр разброса ±0.3 нм при генерации обучающих остатков и полоса в модели окончательного фита (усреднение интенсивностей I_p, I_s, r_p r_s* по гауссовой полосе, второй порядок по σ; фит в 2 раза медленнее). Обучающие спектры синтезируются с полосой, а их опорные фиты выполняются без неё: вклад полосы остаётся и в измеренном, и в обучающих остатках. 0 — полоса не учитывается.'],
     sigDef: ['noise', 'Шум Ψ по умолчанию, градусы: применяется, если в файле нет столбцов σΨ, σΔ; тогда σΔ = 2·σΨ. Задаёт масштаб остатка «в единицах шума».'],
-    simD: ['thickness', 'Истинная толщина плёнки, нм. Если она вне априорного интервала (номинал ± разброс), опорный фит её не найдёт — симулятор предупредит.'],
+    simD: ['thickness', 'Истинная толщина плёнки, нм. Если она вне априорного интервала (номинал ± разброс), поиск может выбрать неверный минимум — симулятор предупредит.'],
     simSeed: ['seed', 'Зерно генератора случайных чисел для шума и дрейфа: одно и то же зерно даёт один и тот же спектр, другое — новую реализацию.'],
     simDelta: ['gradient', 'Линейный градиент показателя по глубине, %: n(z) = n·[1 + δ(z/d − ½)], δ > 0 — n растёт к поверхности, δ < 0 — падает; 0 — однородная плёнка. Допустимо до ±20 %.'],
-    simRough: ['roughness', 'Толщина слоя шероховатости поверхности, нм: слой Бруггемана 50 % плёнка / 50 % пустота (σ_rms ≈ 0.5–0.7 толщины); 0 — гладкая поверхность.'],
-    simK: ['absorption', 'Дефект «поглощение»: хвост ниже края — второй осциллятор Тауца–Лоренца с теми же E₀ и C, что у материала, и порогом E_t = 1.2 эВ; k хвоста растёт к синему краю (≈ как (E − E_t)²/E · лоренциан). Размер задаётся k хвоста при 400 нм в единицах 10⁻³ (0 — нет поглощения; порог обнаружения ≈ 0.1–0.3·10⁻³ при толщине ~1 мкм). Сигнатура — затухание контраста полос к синему краю, а не сдвиг Ψ в полуволновых точках, как у градиента.'],
+    simRough: ['roughness', 'Толщина слоя шероховатости поверхности, нм: слой Бруггемана 50 % плёнка / 50 % пустота (соотношение с σ_rms зависит от морфологии); 0 — гладкая поверхность.'],
+    simK: ['absorption', 'Дефект «поглощение»: хвост ниже края — второй осциллятор Тауца–Лоренца с теми же E₀ и C, что у материала, и порогом E_t = 1.2 эВ; k хвоста растёт к синему краю (≈ как (E − E_t)²/E · лоренциан). Размер задаётся k хвоста при 400 нм в единицах 10⁻³ (0 — нет дополнительного хвоста; собственное поглощение материала сохраняется; ориентировочный порог обнаружения ≈ 0.1–0.3·10⁻³ при толщине ~1 мкм). Поглощение меняет контраст и фазу полос; его отклик может перекрываться с откликами других дефектов и ошибок условий.'],
     kMax: ['absorption', 'Верхняя граница k хвоста при 400 нм в обучающей выборке, ×10⁻³: половина обучающих хвостов лежит в тонкой шкале до 10⁻³, половина — от 10⁻³ до этого максимума.'],
     simDA: ['dispersion', 'Отклонение силы осциллятора A истинной плёнки от справочника, %: имитирует плёнку с иной плотностью, чем в справочнике.'],
     simDAuv: ['dispersion', 'Отклонение силы УФ-полюса A_uv от справочника, %.'],
@@ -1519,8 +1551,9 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   const maxAbs = (a) => Array.from(a).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
   const niceMax = (v) => { if (!(v > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); const f = v / p; return ([1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(x => f <= x + 1e-9) || 10) * p; };
   const withTail = (m, k400) => Object.assign({}, m, { Ak: k400 > 0 ? E.tailAk(m, k400) : 0 });
-  /** Линия Δ(λ) с разрывами там, где Δ перескакивает через 0/360°. */
-  const delPts = (lam, del) => Array.from(lam, (l, i) => ({ x: l, y: (i > 0 && Math.abs(del[i] - del[i - 1]) > 180) ? null : del[i] }));
+  /** Разрыв линии при скачке Δ через 0/360°; обе реальные точки сохраняются. */
+  const delPts = (lam, del) => Array.from(lam).flatMap((l, i) => (i > 0 && Math.abs(del[i] - del[i - 1]) > 180)
+    ? [{ x: (lam[i - 1] + l) / 2, y: null }, { x: l, y: del[i] }] : [{ x: l, y: del[i] }]);
   const SIZE_FIELDS = ['dmDelta', 'dmRough', 'dmK'];
   function defectSource() {
     const fit = S.fin && !S.cfgDirty && !S.analysisStale ? S.fin : null;
@@ -1555,6 +1588,14 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   const sizeLabel = (dv, sz) => dv.g ? `δ = ${sz.delta ? (dv.g > 0 ? '+' : MINUS) : ''}${fmtSize(100 * sz.delta)} %` : dv.r ? `слой ${fmtSize(sz.rough)} нм` : dv.a ? `k₄₀₀ = ${fmtSize(sz.k400 * 1000)}·10⁻³` : '';
   const legendLabel = (dv, sz) => dv.short + (sizeLabel(dv, sz) ? ` (${sizeLabel(dv, sz)})` : '');
   const tipLam = { callbacks: { title: (items) => (items.length && items[0].raw && items[0].raw.lam !== undefined) ? `λ = ${fmtVal(items[0].raw.lam)} нм` : '', label: (it) => `${it.dataset.label}: Ψ ${fmtVal(it.raw.x)} σ, Δ ${fmtVal(it.raw.y)} σ` } };
+  function residualPlaneOpts() {
+    const o = baseOpts('Ψ-остаток, σ', 'Δ-остаток, σ');
+    // Residual x values follow wavelength and are not sorted. Chart.js must
+    // detect this instead of assuming sorted data through parsing: false.
+    o.parsing = true; o.normalized = false;
+    o.interaction = { mode: 'nearest', intersect: false, axis: 'xy' };
+    return o;
+  }
 
   /** Опорный фит для иллюстраций: фит страницы «Анализ», если он есть и «Априорные условия» после него не менялись; если его нет —
    *  используется свой фит; если условия менялись (S.cfgDirty) — также свой фит для текущих условий,
@@ -1591,7 +1632,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   /** На что похож остаток по каналам якорей (для сводок). */
   function looksLike(ch) {
     const out = []; if (Math.abs(ch.psiHW) > 3) out.push(`градиент (Ψ в HW ${fmt(ch.psiHW, 1)} σ)`); if (Math.max(ch.delHW, ch.delQW) > 3) out.push(`шероховатость (|Δ| в HW/QW ${fmt(ch.delHW, 1)}/${fmt(ch.delQW, 1)} σ)`); if (Math.abs(ch.psiHWtrend) > 3) out.push(`поглощение (перепад Ψ синие − красные ${fmt(ch.psiHWtrend, 1)} σ)`);
-    return out.length ? out.join('; ') : 'ни на один дефект (каналы якорей < 3 σ)';
+    return out.length ? out.join('; ') : 'выраженного сходства по каналам якорей нет (значения ≤ 3 σ; при нехватке якорей каналы не используются)';
   }
 
   // ---------------------------------------------------------------- 1. отпечатки
@@ -1614,10 +1655,13 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const tr = (r) => Array.from(lam, (l, i) => ({ x: r[i], y: r[n + i], lam: l }));
     $('fingerOverlaySub').textContent = `плёнка: ${DM.base.label}, d = ${fmt(DM.base.d, 1)} нм; ${DM.withInstr ? 'с эффектами прибора' : 'без эффектов прибора'}`;
     $('fingerGridSub').textContent = `δ = ±${fmtSize(100 * sz.delta)} %, слой ${fmtSize(sz.rough)} нм, k₄₀₀ = ${fmtSize(sz.k400 * 1000)}·10⁻³`;
+    $('fingerGridNote').textContent = (DM.view === 'plane'
+      ? 'Оси каждой панели: по горизонтали — Ψ-остаток, по вертикали — Δ-остаток, в единицах σ; цвет точки — длина волны.'
+      : 'Оси каждой панели: по горизонтали — длина волны в нм, по вертикали — остатки Ψ и Δ в единицах σ.') + ' Цветные точки в заголовке обозначают дефекты класса. Якорные каналы — признаки остатка для классификатора; отдельный канал не определяет дефект однозначно.';
     $('rampL0').textContent = `${fmt(lam[0], 0)} нм`; $('rampL1').textContent = `${fmt(lam[n - 1], 0)} нм`; document.querySelector('#fingerRamp .ramp-bar').style.background = rampCss();
     $('fingerRamp').setAttribute('aria-label', `Цвет точек — длина волны от ${fmt(lam[0], 0)} до ${fmt(lam[n - 1], 0)} нм`);
     makeChart('cFingerOverlay', () => {
-      const o = baseOpts('Ψ-остаток, σ', 'Δ-остаток, σ'); o.interaction = { mode: 'nearest', intersect: false }; o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam);
+      const o = residualPlaneOpts(); o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam);
       o.plugins.guides = { xLines: [{ x: 0, color: css('--line') }], yLines: [{ y: 0, color: css('--line') }] };
       o.scales.x.min = -rng.psi; o.scales.x.max = rng.psi; o.scales.y.min = -rng.del; o.scales.y.max = rng.del; o.scales.x.ticks.stepSize = rng.psi / 2; o.scales.y.ticks.stepSize = rng.del / 2;
       const ds = DEFS.map(dv => { const r = R[dv.cls]; if (!r) return null; const col = defColor(dv); return { legendKey: dv.key, label: legendLabel(dv, sz), data: tr(r.resid), borderColor: col, backgroundColor: col, borderWidth: 1.3, pointRadius: 2.2, pointHoverRadius: 5, showLine: true, tension: 0 }; }).filter(Boolean);
@@ -1630,7 +1674,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     R.forEach((r, i) => makeChart('cFg' + i, () => {
       const cols = Array.from(lam, l => lamColor((l - lam[0]) / (lam[n - 1] - lam[0])));
       if (DM.view === 'plane') {
-        const o = baseOpts('Ψ-остаток, σ', 'Δ-остаток, σ'); o.interaction = { mode: 'nearest', intersect: false }; o.plugins.legend.display = false; o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam);
+        const o = residualPlaneOpts(); o.plugins.legend.display = false; o.plugins.tooltip = Object.assign(o.plugins.tooltip, tipLam);
         o.plugins.guides = { xLines: [{ x: 0, color: css('--line') }], yLines: [{ y: 0, color: css('--line') }] };
         if (DM.scale === 'common') { o.scales.x.min = -rng.psi; o.scales.x.max = rng.psi; o.scales.y.min = -rng.del; o.scales.y.max = rng.del; o.scales.x.ticks.stepSize = rng.psi / 2; o.scales.y.ticks.stepSize = rng.del / 2; }
         o.scales.x.ticks.maxTicksLimit = 6; o.scales.y.ticks.maxTicksLimit = 6; o.scales.x.title.display = false; o.scales.y.title.display = false;
@@ -1669,9 +1713,9 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     variants.forEach(v => { v.phase = phaseOf(v.del); });
     const sigAt = (xs, key) => xs.map(x => E.interp(x, base.lam, key === 'sigPsi' ? base.sig.psi : base.sig.del));
     const pat = { HW: { lam: HW, sigPsi: sigAt(HW, 'sigPsi'), sigDel: sigAt(HW, 'sigDel'), psi: [], del: [] }, QW: { lam: QW, sigPsi: sigAt(QW, 'sigPsi'), sigDel: sigAt(QW, 'sigDel'), psi: [], del: [] } };
-    // Значения в якорях считаются моделью точно в λ якорей, а не интерполяцией с сетки 1 нм: у однородной плёнки Ψ − Ψ_подл в HW-якоре —
-    // квадратичный нуль, и линейная интерполяция давала до 0.15° (≈7 σ) вместо нуля. Ψ в QW-якорях сравнивается с однородной плёнкой
-    // (в QW плёнка не «исчезает», и Ψ подложки там не опора); разности Δ берутся по модулю 360°.
+    // Значения вычисляются моделью в уточнённых λ фазовых якорей: интерполяция сетки 1 нм
+    // в контрольных конфигурациях давала до 0.15° ошибки. Совпадение Ψ с подложкой в HW не гарантируется.
+    // Ψ в QW сравнивается с однородной плёнкой; разности Δ берутся по модулю 360°.
     const lamA = HW.concat(QW), NsubA = E.substrateN(cfg.subKey, lamA), nH = HW.length;
     const subA = E.modelPsiDelta(lamA, NsubA, cfg.phi, 0, base.mat, 0, 0, 1, cfg.back, null);
     const homA = E.modelPsiDelta(lamA, NsubA, cfg.phi, base.d, base.mat, 0, 0, 40, cfg.back, null);
@@ -1680,7 +1724,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       pat.HW.psi.push(HW.map((x, i) => r.psi[i] - subA.psi[i])); pat.HW.del.push(HW.map((x, i) => E.wrap(r.del[i] - subA.del[i])));
       pat.QW.psi.push(QW.map((x, i) => r.psi[nH + i] - homA.psi[nH + i])); pat.QW.del.push(QW.map((x, i) => E.wrap(r.del[nH + i] - subA.del[nH + i] - 180)));
     }
-    // собственное поглощение материала в диапазоне: тогда однородная плёнка «исчезает» в HW-якорях не полностью (Ψ ≠ Ψ_подл)
+    // Отмечаем случаи с собственным поглощением и заметным отличием Ψ от подложки; это не уникальная причина отличия.
     const kFilm = E.filmNK([lamF[0]], base.mat).k[0], homHW = pat.HW.psi[0];
     const absorbs = kFilm > 1e-4 && homHW.some(v => Math.abs(v) > 0.01);
     DM.res.anch = { lamF, sub: { psi: Array.from(sub.psi), del: Array.from(sub.del) }, variants, HW, QW, pat, sz, kFilm, absorbs };
@@ -1718,11 +1762,11 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const trend = (xs, ys) => { if (xs.length < 2) return NaN; let b = ys.filter((_, k) => xs[k] < mid), r = ys.filter((_, k) => xs[k] >= mid); if (!b.length || !r.length) { const h = Math.floor(ys.length / 2); b = ys.slice(0, h); r = ys.slice(h); } return mean(b) - mean(r); };
     const rowsA = A.variants.map((v, j) => { const pH = A.pat.HW.psi[j], pQ = A.pat.QW.psi[j], dH = A.pat.HW.del[j], dQ = A.pat.QW.del[j]; return `<tr><td><span class="dot" style="background:${defColor(v.def)}"></span> ${v.def.name}${sizeLabel(v.def, sz) ? ` <span class="note">(${sizeLabel(v.def, sz)})</span>` : ''}</td><td class="num">${fmt(mean(pH), 3)}</td><td class="num">${fmt(trend(A.HW, pH), 3)}</td><td class="num">${fmt(mean(pQ), 3)}</td><td class="num">${fmt(mabs(dH), 3)}</td><td class="num">${fmt(mabs(dQ), 3)}</td></tr>`; });
     const homNote = A.absorbs
-      ? `Материал поглощает в диапазоне (k = ${fmt(A.kFilm, 4)} при ${fmt(A.lamF[0], 0)} нм), поэтому однородная плёнка «исчезает» в HW-якорях не полностью: её Ψ − Ψ<sub>подл</sub> в синих якорях до ${fmt(A.pat.HW.psi[0].reduce((m, x) => Math.abs(x) > Math.abs(m) ? x : m, 0), 2)}° — это собственное поглощение материала, а не дефект; дефекты читаются как разность с рядом «однородная плёнка» (в остатке опорного фита однородная плёнка уже вычтена).`
-      : 'У однородной прозрачной плёнки отклонения в HW равны нулю (плёнка «исчезает»).';
-    $('dmAnchorTable').innerHTML = T(`<h3>Сводка по якорям (в градусах)</h3><table><thead><tr><th>вариант плёнки</th><th class="num">⟨Ψ − Ψ<sub>подл</sub>⟩ в HW</th><th class="num">перепад синие − красные HW</th><th class="num">⟨Ψ − Ψ<sub>однор</sub>⟩ в QW</th><th class="num">⟨|Δ − Δ<sub>подл</sub>|⟩ в HW</th><th class="num">⟨|Δ − Δ<sub>подл</sub> − 180°|⟩ в QW</th></tr></thead><tbody>${rowsA.join('')}</tbody></table><p class="note">HW-якорей ${A.HW.length}, QW-якорей ${A.QW.length}; значения — точные значения модели в λ якорей. Те же величины, взятые от остатка опорного фита в единицах σ, образуют каналы якорей вектора признаков ИИ. ${homNote} У градиента Ψ-отклонение почти постоянно по диапазону, у поглощения растёт к синему краю, у шероховатости выражено Δ-отклонение.</p>`);
-    const anchList = A.HW.length ? `Найдено HW-якорей: ${A.HW.length} (${A.HW.map(x => fmt(x, 0)).join(', ')} нм), QW-якорей: ${A.QW.length}.` : 'Полуволновых якорей не найдено (плёнка тонкая или диапазон узкий): паттерны пусты.';
-    $('dmAnchorInfo').innerHTML = T(`Плёнка: <b>${DM.base.label}</b>, d = ${fmt(DM.base.d, 2)} нм, ${DM.cfg.mat.name}; подложка — ${subShort(DM.cfg.subKey)}${DM.cfg.back ? ' с задней стороной' : ''}. ${anchList}${A.absorbs ? ' Материал поглощает на синем краю: однородная плёнка касается кривой подложки только в красных HW-якорях (см. примечание к сводке).' : ''}`);
+      ? `Материал поглощает в диапазоне (k = ${fmt(A.kFilm, 4)} при ${fmt(A.lamF[0], 0)} нм); максимальное по модулю Ψ − Ψ<sub>подл</sub> однородной плёнки в HW-якорях составляет ${fmt(A.pat.HW.psi[0].reduce((m, x) => Math.abs(x) > Math.abs(m) ? x : m, 0), 2)}°. Это отклик базовой модели. Вклад дефекта оценивают сравнением с рядом «однородная плёнка».`
+      : 'Совпадение эллипсометрических фаз в HW не гарантирует равенства Ψ плёнки и подложки. Сравнивайте отклики с рядом «однородная плёнка».';
+    $('dmAnchorTable').innerHTML = T(`<h3>Сводка по якорям (в градусах)</h3><table><thead><tr><th>вариант плёнки</th><th class="num">⟨Ψ − Ψ<sub>подл</sub>⟩ в HW</th><th class="num">перепад синие − красные HW</th><th class="num">⟨Ψ − Ψ<sub>однор</sub>⟩ в QW</th><th class="num">⟨|Δ − Δ<sub>подл</sub>|⟩ в HW</th><th class="num">⟨|Δ − Δ<sub>подл</sub> − 180°|⟩ в QW</th></tr></thead><tbody>${rowsA.join('')}</tbody></table><p class="note">HW-якорей ${A.HW.length}, QW-якорей ${A.QW.length}; значения — точные значения модели в λ якорей. Вектор признаков ИИ использует связанные характеристики остатка опорного фита в единицах σ; его якоря определяются по измеренному спектру, поэтому эта таблица иллюстраций не тождественна признакам обучения. ${homNote} Форма и знак отклика зависят от конфигурации; разные дефекты и ошибки условий могут давать сходные каналы.</p>`);
+    const anchList = A.HW.length ? `Найдено HW-якорей: ${A.HW.length} (${A.HW.map(x => fmt(x, 0)).join(', ')} нм), QW-якорей: ${A.QW.length}.` : 'Фазовых HW-якорей не найдено: паттерны пусты.';
+    $('dmAnchorInfo').innerHTML = T(`Плёнка: <b>${DM.base.label}</b>, d = ${fmt(DM.base.d, 2)} нм, ${DM.cfg.mat.name}; подложка — ${subShort(DM.cfg.subKey)}${DM.cfg.back ? ' с задней стороной' : ''}. ${anchList}${A.absorbs ? ' Материал поглощает на синем краю; собственный отклик однородной плёнки показан в сводке.' : ''}`);
   }
   document.querySelectorAll('#anchUnits button').forEach(b => b.addEventListener('click', () => { DM.anchUnits = b.dataset.u; document.querySelectorAll('#anchUnits button').forEach(x => x.classList.toggle('on', x === b)); renderAnchors(); }));
   // ---------------------------------------------------------------- 3. дисперсия
@@ -1742,7 +1786,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const line = (c, key, extra) => Object.assign({ legendKey: c.key, label: c.label, data: pts(D.lamF, c[key]), borderColor: css(c.color), backgroundColor: css(c.color), borderWidth: c.key === 'truth' ? 2.4 : 1.8, borderDash: c.dash || undefined, pointRadius: 0 }, extra || {});
     $('dispSub').textContent = D.mats.map(c => c.label).join(' · ');
     makeChart('cDispN', () => { const o = baseOpts('Длина волны, нм', 'n'); return new Chart($('cDispN'), { type: 'line', data: { datasets: D.mats.map(c => line(c, 'n')) }, options: o }); });
-    makeChart('cDispK', () => { const o = baseOpts('Длина волны, нм', 'k'); const anyK = D.mats.some(c => c.k.some(v => v > 1e-6)); if (!anyK) { o.scales.y.min = 0; o.scales.y.max = 0.001; o.plugins.guides = { xBands: [{ from: D.lamF[0], to: D.lamF[D.lamF.length - 1], color: 'rgba(0,0,0,0)', label: 'плёнка прозрачна в диапазоне: k = 0' }] }; } return new Chart($('cDispK'), { type: 'line', data: { datasets: D.mats.map(c => line(c, 'k')) }, options: o }); });
+    makeChart('cDispK', () => { const o = baseOpts('Длина волны, нм', 'k'); const anyK = D.mats.some(c => c.k.some(v => v > 0)); if (!anyK) { o.scales.y.min = 0; o.scales.y.max = 0.001; o.plugins.guides = { xBands: [{ from: D.lamF[0], to: D.lamF[D.lamF.length - 1], color: 'rgba(0,0,0,0)', label: 'плёнка прозрачна в диапазоне: k = 0' }] }; } return new Chart($('cDispK'), { type: 'line', data: { datasets: D.mats.map(c => line(c, 'k')) }, options: o }); });
     makeChart('cDispTail', () => {
       const o = baseOpts('Длина волны, нм', 'k хвоста'); const ds = D.mats.filter(c => c.kTail).map(c => line(c, 'kTail', { label: `${c.label}: k хвоста (k₄₀₀ = ${fmtK(c.k400, 2)})` }));
       if (!ds.length) { o.scales.y.min = 0; o.scales.y.max = 0.001; ds.push({ label: 'хвоста поглощения нет', data: pts(D.lamF, D.lamF.map(() => 0)), borderColor: css('--muted'), borderWidth: 1.4, pointRadius: 0 }); }
@@ -1757,8 +1801,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     });
     // формулы
     const F = [
-      { tex: String.raw`\varepsilon(E) = 1 + \varepsilon_1^{\mathrm{TL}}(E) + \frac{A_{uv}}{E_{uv}^{2} - E^{2}} + i\,\varepsilon_2^{\mathrm{TL}}(E) + \varepsilon^{\mathrm{tail}}(E),\qquad N = n - ik = \sqrt{\varepsilon}`, plain: 'ε(E) = 1 + ε₁ᵀᴸ(E) + A_uv / (E_uv² − E²) + i·ε₂ᵀᴸ(E) + ε^tail(E),   N = n − ik = √ε', cap: 'диэлектрическая функция: осциллятор Тауца–Лоренца, УФ-полюс Зельмейера и хвост поглощения' },
-      { tex: String.raw`\varepsilon_2^{\mathrm{TL}}(E) = \begin{cases} \dfrac{A\,E_0\,C\,(E - E_g)^{2}}{\left[(E^{2} - E_0^{2})^{2} + C^{2}E^{2}\right]E}, & E > E_g \\[8pt] 0, & E \le E_g \end{cases}`, plain: 'ε₂ᵀᴸ(E) = A·E₀·C·(E − E_g)² / {[(E² − E₀²)² + C²E²]·E} при E > E_g;  0 при E ≤ E_g', cap: 'мнимая часть: A — сила осциллятора, E₀ — энергия пика, C — ширина, E_g — край поглощения по Тауцу' },
+      { tex: String.raw`\varepsilon(E) = 1 + \varepsilon_1^{\mathrm{TL}}(E) + \frac{A_{uv}}{E_{uv}^{2} - E^{2}} - i\,\varepsilon_2^{\mathrm{TL}}(E) + \varepsilon^{\mathrm{tail}}(E),\qquad N = n - ik = \sqrt{\varepsilon}`, plain: 'ε(E) = 1 + ε₁ᵀᴸ(E) + A_uv / (E_uv² − E²) − i·ε₂ᵀᴸ(E) + ε^tail(E),   N = n − ik = √ε', cap: 'диэлектрическая функция: осциллятор Тауца–Лоренца, УФ-полюс Зельмейера и хвост поглощения' },
+      { tex: String.raw`\varepsilon_2^{\mathrm{TL}}(E) = \begin{cases} \dfrac{A\,E_0\,C\,(E - E_g)^{2}}{\left[(E^{2} - E_0^{2})^{2} + C^{2}E^{2}\right]E}, & E > E_g \\[8pt] 0, & E \le E_g \end{cases}`, plain: 'ε₂ᵀᴸ(E) = A·E₀·C·(E − E_g)² / {[(E² − E₀²)² + C²E²]·E} при E > E_g;  0 при E ≤ E_g', cap: 'ε₂ = −Im ε ≥ 0: A — сила осциллятора, E₀ — резонансная энергия, C — параметр уширения, E_g — край поглощения по Тауцу' },
       { tex: String.raw`\varepsilon_1^{\mathrm{TL}}(E) = \frac{2}{\pi}\,\mathcal{P}\!\!\int_{E_g}^{\infty}\frac{\xi\,\varepsilon_2^{\mathrm{TL}}(\xi)}{\xi^{2} - E^{2}}\,d\xi`, plain: 'ε₁ᵀᴸ(E) = (2/π)·P∫[E_g,∞] ξ·ε₂ᵀᴸ(ξ) / (ξ² − E²) dξ', cap: 'действительная часть — преобразование Крамерса–Кронига (аналитическое выражение Джеллисона–Модина, 1996): дисперсия причинна' },
       { tex: String.raw`\varepsilon^{\mathrm{tail}}(E) = \varepsilon^{\mathrm{TL}}(E;\,A_k,\,E_0,\,C,\,E_t),\quad E_t = 1.2\ \mathrm{eV};\qquad k_{400} = k(400\,\mathrm{nm})\big|_{A_k} - k(400\,\mathrm{nm})\big|_{A_k = 0}`, plain: 'ε^tail(E) = εᵀᴸ(E; A_k, E₀, C, E_t), E_t = 1.2 эВ;   k₄₀₀ = k(400 нм)|A_k − k(400 нм)|0', cap: 'хвост поглощения — второй осциллятор с силой A_k, теми же E₀, C и порогом E_t; наружу выводится k хвоста при 400 нм' },
     ];
@@ -1806,9 +1850,9 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     const absorbing = E.SUBSTRATES[B.subKey].fn(lam[n - 1])[1] > 1e-4;             // k подложки на красном краю диапазона (где она прозрачнее всего)
     $('backFitSub').textContent = `спектр с задней стороной (${fL}) фитируется моделью без неё`;
     $('backFitNote').innerHTML = T(negligible
-      ? `Задняя сторона здесь ничего не меняет (${B.f > 0 ? (absorbing ? 'подложка поглощает: свет задней грани гасится в её толще' : 'вклад ниже 10⁻³°') : 'доля f = 0'}), поэтому однородный фит без неё воспроизводит базовую плёнку: d = ${fmt(B.fitNo.d, 2)} нм при ${fmt(DM.base.d, 2)} нм, χ²/ν = ${fmt(B.fitNo.chi2, 1)}, ложных дефектов не возникает. Чтобы увидеть эффект, выберите прозрачную подложку и долю f > 0 и нажмите «Пересчитать».`
+      ? `Изменения Ψ ниже 10⁻³°, Δ — ниже 10⁻²° (${B.f > 0 ? (absorbing ? 'подложка поглощает свет задней грани' : 'малый вклад задней стороны') : 'доля f = 0'}). Однородный фит без задней стороны: d = ${fmt(B.fitNo.d, 2)} нм при ${fmt(DM.base.d, 2)} нм, χ²/ν = ${fmt(B.fitNo.chi2, 1)}. Значимость изменений зависит от заданного σ. Чтобы увидеть более сильный эффект, выберите прозрачную подложку и долю f > 0 и нажмите «Пересчитать».`
       : `Однородный фит без задней стороны находит d = ${fmt(B.fitNo.d, 2)} нм при d базовой плёнки ${fmt(DM.base.d, 2)} нм (ошибка ${fmt(B.fitNo.d - DM.base.d, 2)} нм), χ²/ν = ${fmt(B.fitNo.chi2, 1)}; остаток похож на: ${looksLike(B.fitNo.ch)}. Так задняя сторона, не учтённая в модели, превращается в ложные дефекты — поэтому её доля задаётся из независимого измерения и входит в модель, обучение и симулятор.`);
-    const effect = negligible ? 'Задняя сторона спектр не меняет (изменения Ψ ниже 10⁻³°, Δ — ниже 10⁻²°, деполяризации нет).' : `Задняя сторона меняет Ψ до ${fmt(mp, 2)}° и Δ до ${fmt(md, 1)}°; степень деполяризации до ${fmt(mdp, 1)} %.`;
+    const effect = negligible ? `Изменения Ψ ниже 10⁻³°, Δ — ниже 10⁻²°; степень деполяризации до ${fitMetric(mdp, 3)} %.` : `Задняя сторона меняет Ψ до ${fmt(mp, 2)}° и Δ до ${fmt(md, 1)}°; степень деполяризации до ${fmt(mdp, 1)} %.`;
     $('dmBackInfo').innerHTML = T(`Подложка — <b>${subName}</b>${absorbing && negligible ? ' (поглощает: вклад задней стороны гасится в её толще)' : ''}, толщина ${fmt(B.ds / 1e6, 2)} мм, доля ${fmt(B.f, 2)}; плёнка — ${DM.base.label}, d = ${fmt(DM.base.d, 1)} нм, угол ${fmt(DM.cfg.phi, 2)}°. ${effect}${DM.cfg.back ? '' : ' На странице «Анализ» задняя сторона сейчас выключена — здесь она включена только для иллюстрации.'}`);
     backSrcInfo();
   }

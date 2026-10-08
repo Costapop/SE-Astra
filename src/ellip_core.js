@@ -11,7 +11,18 @@
   const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
   const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
   const cabs2 = (a) => a[0] * a[0] + a[1] * a[1];
-  function csqrt(a) { const r = Math.hypot(a[0], a[1]); let re = Math.sqrt(Math.max(0, (r + a[0]) / 2)); let im = Math.sqrt(Math.max(0, (r - a[0]) / 2)); if (a[1] < 0) im = -im; return [re, im]; }
+  // Малую компоненту восстанавливаем из 2 Re√z Im√z = Im z: разность |z| − Re z
+  // теряет слабое поглощение целиком, если ε₂² меньше ошибки округления ε₁².
+  function csqrt(a) {
+    const x = a[0], y = a[1], r = Math.hypot(x, y);
+    if (r === 0) return [0, y];
+    if (x >= 0) { const re = Math.sqrt(r / 2 + x / 2); return [re, y / (2 * re)]; }
+    const im = (y < 0 || Object.is(y, -0) ? -1 : 1) * Math.sqrt(r / 2 - x / 2);
+    return [y / (2 * im), im];
+  }
+  // Действительная часть корня без потери точности; используется в скалярных горячих циклах.
+  const sqrtRe = (x, y, r) => x >= 0 ? Math.sqrt(r / 2 + x / 2) : Math.abs(y) / (2 * Math.sqrt(r / 2 - x / 2));
+  const passiveSqrtIm = (x, y, re) => re > 0 ? y / (2 * re) : -Math.sqrt(Math.max(0, -x));
   function cexp(a) { const e = Math.exp(a[0]); return [e * Math.cos(a[1]), e * Math.sin(a[1])]; }
 
   // ---------------------------------------------------------------- дисперсия: Тауц–Лоренц + УФ-полюс (ε∞ = 1)
@@ -53,6 +64,11 @@
   function tailK400(m, Ak) {
     const k1 = filmNK([400], Object.assign({}, m, { Ak: Ak })).k[0], k0 = filmNK([400], Object.assign({}, m, { Ak: 0 })).k[0];
     return k1 - k0;
+  }
+  function tailK400Gradient(m, Ak, free) {
+    const full = filmNJac([400], Object.assign({}, m, { Ak })), base = filmNJac([400], Object.assign({}, m, { Ak: 0 }));
+    return free.map(k => k === 'Ak' ? -full.dN.Ak[0][1] :
+      (k === 'A' || k === 'Auv' || k === 'Eg' ? base.dN[k][0][1] - full.dN[k][0][1] : 0));
   }
   /** Обратное к tailK400: сила хвоста A_k (эВ), дающая заданный k хвоста при 400 нм (монотонная зависимость; Ньютон). */
   function tailAk(m, k400) {
@@ -103,8 +119,11 @@
   /** Кубическая интерполяция Кэтмулла–Рома по таблице [[x, n, k], ...] с монотонно возрастающим x (равномерная сетка по x или близкая к ней). */
   function cubicTab(t, x) {
     const L = t.length; if (x <= t[0][0]) return [t[0][1], t[0][2]]; if (x >= t[L - 1][0]) return [t[L - 1][1], t[L - 1][2]];
-    let j = 1; while (t[j][0] < x) j++; j = Math.min(L - 3, Math.max(1, j - 1));
+    let j = 1; while (t[j][0] < x) j++; j--;
     const u = (x - t[j][0]) / (t[j + 1][0] - t[j][0]);
+    // На краях нет четырёх узлов: интерполируем крайний интервал линейно,
+    // а не экстраполируем соседний кубический полином за его область.
+    if (j === 0 || j === L - 2) return [t[j][1] + u * (t[j + 1][1] - t[j][1]), t[j][2] + u * (t[j + 1][2] - t[j][2])];
     const cr = (y0, y1, y2, y3) => y1 + 0.5 * u * (y2 - y0 + u * (2 * y0 - 5 * y1 + 4 * y2 - y3 + u * (3 * (y1 - y2) + y3 - y0)));
     return [cr(t[j - 1][1], t[j][1], t[j + 1][1], t[j + 2][1]), Math.max(0, cr(t[j - 1][2], t[j][2], t[j + 1][2], t[j + 2][2]))];
   }
@@ -161,7 +180,12 @@
   }
 
   // ---------------------------------------------------------------- отражение от стопки
-  function cosT(N, s02) { const q = cdiv([s02, 0], cmul(N, N)); return csqrt([1 - q[0], -q[1]]); }
+  function cosT(N, s02) {
+    const q = cdiv([s02, 0], cmul(N, N)), c = csqrt([1 - q[0], -q[1]]);
+    // При N = n − ik затухание требует Im(N cos γ) ≤ 0, в том числе при полном отражении.
+    if (cmul(N, c)[1] > 0) return [-c[0], -c[1]];
+    return c;
+  }
   function fresnelPS(Ni, ci, Nj, cj) {
     const a = cmul(Nj, ci), b = cmul(Ni, cj);
     const rp = cdiv(csub(a, b), cadd(a, b));
@@ -182,7 +206,7 @@
         const Nv = j < L ? layers[j].N[i] : Nsub[i], Nr = Nv[0], Ni = Nv[1];
         const N2r = Nr * Nr - Ni * Ni, N2i = 2 * Nr * Ni, den = N2r * N2r + N2i * N2i;
         const ar = 1 - s02 * N2r / den, ai = s02 * N2i / den, mod = Math.hypot(ar, ai);
-        let cre = Math.sqrt(Math.max(0, (mod + ar) / 2)), cim = Math.sqrt(Math.max(0, (mod - ar) / 2)); if (ai < 0) cim = -cim;
+        const cre = sqrtRe(ar, ai, mod), cim = passiveSqrtIm(ar, ai, cre);
         cr_[j] = cre; ci_[j] = cim; nr_[j] = Nr; ni_[j] = Ni;
       }
       // старт: граница нижний слой (или воздух) | подложка
@@ -292,7 +316,7 @@
     const s0 = Math.sin(phi * PI / 180), s02 = s0 * s0, c0 = Math.cos(phi * PI / 180), L = layers.length;
     // cos γ = sqrt(1 − s0²/N²) для N = (Nr, Ni): результат в (cr, ci)
     let cr = 0, ci = 0;
-    const cosG = (Nr, Ni) => { const N2r = Nr * Nr - Ni * Ni, N2i = 2 * Nr * Ni, den = N2r * N2r + N2i * N2i, ar = 1 - s02 * N2r / den, ai = s02 * N2i / den, mod = Math.hypot(ar, ai); cr = Math.sqrt(Math.max(0, (mod + ar) / 2)); ci = Math.sqrt(Math.max(0, (mod - ar) / 2)); if (ai < 0) ci = -ci; };
+    const cosG = (Nr, Ni) => { const N2r = Nr * Nr - Ni * Ni, N2i = 2 * Nr * Ni, den = N2r * N2r + N2i * N2i, ar = 1 - s02 * N2r / den, ai = s02 * N2i / den, mod = Math.hypot(ar, ai); cr = sqrtRe(ar, ai, mod); ci = passiveSqrtIm(ar, ai, cr); };
     for (let i = 0; i < n; i++) {
       const k = 2 * PI / lam[i], Nbr = Nsub[i][0], Nbi = Nsub[i][1];
       cosG(Nbr, Nbi); const cbr = cr, cbi = ci;
@@ -351,6 +375,7 @@
    *  (Furman & Tikhonravov, 1.1.19, 1.1.20), RK4 с шагом h (нм); EMA-слой сверху добавляется по Эйри.
    *  Возвращает [RP, RS] в конвенции ядра (r_p как в эллипсометрии, т.е. −r_p книги). */
   function rhoGraded(lam, Nsub, phi, d, m, delta, dRough, h) {
+    if (d === 0) return rhoStack(lam, buildLayers(lam, 0, m, 0, dRough, 1), Nsub, phi);
     h = h || 1.0;
     const s0 = Math.sin(phi * PI / 180), s02 = s0 * s0, c0 = [Math.cos(phi * PI / 180), 0], N0 = [1, 0];
     const Nf = filmN(lam, m);
@@ -398,7 +423,8 @@
    *  и только затем берутся отношения: N = (⟨I_s⟩ − ⟨I_p⟩)/(⟨I_p⟩ + ⟨I_s⟩) и т. д. — как в некогерентной сумме пучков задней стороны.
    *  В модели фита полоса учитывается во втором порядке по σ: ⟨M⟩ ≈ M + (σ²/2) M″, где M″ — центральная разность по λ с шагом BAND_H
    *  (три сетки λ − h, λ, λ + h, т. е. три вычисления модели вместо одного). Отброшенный член σ⁴M⁗/8 при σ ≤ 0.7 нм и периоде полос ≥ 20 нм
-   *  составляет < 2·10⁻⁴ от эффекта полосы; ошибка самой разности (h²/12)M⁗ — < 0.5 % от M″. */
+   *  для гармоники периода 20 нм достигает 1.21 % от члена второго порядка; ошибка самой разности при h = 1 нм — около 0.82 %.
+   *  Поэтому точность по Ψ, Δ проверяется на конкретном спектре сравнением с прямой свёрткой. */
   const BAND_H = 1.0;
   const bandOn = (band) => !!(band && band.bw > 0);
   function lam3Of(lam, h) { const n = lam.length, out = new Float64Array(3 * n); for (let i = 0; i < n; i++) { out[i] = lam[i] - h; out[n + i] = lam[i]; out[2 * n + i] = lam[i] + h; } return out; }
@@ -596,18 +622,19 @@
   const subLayersFor = (delta) => (Math.abs(delta) > 0.12 ? 160 : (Math.abs(delta) > 0.04 ? 80 : 40));
   /** Систематическая погрешность параметров от заявленных неопределённостей условий измерения (линейное распространение в решении):
    *  δx = −(JᵀJ)⁻¹ Jᵀ (∂r/∂q) Δq для q = угол (nuis.phiErr), доля задней стороны (nuis.backFerr), полоса (nuis.bwErr), сдвиг шкалы λ (nuis.offErr);
-   *  ∂r/∂q — центральные разности по невязке. Возвращает {total: {param: ±}, parts: {phi, backF, bw, off: {param: ±}}} — полуширины при предельных Δq. */
+   *  ∂r/∂q — центральные разности по невязке. total и parts содержат модули сдвигов;
+   *  shifts сохраняет знаки совместных δx для распространения на производные величины (например, k₄₀₀). */
   function sysErrors(data, cfg, free, fixed, M, x, nuis) {
     const fn0 = makeResidJacFn(data, cfg, free, fixed, M), ev = fn0(x, true), J = ev.J, m = ev.r.length, p = free.length;
     const JTJ = Array.from({ length: p }, () => new Array(p).fill(0));
     for (let a = 0; a < p; a++) for (let b = a; b < p; b++) { let s = 0; for (let i = 0; i < m; i++) s += J[a][i] * J[b][i]; JTJ[a][b] = s; JTJ[b][a] = s; }
     const inv = invert(JTJ); if (!inv) return null;
-    const parts = {}, total = {}; free.forEach(k => total[k] = 0);
+    const parts = {}, shifts = {}, total = {}; free.forEach(k => total[k] = 0);
     const push = (name, rPlus, rMinus, hh, dq) => {                          // δx = −(JᵀJ)⁻¹ Jᵀ (∂r/∂q) Δq
       const g = new Array(p).fill(0);
       for (let a = 0; a < p; a++) { let s = 0; for (let i = 0; i < m; i++) s += J[a][i] * (rPlus[i] - rMinus[i]) / hh; g[a] = s; }
-      const dx = {}; free.forEach((k, a) => { let s = 0; for (let b = 0; b < p; b++) s += inv[a][b] * g[b]; dx[k] = Math.abs(s * dq); total[k] += dx[k] * dx[k]; });
-      parts[name] = dx;
+      const dx = {}, signed = {}; free.forEach((k, a) => { let s = 0; for (let b = 0; b < p; b++) s += inv[a][b] * g[b]; signed[k] = -s * dq; dx[k] = Math.abs(signed[k]); total[k] += dx[k] * dx[k]; });
+      parts[name] = dx; shifts[name] = signed;
     };
     const r = (cfgX, dataX) => makeResidJacFn(dataX || data, cfgX, free, fixed, M)(x, false).r;
     if (nuis.phiErr > 0) { const h = 0.005; push('phi', r(Object.assign({}, cfg, { phi: cfg.phi + h })), r(Object.assign({}, cfg, { phi: cfg.phi - h })), 2 * h, nuis.phiErr); }
@@ -619,11 +646,17 @@
       push('off', r(cP, Object.assign({}, data, { lam: lamP })), r(cM, Object.assign({}, data, { lam: lamM })), 2 * h, nuis.offErr);
     }
     free.forEach(k => total[k] = Math.sqrt(total[k]));
-    return { total, parts };
+    return { total, parts, shifts };
   }
   /** Порог вето для параметра дефекта k: √((3σ_форм)² + сист.²) — дефект должен превышать и формальную погрешность (3σ), и линейно
    *  распространённую систематику заявленных неопределённостей условий (если fin.sys есть). */
-  function vetoThreshold(fin, k) { const e = fin.E[k] || 0, s = (fin.sys && fin.sys.total && isFinite(fin.sys.total[k])) ? fin.sys.total[k] : 0; return Math.sqrt(9 * e * e + s * s); }
+  function vetoThreshold(fin, k) {
+    const e = fin.E[k], s = fin.sys && fin.sys.total ? fin.sys.total[k] : 0;
+    // Неизвестная погрешность не равна нулю. NaN запрещает вывод о значимости
+    // и автоматическое удаление параметра сравнением с недостоверным порогом.
+    if (!Number.isFinite(e) || e < 0 || !Number.isFinite(s) || s < 0) return NaN;
+    return Math.hypot(3 * e, s);
+  }
   /** Фит в выбранной модели дефектов flags = {grad, rough, abs}: несколько стартов (толщины из перебора опорного фита × знак градиента),
    *  лучший по χ² дотягивается до сходимости; при |δ| > 4 % — повтор с 80 подслоями, при |δ| > 12 % — со 160. Поглощение — сила хвоста A_k
    *  (старт из p0.Ak); k₄₀₀ пересчитывается по найденной дисперсии (A, A_uv, E_g фита), а не по справочной. cfg.band — полоса прибора в модели.
@@ -678,13 +711,29 @@
     const P = { dRough: 0, delta: 0, Ak: 0 }; free.forEach((k, i) => P[k] = res.x[i]);
     const E = {}; free.forEach((k, i) => E[k] = res.err[i]);
     const mFit = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg });                  // k₄₀₀ — по найденной дисперсии
-    const dk400 = (Ak) => { const h = Math.max(1e-6, 1e-3 * Ak); return (tailK400(mFit, Ak + h) - tailK400(mFit, Ak)) / h; };
-    if (flags.abs) { P.k400 = tailK400(mFit, P.Ak); E.k400 = E.Ak * dk400(P.Ak); } else { P.k400 = 0; }
+    // k₄₀₀ зависит не только от A_k: учитываем дисперсию и все ковариации свободных параметров.
+    const gK = flags.abs ? tailK400Gradient(mFit, P.Ak, free) : null;
+    if (flags.abs) {
+      P.k400 = tailK400(mFit, P.Ak);
+      let variance = 0;
+      if (res.cov) for (let i = 0; i < free.length; i++) for (let j = 0; j < free.length; j++) variance += gK[i] * res.cov[i][j] * gK[j];
+      E.k400 = res.cov ? Math.sqrt(Math.max(0, variance)) : NaN;
+    } else { P.k400 = 0; }
     let sys = null;
     const profileLayers = flags.grad ? Mfin : 1;
     if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit, run: runs, dof, profileLayers });
-    if (nuis) { sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis); if (sys && flags.abs) { const dk = dk400(P.Ak); sys.total.k400 = sys.total.Ak * dk; for (const q of Object.keys(sys.parts)) sys.parts[q].k400 = sys.parts[q].Ak * dk; } }
-    return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin, runs, iterations, dof, profileLayers };
+    if (nuis) {
+      sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis);
+      if (sys && flags.abs) {
+        let variance = 0;
+        for (const q of Object.keys(sys.parts)) {
+          const shift = free.reduce((s, k, i) => s + gK[i] * sys.shifts[q][k], 0);
+          sys.shifts[q].k400 = shift; sys.parts[q].k400 = Math.abs(shift); variance += shift * shift;
+        }
+        sys.total.k400 = Math.sqrt(variance);
+      }
+    }
+    return { P, E, sys, cov: res.cov, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin, runs, iterations, dof, profileLayers };
   }
 
   // ---------------------------------------------------------------- аналитический якобиан (Фурман–Тихонравов, разд. 1.4.1: формулы 1.4.9–1.4.16) и ЛМ с масштабированием
@@ -706,7 +755,8 @@
       const [t1, t2] = tlEps(E, 1, m.E0, m.C, TAIL_ET);                                   // хвост единичной силы: ∂ε/∂Ak
       let Nv = csqrt([1 + e1 + m.Auv / uvd + (Ak ? Ak * t1 : 0), -(e2 + (Ak ? Ak * t2 : 0))]); Nv = [Math.abs(Nv[0]), -Math.abs(Nv[1])]; N[i] = Nv;
       const g = cdiv([0.5, 0], Nv);
-      dA[i] = cmul(g, [e1 / m.A, -e2 / m.A]);
+      const unit = m.A !== 0 ? [e1 / m.A, e2 / m.A] : tlEps(E, 1, m.E0, m.C, m.Eg);
+      dA[i] = cmul(g, [unit[0], -unit[1]]);
       dAuv[i] = cmul(g, [1 / uvd, 0]);
       dAk[i] = cmul(g, [t1, -t2]);
       const [p1, p2] = tlEps(E, m.A, m.E0, m.C, m.Eg + h), [q1, q2] = tlEps(E, m.A, m.E0, m.C, m.Eg - h);
@@ -773,14 +823,14 @@
       const k = 2 * PI / lam[i], Nbr = Nsub[i][0], Nbi = Nsub[i][1];
       // cos γ подложки: sqrt(1 − s0²/Nb²)
       let N2r = Nbr * Nbr - Nbi * Nbi, N2i = 2 * Nbr * Nbi, den = N2r * N2r + N2i * N2i, qr = s02 * N2r / den, qi = -s02 * N2i / den, ar = 1 - qr, ai = -qi, mod = Math.hypot(ar, ai);
-      let cbr = Math.sqrt(Math.max(0, (mod + ar) / 2)), cbi = Math.sqrt(Math.max(0, (mod - ar) / 2)); if (ai < 0) cbi = -cbi;
+      const cbr = sqrtRe(ar, ai, mod), cbi = passiveSqrtIm(ar, ai, cbr);
       for (let pol = 0; pol < 2; pol++) {
         const isS = pol === 0, qa = isS ? c0 : 1 / c0;
         let qsr, qsi; if (isS) { qsr = Nbr * cbr - Nbi * cbi; qsi = Nbr * cbi + Nbi * cbr; } else { const dd = cbr * cbr + cbi * cbi; qsr = (Nbr * cbr + Nbi * cbi) / dd; qsi = (Nbi * cbr - Nbr * cbi) / dd; }
         for (let a = 0; a < nL; a++) {
           const Nr = layers[a].N[i][0], Ni = layers[a].N[i][1], dj = layers[a].d;
           N2r = Nr * Nr - Ni * Ni; N2i = 2 * Nr * Ni; den = N2r * N2r + N2i * N2i; qr = s02 * N2r / den; qi = -s02 * N2i / den; ar = 1 - qr; ai = -qi; mod = Math.hypot(ar, ai);
-          let cr = Math.sqrt(Math.max(0, (mod + ar) / 2)), ci = Math.sqrt(Math.max(0, (mod - ar) / 2)); if (ai < 0) ci = -ci;    // cos γ_j
+          const cr = sqrtRe(ar, ai, mod), ci = passiveSqrtIm(ar, ai, cr);    // cos γ_j
           const ncr = Nr * cr - Ni * ci, nci = Nr * ci + Ni * cr;                                        // N cos γ
           let qjr, qji; if (isS) { qjr = ncr; qji = nci; } else { const dd = cr * cr + ci * ci; qjr = (Nr * cr + Ni * ci) / dd; qji = (Ni * cr - Nr * ci) / dd; }
           const phr = k * dj * ncr, phi_ = k * dj * nci;
@@ -1012,22 +1062,33 @@
     return { x, resid: r, chi2, cov, nfev, nit, err: cov ? cov.map((row, k) => Math.sqrt(Math.max(0, row[k]))) : x.map(() => NaN) };
   }
 
-  // ---------------------------------------------------------------- якоря (полуволновые/четвертьволновые точки) и каналы остатка
+  // ---------------------------------------------------------------- фазовые якоря (условные метки HW/QW) и каналы остатка
   function unwrapDeg(a) { const out = new Float64Array(a.length); out[0] = a[0]; for (let i = 1; i < a.length; i++) { let d = a[i] - a[i - 1]; d = ((d + 180) % 360 + 360) % 360 - 180; out[i] = out[i - 1] + d; } return out; }
   function interp(x, xs, ys) { if (x <= xs[0]) return ys[0]; if (x >= xs[xs.length - 1]) return ys[ys.length - 1]; let j = 1; while (xs[j] < x) j++; const f = (x - xs[j - 1]) / (xs[j] - xs[j - 1]); return ys[j - 1] + f * (ys[j] - ys[j - 1]); }
   function anchors(lam, del, delSub) {
     const diff = new Float64Array(lam.length); for (let i = 0; i < lam.length; i++) diff[i] = wrap(del[i] - delSub[i]);
-    let ph = unwrapDeg(diff); if (ph[ph.length - 1] < ph[0]) ph = ph.map(v => -v);
+    const ph = unwrapDeg(diff);
     const HW = [], QW = [];
-    for (let t = Math.ceil(ph[0] / 360 + 1e-9) * 360; t < ph[ph.length - 1]; t += 360) { HW.push(interp(t, ph, lam)); if (t + 180 < ph[ph.length - 1]) QW.push(interp(t + 180, ph, lam)); }
+    // Ищем локальные пересечения каждой семьи независимо: QW может предшествовать
+    // первому HW, а измеренная фаза не обязана быть глобально монотонной.
+    for (let i = 1; i < lam.length; i++) {
+      const a = ph[i - 1], b = ph[i]; if (a === b) continue;
+      for (const [offset, out] of [[0, HW], [180, QW]]) {
+        const low = Math.min(a, b), high = Math.max(a, b);
+        for (let k = Math.ceil((low - offset) / 360); offset + 360 * k <= high; k++) {
+          const t = offset + 360 * k, x = lam[i - 1] + (lam[i] - lam[i - 1]) * (t - a) / (b - a);
+          if (x > lam[0] && x < lam[lam.length - 1] && (!out.length || Math.abs(x - out[out.length - 1]) > 1e-9)) out.push(x);
+        }
+      }
+    }
     return { HW, QW };
   }
-  /** Каналы остатка по якорям. В полуволновых точках однородная прозрачная плёнка «отсутствует» и Ψ = Ψ подложки при любых n и d,
-   *  поэтому Ψ-остаток в HW-якорях не зависит от того, как опорный фит подобрал дисперсию, и читает дефекты напрямую:
-   *  градиент сдвигает Ψ в HW-якорях примерно одинаково по всему диапазону (канал psiHW — среднее), поглощение — гасит контраст
-   *  полос тем сильнее, чем ближе к синему краю (∝ k(λ)·d/λ), поэтому его канал — перепад Ψ-остатка между синей и красной половинами
-   *  якорей: psiHWtrend = ⟨r_Ψ(HW)⟩_синие − ⟨r_Ψ(HW)⟩_красные; в четвертьволновых точках контраст гасится с противоположной стороны
-   *  (psiQWtrend — тот же перепад по QW-якорям). Половины — по середине диапазона λ; если одна пуста — по номеру якоря. */
+  /** Каналы остатка по фазовым якорям HW/QW. Условия Δ−Δsub = 0/180° mod 360°
+   *  не гарантируют истинную полуволновую/четвертьволновую оптическую толщину.
+   *  Средние, разброс и спектральные перепады — диагностические признаки, зависящие от
+   *  геометрии, дисперсии, дефектов и ошибок условий. Отдельный канал не изолирует один дефект.
+   *  psiHWtrend/psiQWtrend = среднее Ψ-остатка в синих якорях минус среднее в красных.
+   *  Половины — по середине диапазона λ; если одна пуста — по номеру якоря. */
   function channels(lam, resid, HW, QW) {
     const n = lam.length, rp = Array.from(resid.slice(0, n)), rd = Array.from(resid.slice(n));
     const at = (xs, ys) => xs.map(x => interp(x, lam, ys));
@@ -1112,6 +1173,11 @@
     const { HW, QW } = anchors(dd.lam, dd.del, subDel);
     let ch = { psiHW: 0, psiHWsd: 0, delHW: 0, delQW: 0, rmsPsi: 0, rmsDel: 0, psiHWtrend: 0, psiQWtrend: 0 };
     if (HW.length >= 2 && QW.length >= 1) ch = channels(dd.lam, resid, HW, QW);
+    else {
+      const n = dd.lam.length; let p2 = 0, d2 = 0;
+      for (let i = 0; i < n; i++) { p2 += resid[i] ** 2; d2 += resid[n + i] ** 2; }
+      ch.rmsPsi = Math.sqrt(p2 / n); ch.rmsDel = Math.sqrt(d2 / n);
+    }
     const f = (v) => (isFinite(v) ? v : 0);
     return Array.from(resid).concat([f(ch.psiHW), f(ch.psiHWsd), f(ch.delHW), f(ch.delQW), f(ch.rmsPsi), f(ch.rmsDel), f(ch.psiHWtrend), f(ch.psiQWtrend)]);
   }

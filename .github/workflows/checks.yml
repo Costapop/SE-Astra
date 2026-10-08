@@ -17,6 +17,7 @@ jobs:
       - run: npm run verify:book
       - run: npm run verify:backside
       - run: npm run examples:check
+      - run: npm run test:audit
       - run: npm run test:analysis
       - run: npm run test:astra
       - run: npm run test:illustrations

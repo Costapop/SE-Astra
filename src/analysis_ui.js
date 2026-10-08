@@ -193,10 +193,10 @@ function resetTrainingProgress() {
 function trainingProgress(e) {
   const labels = { spectra: 'Моделируем и фитируем спектры', anchors: 'Обрабатываем остатки по якорям', holdout: 'Обучаем контрольный классификатор', classifier: 'Обучаем итоговый классификатор', ridge: 'Обучаем оценки размеров дефектов' };
   if (e.phase === 'spectra' || e.phase === 'anchors') trainingRow(e.phase === 'spectra' ? 'Spectra' : 'Anchors', e.done, e.total, `${e.done} / ${e.total}${e.done === e.total ? ' · готово' : ''}`);
-  else if (e.phase === 'trained') trainingRow('Model', 503, 503, 'Готово · 500 эпох + 3 регрессии');
+  else if (e.phase === 'trained') trainingRow('Model', 506, 506, 'Готово · 500 эпох + 6 регрессий');
   else {
     const offset = { holdout: 0, classifier: 250, ridge: 500 }[e.phase];
-    trainingRow('Model', offset + e.done, 503, e.phase === 'ridge' ? `Регрессии: ${e.done} / 3` : `${e.phase === 'holdout' ? 'Контроль' : 'Итоговая модель'}: ${e.done} / ${e.total} эпох`);
+    trainingRow('Model', offset + e.done, 506, e.phase === 'ridge' ? `Регрессии: ${e.done} / ${e.total} (контрольные и итоговые)` : `${e.phase === 'holdout' ? 'Контроль' : 'Итоговая модель'}: ${e.done} / ${e.total} эпох`);
   }
   stageStatus(e.phase === 'trained' ? 'Обучение завершено.' : labels[e.phase]);
   progressValue(e.fraction);

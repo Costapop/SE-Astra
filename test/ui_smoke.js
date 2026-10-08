@@ -7,7 +7,7 @@ html = html.replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*chart[^"]*"><
            .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*xlsx[^"]*"><\/script>/, '<script>window.XLSX = {};</script>')
            .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*"><\/script>/, '')
            .replace(/<link rel="stylesheet" href="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*">/, '');
-const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true, beforeParse: require("./worker_shim") }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({});
+const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true, beforeParse: require("./worker_shim") }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({}); w.scrollTo = () => {};
 const $ = (id) => w.document.getElementById(id); const txt = (el) => el.textContent.replace(/\s+/g, " ").trim();
 let failures = 0; const check = (ok, msg) => { console.log((ok ? "  ok   " : "  FAIL ") + msg); if (!ok) failures++; };
 w.addEventListener("error", (e) => { console.log("window error:", e.message); failures++; });
@@ -52,7 +52,7 @@ const truthRows = () => Object.fromEntries([...$("truthOut").querySelectorAll("t
   sec = await runAll(400); const tr4 = truthRows();
   check(!/не совпадает/.test(tr4["Набор дефектов"][2]), `набор дефектов совпал: «${tr4["Набор дефектов"][1]}» (${sec.toFixed(0)} с)`);
   check(/0\.960/.test(tr4["Задняя сторона подложки, доля"][1]) && /в модели 0\.950/.test(tr4["Задняя сторона подложки, доля"][2]), "таблица истины показывает истинную и заданную долю: " + tr4["Задняя сторона подложки, доля"].join(" | "));
-  check(/доля задней стороны как у образца/.test(txt($("causeOut"))), "в бюджете отклонения есть строка про долю задней стороны");
+  check(/доля задней стороны и толщина подложки как у образца/.test(txt($("causeOut"))), "в бюджете отклонения есть строка про долю задней стороны и толщину подложки");
   const dErr = num((tr4["d, нм"][2].match(/ошибка ([-−]?[\d.]+)/) || [])[1]);
   check(Math.abs(dErr) < 1.5, `толщина найдена с ошибкой ${dErr} нм`);
   console.log("5. Снятие флажка задней стороны сбрасывает шаги, установка обратно — тоже");
@@ -63,6 +63,9 @@ const truthRows = () => Object.fromEntries([...$("truthOut").querySelectorAll("t
   console.log("6. Повторный шаг 1 очищает шаги 2–4");
   $("btn1").click(); await new Promise(r => setTimeout(r, 100));
   check(/Сначала опорный фит/.test(txt($("trainOut"))) && /Сначала обучение/.test(txt($("diagOut"))) && /Сначала диагноз/.test(txt($("finOut"))) && $("causeOut").innerHTML === "" && $("btn3").disabled && $("btn4").disabled, "панели очищены, кнопки 3–4 отключены");
+  // A Worker fit is asynchronous; page navigation is intentionally locked until it ends.
+  { const started = Date.now(); while ($("btnAll").disabled && Date.now() - started < 60000) await new Promise(r => setTimeout(r, 50)); }
+  check(!$("btnAll").disabled && /Готово/.test($("globalStatus").textContent), "опорный Worker завершён до перехода к иллюстрациям");
   console.log("7. Страница «Иллюстрации»: построение для образца 09 (задняя сторона), запуск по адресу #demo");
   check(/v\d+\.\d+\.\d+/.test($("appVer").textContent) && $("page-demo").hidden && !$("page-analysis").hidden, "версия в шапке, страница «Анализ» показана, «Иллюстрации» скрыта: " + $("appVer").textContent);
   w.location.hash = "#demo"; await new Promise(r => setTimeout(r, 100));
@@ -77,7 +80,7 @@ const truthRows = () => Object.fromEntries([...$("truthOut").querySelectorAll("t
   { const hom = [...$("dmAnchorTable").querySelectorAll("tbody tr")][0]; const cells = [...hom.children].map(c => c.textContent.trim()); check(/однородная/.test(cells[0]) && cells.slice(1).every(v => /^[−-]?0\.000$/.test(v)), "сводка по якорям: у однородной прозрачной плёнки все отклонения точно нули: " + cells.slice(1).join(" | ")); }
   check($("dmInstrTable").querySelectorAll("tbody tr").length === 6 && $("instrFitGrid").querySelectorAll(".mini").length === 6, "эффекты прибора: 6 вариантов");
   { const fig = $("figFingerOverlay"), tb = fig.querySelector('[data-act="table"]'); tb.click(); const t = fig.querySelector(".fig-table table"); const head = t ? [...t.querySelectorAll("thead th")].map(h => h.textContent) : []; check(t && head[0] === "λ, нм" && head.length === 13 && t.querySelectorAll("tbody tr").length === 201, `кнопка «Таблица» выводит значения отпечатков по длине волны (${head.length} столбцов, ${t ? t.querySelectorAll("tbody tr").length : 0} строк)`); tb.click(); check(fig.querySelector(".fig-table").classList.contains("hidden"), "повторное нажатие скрывает таблицу"); }
-  $("dmDelta").value = "3"; $("dmDelta").dispatchEvent(new w.Event("change"));
+  $("dmDelta").value = "3"; $("dmDelta").dispatchEvent(new w.Event("input", { bubbles: true }));
   check(/изменились/.test($("dmStatus").textContent), "смена размера дефекта помечает иллюстрации устаревшими");
   $("dmBackSub").value = "bk7"; $("dmBackSub").dispatchEvent(new w.Event("change"));
   check(!$("dmBackReset").hidden && /заданы здесь: подложка/.test($("dmBackSrc").textContent), "подложка раздела «Задняя сторона» закреплена за страницей: " + $("dmBackSrc").textContent);

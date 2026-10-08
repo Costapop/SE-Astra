@@ -119,9 +119,12 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
  // Individual, shared-mini, bar and color-mapped panels all export their own keys.
  for(const id of ['cDispN','cBackDepol','cIr3','cInstrSum','cFg2']){
    const c=S.charts[id],before=c.options.plugins.legend.position;
+   const axes=Object.values(c.options.scales).filter(s=>s.title&&s.title.text);
+   const shown=axes.map(s=>s.title.display);
    c.canvas.toBlob=cb=>{
      assert.equal(c.options.plugins.legend.display,true,id);
      assert.equal(c.options.plugins.legend.position,'bottom',id);
+     axes.forEach(s=>assert.equal(s.title.display,true,id+' exported axis must be titled'));
      if(id==='cFg2'){
        const labels=c.options.plugins.legend.labels.generateLabels();
        assert.equal(labels.length,3);assert.match(labels[0].text,/400/);assert.match(labels[2].text,/800/);
@@ -129,7 +132,56 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
      cb(new w.Blob(['png']));
    };
    T.exportPng(c,id);assert.equal(c.options.plugins.legend.display,false,id);assert.equal(c.options.plugins.legend.position,before,id);
+   axes.forEach((s,i)=>assert.equal(s.title.display,shown[i],id+' screen axis setting must be restored'));
  }
+ // Exported panels must identify their specific effect/class and parameter values,
+ // including whether instrument differences are shown before or after fitting.
+ const compact=text=>String(text).replace(/\s+/g,' ').trim();
+ const plain=el=>Array.from(el.childNodes,node=>node.nodeName==='BR'?' ':node.textContent).join('');
+ const exportedTitles={};
+ for(const id of ['cIr0','cIr1','cIf0','cFg2','cDispN','cAnchPsiHW']){
+   const c=S.charts[id],priorTitle=JSON.stringify(c.options.plugins.title);
+   const mini=c.canvas.closest('.mini'),fig=c.canvas.closest('figure.fig');
+   c.canvas.toBlob=cb=>{
+     const title=c.options.plugins.title;
+     assert.equal(title.display,true,id+' must have an export title');assert.ok(Array.isArray(title.text));
+     const text=compact(title.text.join(' '));exportedTitles[id]=text;
+     assert.ok(text.includes(compact(fig.querySelector('.fig-title').textContent)),id+' figure context');
+     if(mini){
+       assert.ok(text.includes(compact(plain(mini.querySelector('.mini-title')))),id+' effect/class identity');
+       assert.ok(text.includes(compact(plain(mini.querySelector('.mini-sub')))),id+' effect magnitude and metrics');
+     }
+     if(id==='cAnchPsiHW'){assert.match(text,/HW · Ψ/);assert.match(text,/Ψ − Ψ подложки/);}
+     cb(new w.Blob(['png']));
+   };
+   T.exportPng(c,id);
+   assert.equal(JSON.stringify(c.options.plugins.title),priorTitle,id+' screen title settings must be restored');
+ }
+ assert.notEqual(exportedTitles.cIr0,exportedTitles.cIr1,'two instrument effects must not export with indistinguishable titles');
+ assert.notEqual(exportedTitles.cIr0,exportedTitles.cIf0,'raw effect and fitted residual must retain their distinct figure context');
+ // Long titles, including a single long token, wrap without losing their content.
+ const longChart=S.charts.cIr1,longName=longChart.canvas.closest('.mini').querySelector('.mini-title span'),oldName=longName.textContent;
+ longName.textContent='Длинное название эффекта '.repeat(8)+'λ'.repeat(180);
+ longChart.canvas.toBlob=cb=>{
+   const lines=longChart.options.plugins.title.text;
+   assert.ok(lines.length>3);
+   assert.ok(lines.every(line=>line.length*8.4<=Math.max(960,longChart.width)-64),'export title must fit the available width');
+   assert.equal(lines.join('').match(/λ/g).length,180,'wrapping must retain every character');
+   cb(null);
+ };
+ const longPrior=JSON.stringify(longChart.options.plugins.title);T.exportPng(longChart,'long title');
+ assert.equal(JSON.stringify(longChart.options.plugins.title),longPrior,'title must also restore if PNG encoding returns no blob');
+ longName.textContent=oldName;
+ // Chart.js resolved options are Proxies; copying one with object spread can
+ // throw before PNG encoding. Snapshot the raw config, never enumerate a resolver.
+ const proxyChart=S.charts.cIr0,originalOptions=proxyChart.options;
+ proxyChart.options={...originalOptions,plugins:{...originalOptions.plugins,title:new Proxy({display:false,color:'#000'}, {
+   ownKeys(){throw new Error('resolved title options cannot be enumerated');}
+ })}};
+ let proxyEncoded=false;
+ proxyChart.canvas.toBlob=cb=>{proxyEncoded=true;assert.equal(proxyChart.options.plugins.title.display,true);cb(null);};
+ try{T.exportPng(proxyChart,'resolved-options');assert.ok(proxyEncoded,'resolved Chart.js title must reach PNG encoding');}
+ finally{proxyChart.options=originalOptions;}
  // Large gradients use the same converged discretization as finalFit (160 sublayers).
  DM.sizes={delta:.15,rough:0,k400:0};T.dmAnchors(DM.base);
  const A=DM.res.anch,base=DM.base,cfg=base.cfg,lam=A.HW;

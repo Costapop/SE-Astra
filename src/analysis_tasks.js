@@ -38,15 +38,24 @@
       if (kk === y[k]) { acc++; if (big) accBig++; } if (big) nBig++;
     }
     const model = E.trainSoftmax(X, y, K, { epochs: 250, onProgress: (done, total) => emit({ phase: 'classifier', done, total, fraction: 0.8 + 0.1 * done / total }) });
-    emit({ phase: 'ridge', done: 0, total: 3, fraction: 0.9 });
-    const rd = E.ridge(X, sz.map(v => 100 * v[0]), 30);
-    emit({ phase: 'ridge', done: 1, total: 3, fraction: 0.93 });
-    const rr = E.ridge(X, sz.map(v => v[1]), 30);
-    emit({ phase: 'ridge', done: 2, total: 3, fraction: 0.96 });
-    const rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
-    emit({ phase: 'ridge', done: 3, total: 3, fraction: 0.99 });
+    // Evaluate regressions on spectra excluded from their fitting and scaling.
+    // The production regressions still use all spectra after this holdout check.
+    const Xtr = tr.map(k => X[k]);
+    emit({ phase: 'ridge', done: 0, total: 6, fraction: 0.9 });
+    const rdHold = E.ridge(Xtr, tr.map(k => 100 * sz[k][0]), 30);
+    emit({ phase: 'ridge', done: 1, total: 6, fraction: 0.915 });
+    const rrHold = E.ridge(Xtr, tr.map(k => sz[k][1]), 30);
+    emit({ phase: 'ridge', done: 2, total: 6, fraction: 0.93 });
+    const rkHold = E.ridge(Xtr, tr.map(k => 1000 * sz[k][2]), 30);
+    emit({ phase: 'ridge', done: 3, total: 6, fraction: 0.945 });
     let e1 = 0, e2 = 0, e3 = 0;
-    for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
+    for (const k of te) { e1 += (rdHold.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rrHold.predict(X[k]) - sz[k][1]) ** 2; e3 += (Math.max(0, rkHold.predict(X[k])) - 1000 * sz[k][2]) ** 2; }
+    const rd = E.ridge(X, sz.map(v => 100 * v[0]), 30);
+    emit({ phase: 'ridge', done: 4, total: 6, fraction: 0.96 });
+    const rr = E.ridge(X, sz.map(v => v[1]), 30);
+    emit({ phase: 'ridge', done: 5, total: 6, fraction: 0.975 });
+    const rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
+    emit({ phase: 'ridge', done: 6, total: 6, fraction: 0.99 });
     emit({ phase: 'trained', fraction: 1 });
     return { model: packSoftmax(model), rd: packRidge(rd), rr: packRidge(rr), rk: packRidge(rk), N, acc: 100 * acc / nte, accBig: nBig ? 100 * accBig / nBig : NaN, rmseD: Math.sqrt(e1 / nte), rmseR: Math.sqrt(e2 / nte), rmseK: Math.sqrt(e3 / nte) / 1000, sec: (Date.now() - t0) / 1000 };
   }
@@ -70,9 +79,9 @@
     return { frames, probs: frames[frames.length - 1].probs, est: { delta: ridgePredict(t.rd, x) / 100, dRough: ridgePredict(t.rr, x), k400: Math.max(0, ridgePredict(t.rk, x) / 1000) } };
   }
 
-  function curves(data, cfg, P) {
+  function curves(data, cfg, P, M = 1) {
     const mat = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg, Ak: P.Ak || 0 });
-    return E.modelPsiDelta(data.lam, cfg.Nsub, cfg.phi, P.d, mat, P.delta || 0, P.dRough || 0, E.subLayersFor(P.delta || 0), cfg.back, cfg.band || null);
+    return E.modelPsiDelta(data.lam, cfg.Nsub, cfg.phi, P.d, mat, P.delta || 0, P.dRough || 0, M, cfg.back, cfg.band || null);
   }
 
   function causes(S, emit) {
@@ -85,20 +94,20 @@
     const mk = (opt) => { const sy = E.synthesize(lam, S.cfg.subKey, Tt.phiTrue, Tt.d, Tt.mat, Tt.delta, Tt.dRough, Object.assign({ continuous: !!Tt.continuous, back: Tt.back || null }, opt), E.makeRng(1)); return { lam, psi: Array.from(sy.psi), del: Array.from(sy.del), sigPsi: S.data.sigPsi, sigDel: S.data.sigDel }; };
     const cfg0 = S.cfg, cfgA = Object.assign({}, S.cfg, { phi: Tt.phiTrue, subDel: null });
     const bwModel = S.cfg.band ? S.cfg.band.bw : 0;                          // полоса в модели фита; строка бюджета «полоса как в модели» убирает её ошибку
-    const backDiff = !!(Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > 1e-9) || (!!Tt.back !== !!S.cfg.back);
+    const backDiff = !!(Tt.back && S.cfg.back && (Math.abs(Tt.back.f - S.cfg.back.f) > 1e-9 || Math.abs(Tt.back.ds - S.cfg.back.ds) > 1e-9)) || (!!Tt.back !== !!S.cfg.back);
     const cfgAB = backDiff ? Object.assign({}, cfgA, { back: Tt.back || null, subDel: null }) : cfgA;
     const cfgAD = Object.assign({}, cfgAB, { mat: Object.assign({}, S.cfg.mat, { E0: Tt.mat.E0, C: Tt.mat.C, Euv: Tt.mat.Euv }) });
     const fitRow = (label, data, cfg) => { emit({ phase: 'causes', row: label }); const r = E.finalFit(data, cfg, S.prior, trueFlags, p0, null, e => emit({ ...e, phase: 'causes', row: label })); const m = Object.assign({}, cfg.mat, { A: r.P.A, Auv: r.P.Auv, Eg: r.P.Eg, Ak: r.P.Ak || 0 }); return { label, d: r.P.d, delta: trueFlags.grad ? r.P.delta : 0, rough: trueFlags.rough ? r.P.dRough : 0, k: trueFlags.abs ? r.P.k400 : 0, n: nAt(m, 550), chi2: r.chi2 }; };
     const rows = [{ label: 'измеренный спектр, модель по выбору ИИ (как есть)', d: fin.P.d, delta: flags.grad ? fin.P.delta : 0, rough: flags.rough ? fin.P.dRough : 0, k: flags.abs ? fin.P.k400 : 0, n: nAt(mFin, 550), chi2: fin.chi2 }];
     if (!classOK) rows.push(fitRow('измеренный спектр, верный набор дефектов', S.data, cfg0));
-    const hasDrift = !!Tt.driftPsi;
+    const hasDrift = [Tt.driftPsi, Tt.driftDel].some(v => v && v.some(x => x !== 0));
     if (hasDrift) rows.push(fitRow('без шума (дрейф, полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset, driftPsi: Tt.driftPsi, driftDel: Tt.driftDel }), cfg0));
     rows.push(fitRow(hasDrift ? '+ без дрейфа' : 'без шума и дрейфа (полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset }), cfg0));
     rows.push(fitRow('+ без сдвига шкалы λ', mk({ bw: Tt.bw, lamOffset: 0 }), cfg0));
     rows.push(fitRow(bwModel > 0 ? `+ полоса в истине равна заданной в модели (${fmt(bwModel, 1)} нм)` : '+ без спектральной полосы', mk({ bw: bwModel, lamOffset: 0 }), cfg0));
     rows.push(fitRow('+ угол известен точно', mk({ bw: bwModel, lamOffset: 0 }), cfgA));
-    if (backDiff) rows.push(fitRow('+ доля задней стороны как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAB));
-    rows.push(fitRow('+ E₀, C, E_uv как у образца (остаётся только численная точность)', mk({ bw: bwModel, lamOffset: 0 }), cfgAD));
+    if (backDiff) rows.push(fitRow('+ доля задней стороны и толщина подложки как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAB));
+    rows.push(fitRow('+ E₀, C, E_uv как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAD));
     const truthRow = { label: 'истина', d: Tt.d, delta: Tt.delta, rough: Tt.dRough, k: tk, n: nAt(Tt.mat, 550), chi2: NaN };
     // вклад каждого фактора = изменение параметров при его устранении
     const contrib = []; for (let i = 1; i < rows.length; i++) contrib.push({ label: rows[i].label, dd: rows[i - 1].d - rows[i].d, dDelta: rows[i - 1].delta - rows[i].delta, dRough: rows[i - 1].rough - rows[i].rough, dk: rows[i - 1].k - rows[i].k, dn: rows[i - 1].n - rows[i].n });
@@ -116,7 +125,7 @@
     if (type === 'diagnose') return diagnose(a);
     if (type === 'final') {
       const fin = E.finalFit(a.data, a.cfg, a.prior, a.flags, a.p0, a.nuis, emit);
-      return { fin, curves: curves(a.data, a.cfg, fin.P) };
+      return { fin, curves: curves(a.data, a.cfg, fin.P, fin.M) };
     }
     if (type === 'causes') return causes(a, emit);
     throw new Error('Неизвестный этап анализа: ' + type);
