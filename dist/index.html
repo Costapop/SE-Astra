@@ -432,12 +432,128 @@ footer details p { max-width:120ch; margin:10px 0; }
 @container (max-width:649px) { #figAnchPat:fullscreen .grid2x2 .chart { height:300px; } }
 @media(max-width:720px) { #figAnchPat:fullscreen { padding:16px; } #figAnchPat .fig-tools { margin-left:0; } }
 
+/* Analysis v1.2: one working stage, live computation, readable result tables. */
+.analysis-navigation { position:sticky; top:var(--barh,72px); z-index:8; display:flex; align-items:center; gap:12px; padding:10px; background:var(--surface); border:1px solid var(--line2); border-radius:14px; box-shadow:var(--shadow); }
+.analysis-tabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; flex:1; min-width:0; }
+.analysis-tabs button { font-size:14px; line-height:1.3; padding:10px 6px; background:transparent; border:0; white-space:normal; }
+.analysis-tabs button[aria-selected="true"] { color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,var(--surface)); font-weight:650; }
+.analysis-tabs button.is-complete:not([aria-selected="true"]) { color:var(--text); }
+#btnCancel { color:var(--bad); font-size:14px; flex:none; }
+#page-analysis .step { scroll-margin-top:calc(var(--barh,72px) + 94px); }
+#page-analysis .step>h2:focus { outline:none; }
+#page-analysis .step[hidden], #resultsHeading[hidden], .stage-live[hidden] { display:none; }
+.toolbar .stepbtns button.stage-active { background:var(--surface); opacity:1; box-shadow:inset 0 0 0 1px var(--accent); }
+.toolbar .stepbtns b, .toolbar .status { font-size:14px; }
+.stage-live { margin:18px 0 22px; padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--surface2); min-width:0; }
+.stage-live-heading { display:flex; align-items:center; gap:10px; min-height:28px; }
+.stage-live-heading p { flex:1; margin:0; font-size:15px; line-height:1.5; min-width:0; overflow-wrap:anywhere; }
+.stage-elapsed { color:var(--muted); font-size:14px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.activity-mark { width:14px; height:14px; flex:none; border:2px solid var(--line); border-top-color:var(--accent); border-radius:50%; }
+.is-running .activity-mark { animation:analysis-spin .9s linear infinite; }
+.stage-live:not(.is-running) .activity-mark { border-color:var(--muted); }
+.stage-live progress { display:block; width:100%; height:6px; margin-top:14px; border:0; border-radius:6px; accent-color:var(--accent); overflow:hidden; }
+.stage-live progress::-webkit-progress-bar { background:var(--line2); border-radius:6px; }
+.stage-live progress::-webkit-progress-value { background:var(--accent); transition:width .18s linear; }
+.stage-live progress::-moz-progress-bar { background:var(--accent); }
+.stage-live .note { font-size:14px; line-height:1.55; }
+#s3,#s4 { container-type:inline-size; }
+.inference-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:28px; margin-top:12px; }
+.inference-layout h3 { margin:12px 0; }
+.inference-phase { color:var(--accent); font-size:14px; }
+.residual-viz,.fit-viz { display:block; width:100%; overflow:visible; }
+.residual-viz { margin:12px 0; }
+.viz-axis { stroke:var(--line); stroke-width:1; fill:none; }
+.viz-psi { stroke:var(--psi); stroke-width:2; }
+.viz-delta { stroke:var(--del); stroke-width:2; }
+.residual-scan { stroke:var(--accent); stroke-width:3; opacity:.8; transition:x1 .08s linear,x2 .08s linear; }
+.residual-key { display:flex; flex-wrap:wrap; gap:18px; font-size:14px; }
+.residual-key span:first-child { color:var(--psi); }
+.residual-key span:last-child { color:var(--del); }
+.live-prob-list { position:relative; height:360px; margin:10px 0 0; }
+.live-prob-row { position:absolute; inset:0 0 auto; height:68px; display:grid; grid-template-columns:24px minmax(0,1fr) 64px; grid-template-rows:1fr 5px; gap:5px 8px; align-items:center; padding:5px 0; font-size:14px; opacity:0; visibility:hidden; transition:transform .22s ease,opacity .18s ease; }
+.live-rank { color:var(--muted); font-variant-numeric:tabular-nums; }
+.live-prob-name { line-height:1.3; overflow-wrap:anywhere; }
+.live-prob-name .dots { display:none; }
+.live-prob-value { text-align:right; white-space:nowrap; font-size:15px; font-variant-numeric:tabular-nums; }
+.live-prob-track { grid-column:2/4; height:5px; border-radius:4px; background:var(--line2); overflow:hidden; }
+.live-prob-bar { display:block; width:0; height:100%; background:var(--accent); border-radius:4px; transition:width .16s linear; }
+.all-probabilities { margin:16px 0; }
+.all-probabilities summary { color:var(--accent); font-size:15px; cursor:pointer; }
+.fit-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:24px 0 8px; }
+.fit-metrics span { display:block; font-size:14px; color:var(--muted); }
+.fit-metrics b { display:block; margin-top:7px; font-size:24px; font-variant-numeric:tabular-nums; font-weight:550; overflow-wrap:anywhere; }
+.fit-viz { max-height:210px; margin-top:18px; }
+#fitTrace { stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; }
+#finOut,#truthOut,#causeOut details { overflow:visible; min-width:0; }
+#s4 .analysis-table { table-layout:fixed; width:100%; font-size:15px; line-height:1.5; }
+#s4 .analysis-table th,#s4 .analysis-table td,#finOut td:first-child,#truthOut td:first-child { white-space:normal; overflow-wrap:anywhere; min-width:0; }
+#s4 .analysis-table th { font-size:14px; }
+#s4 .analysis-table th:first-child { width:27%; }
+#s4 .analysis-table:not(.budget-table) th:nth-child(2) { width:35%; }
+#s4 .analysis-table .note { font-size:14px; }
+#s4 .analysis-table td .tag { max-width:100%; box-sizing:border-box; white-space:normal; }
+@container (max-width:900px) {
+  #s4 .budget-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  #s4 .budget-table,#s4 .budget-table tbody { display:block; }
+  #s4 .budget-table tr { display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; padding:14px 0; border-bottom:1px solid var(--line); }
+  #s4 .budget-table td { display:block; padding:0; border:0; text-align:left; }
+  #s4 .budget-table td:first-child { grid-column:1/-1; font-weight:600; }
+  #s4 .budget-table td:not(:first-child)::before { content:attr(data-label); display:block; font-size:14px; color:var(--muted); margin-bottom:3px; }
+}
+@container (max-width:680px) {
+  .inference-layout { grid-template-columns:1fr; gap:6px; }
+  .inference-input .note { margin-bottom:8px; }
+  .residual-viz { max-height:150px; }
+  #s4 .analysis-table:not(.budget-table) thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  #s4 .analysis-table:not(.budget-table),#s4 .analysis-table:not(.budget-table) tbody { display:block; }
+  #s4 .analysis-table:not(.budget-table) tr { display:block; padding:15px 0; border-bottom:1px solid var(--line); }
+  #s4 .analysis-table:not(.budget-table) td { display:block; border:0; text-align:left; padding:4px 0; }
+  #s4 .analysis-table:not(.budget-table) td:first-child { font-weight:650; font-size:16px; }
+  #s4 .analysis-table:not(.budget-table) td:nth-child(2)::before { content:attr(data-label) ': '; color:var(--muted); font-size:14px; }
+  #s4 .analysis-table td:empty { display:none; }
+}
+@media(max-width:720px) {
+  .analysis-navigation { gap:8px; flex-wrap:wrap; padding:8px; }
+  .analysis-tabs { flex-basis:100%; }
+  .analysis-tabs button { font-size:14px; padding:9px 3px; }
+  #btnCancel { margin-left:auto; padding:7px 12px; }
+  #page-analysis .step { scroll-margin-top:calc(var(--barh,62px) + 142px); }
+  .stage-live { padding:14px; margin:14px 0; }
+  .stage-live-heading { flex-wrap:wrap; gap:8px; }
+  .stage-elapsed { margin-left:24px; }
+  .fit-metrics { gap:8px; }
+  .fit-metrics b { font-size:21px; }
+  .toolbar .stepbtns b { overflow-wrap:anywhere; }
+}
+@keyframes analysis-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) {
+  .is-running .activity-mark { animation:none; }
+  .live-prob-row,.live-prob-bar,.residual-scan,.stage-live progress::-webkit-progress-value { transition:none; }
+}
+@media print {
+  .analysis-navigation,.stage-live { display:none!important; }
+  #page-analysis .step[hidden] { display:block!important; }
+}
+.steps { container-type:inline-size; container-name:analysis-workspace; }
+.analysis-tab-short { display:none; }
+.inference-explanation summary { color:var(--muted); font-size:14px; cursor:pointer; }
+@container analysis-workspace (max-width:600px) {
+  .analysis-tab-full { display:none; }
+  .analysis-tab-short { display:inline; }
+  .analysis-tabs button { min-height:40px; font-size:15px; }
+}
+@container (max-width:680px) {
+  .inference-input h3 { font-size:16px; margin:8px 0; }
+  .residual-viz { max-height:90px; margin:5px 0; }
+  .inference-input #inferenceRange { margin:4px 0; }
+}
+
 </style>
 </head>
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.1.2</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.0</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -593,35 +709,68 @@ footer details p { max-width:120ch; margin:10px 0; }
     <div id="globalStatus" class="status" role="status" aria-live="polite">Готово к анализу · 800 обучающих примеров</div>
     <div class="tb-progress" aria-hidden="true"><div id="runProgress"></div></div>
   </div>
-  <section class="step spectrum-card" id="s0">
+  <div class="analysis-navigation">
+    <div class="analysis-tabs" role="tablist" aria-label="Разделы анализа">
+      <button id="viewStage0" role="tab" data-analysis-stage="0" aria-controls="s0" aria-selected="true" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button>
+      <button id="viewStage1" role="tab" data-analysis-stage="1" aria-controls="s1" aria-selected="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
+      <button id="viewStage2" role="tab" data-analysis-stage="2" aria-controls="s2" aria-selected="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
+      <button id="viewStage3" role="tab" data-analysis-stage="3" aria-controls="s3" aria-selected="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
+      <button id="viewStage4" role="tab" data-analysis-stage="4" aria-controls="s4" aria-selected="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
+    </div>
+    <button id="btnCancel" type="button" hidden>Остановить</button>
+  </div>
+  <section class="step spectrum-card" id="s0" role="tabpanel" aria-labelledby="viewStage0">
 <div class="sample-summary" aria-label="Текущие условия"><div><span>Материал</span><b id="summaryMaterial">—</b></div><div><span>Подложка</span><b id="summarySubstrate">—</b></div><div><span>Угол падения</span><b id="summaryAngle">—</b></div><div><span>Диапазон</span><b id="summaryRange">—</b></div></div>
-    <h2>Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
+    <h2 tabindex="-1">Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
     <p class="lead">Экспериментальные данные и физическая модель.</p>
     <figure class="fig" data-fig="se-ai_spectrum"><figcaption><span class="fig-title">Ψ и Δ измерения</span><span class="fig-tools"></span></figcaption>
       <div class="chart tall"><canvas id="chSpec"></canvas></div><div class="fig-table hidden"></div></figure>
     <div id="specNote" class="note"></div>
   </section>
 
-  <div class="results-heading"><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
-  <section class="step" id="s1">
-    <h2><span class="num">1</span>Опорный фит: однородная плёнка</h2>
+  <div class="results-heading" id="resultsHeading" hidden><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
+  <section class="step" id="s1" role="tabpanel" aria-labelledby="viewStage1" hidden>
+    <h2 tabindex="-1"><span class="num">1</span>Опорный фит: однородная плёнка</h2>
     <p class="lead">Толщина ищется грубым перебором в заданном разбросе, затем метод Левенберга–Марквардта с аналитическим якобианом (формулы Фурмана–Тихонравова, разд. 1.4.1) по d, A, A<sub>uv</sub>, E<sub>g</sub> из трёх лучших стартов. Остаток (измерено − модель) в единицах σ — то, что модель не смогла объяснить.</p>
+    <div class="stage-live" id="stageLive1" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus1" role="status" aria-live="polite">Подготовка…</p><span id="elapsed1" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar1" max="100" value="0" aria-label="Ход шага 1"></progress>
+    </div>
     <div id="refOut" class="empty">Загрузите спектр и нажмите «Опорный фит».</div>
     <figure class="fig empty" data-fig="se-ai_residual_reference_fit"><figcaption><span class="fig-title">Остаток опорного фита однородной плёнки</span><span class="fig-tools"></span></figcaption>
       <div class="chart"><canvas id="chRes"></canvas></div><div class="fig-table hidden"></div></figure>
     <div id="chanOut" class="note"></div>
   </section>
 
-  <section class="step" id="s2">
-    <h2><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
+  <section class="step" id="s2" role="tabpanel" aria-labelledby="viewStage2" hidden>
+    <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p>
     <div class="bar"><div id="trainBar"></div></div>
+    <div class="stage-live" id="stageLive2" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar2" max="100" value="0" aria-label="Ход шага 2"></progress>
+    </div>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
-  <section class="step" id="s3">
-    <h2><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
+  <section class="step" id="s3" role="tabpanel" aria-labelledby="viewStage3" hidden>
+    <h2 tabindex="-1"><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
     <p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — вероятность каждого класса и оценка размеров дефектов регрессией. Модель для окончательного фита можно поправить вручную.</p>
+    <div class="stage-live" id="stageLive3" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus3" role="status" aria-live="polite">Подготовка…</p><span id="elapsed3" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar3" max="100" value="0" aria-label="Ход шага 3"></progress>
+      <div class="inference-layout">
+        <div class="inference-input"><h3>Остаток опорного фита</h3><span class="inference-phase" id="inferencePhase">Спектральный остаток</span>
+          <svg class="residual-viz" viewBox="0 0 600 200" role="img" aria-label="Остатки Ψ и Δ, передаваемые обученной модели">
+            <path class="viz-axis" d="M16 100H584"/><polyline id="inferencePsi" class="viz-psi" fill="none"/><polyline id="inferenceDelta" class="viz-delta" fill="none"/>
+            <line id="residualScan" x1="16" x2="16" y1="16" y2="184" class="residual-scan"/>
+          </svg>
+          <div class="residual-key"><span>Ψ-остаток</span><span>Δ-остаток</span></div><p id="inferenceRange" class="note"></p>
+          <details class="inference-explanation"><summary>Как читать анимацию</summary><p class="note">Визуализация вклада признаков обученной модели. Промежуточные оценки рассчитаны по части признаков; итоговые вероятности — после всего остатка и якорных каналов.</p></details>
+        </div>
+        <div><h3>Топ-5 комбинаций</h3><div class="live-prob-list" id="inferenceTop" aria-label="Пять наиболее вероятных комбинаций"></div><p id="otherProbs" class="note"></p></div>
+      </div>
+    </div>
     <div id="diagOut" class="empty">Сначала обучение.</div>
     <div class="checks" id="modelChoice" style="display:none">
       <label><input type="checkbox" id="ckGrad"> градиент показателя по глубине</label>
@@ -630,9 +779,16 @@ footer details p { max-width:120ch; margin:10px 0; }
     </div>
   </section>
 
-  <section class="step" id="s4">
-    <h2><span class="num">4</span>Окончательный фит и решение</h2>
+  <section class="step" id="s4" role="tabpanel" aria-labelledby="viewStage4" hidden>
+    <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется.</p>
+    <div class="stage-live" id="stageLive4" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
+      <div class="fit-metrics"><div><span>Текущий χ²/ν</span><b id="fitChi">—</b></div><div><span>Толщина d</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
+      <svg class="fit-viz" viewBox="0 0 600 180" role="img" aria-label="Динамика невязки по итерациям окончательного фита"><path class="viz-axis" d="M20 20V160H580"/><polyline id="fitTrace" fill="none"/></svg>
+      <p id="fitScale" class="note">Ожидаем первые итерации…</p><p id="fitPhase" class="note">Перебор стартов, точный фит и оценка погрешностей.</p>
+      <p class="note">Показаны реальные расчёты. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p>
+    </div>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
@@ -829,7 +985,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   <p><b>ИИ.</b> Мультиномиальная логистическая регрессия на остатке и якорных каналах, гребневая регрессия для размеров. Все вычисления идут в браузере; внешние библиотеки — Chart.js, SheetJS, KaTeX.</p>
 </details><p class="footer-links"><a href="https://github.com/Costapop/SE-Astra">Исходный код</a><span>Спектральная эллипсометрия · Локальные вычисления</span></p></footer>
 
-<script>
+<script id="ellip-core">
 /* Эллипсометрия тонкой плёнки: физика, синтез, фит и ИИ-модель на остатках.
    Конвенция: N = n - ik, фазовый множитель exp(-2iβ), ρ = r_p/r_s = tanΨ·exp(iΔ) (Аззам–Башара). */
 (function (root) {
@@ -1400,12 +1556,12 @@ footer details p { max-width:120ch; margin:10px 0; }
   }
   /** Опорный фит однородной плёнки: грубый перебор d при справочной дисперсии → три лучших локальных минимума χ²(d) →
    *  ЛМ (аналитический якобиан, масштабированные параметры) по (d, A, Auv, Eg) из каждого; лучший по χ². */
-  function referenceFit(data, cfg, prior) {
+  function referenceFit(data, cfg, prior, onProgress) {
     const fixed = { dRough: 0, delta: 0, Ak: 0 };
     const base = { A: cfg.mat.A, Auv: cfg.mat.Auv, Eg: cfg.mat.Eg };
     const scan = makeResidJacFn(data, cfg, ['d'], Object.assign({}, fixed, base), 1);
     const step = Math.max(0.5, (prior.dMax - prior.dMin) / 120), grid = [], cost = [];
-    for (let dg = prior.dMin; dg <= prior.dMax + 1e-9; dg += step) { const r = scan([dg], false).r; let c = 0; for (let i = 0; i < r.length; i++) c += r[i] * r[i]; grid.push(dg); cost.push(c); }
+    for (let dg = prior.dMin; dg <= prior.dMax + 1e-9; dg += step) { const r = scan([dg], false).r; let c = 0; for (let i = 0; i < r.length; i++) c += r[i] * r[i]; grid.push(dg); cost.push(c); if (onProgress) onProgress({ phase: 'scan', fraction: (dg - prior.dMin) / (prior.dMax - prior.dMin), d: dg }); }
     const cands = [];
     for (let i = 0; i < grid.length; i++) if ((i === 0 || cost[i] <= cost[i - 1]) && (i === grid.length - 1 || cost[i] <= cost[i + 1])) cands.push(i);
     cands.sort((a, b) => cost[a] - cost[b]);
@@ -1416,7 +1572,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     const fn = makeResidJacFn(data, cfg, free, fixed, 1);
     let res = null, nfev = 0;
     for (const d0 of starts) {
-      const r = lmFitJac(fn, [d0, base.A, base.Auv, base.Eg], b.map(v => v[0]), b.map(v => v[1]), 80); nfev += r.nfev;
+      const r = lmFitJac(fn, [d0, base.A, base.Auv, base.Eg], b.map(v => v[0]), b.map(v => v[1]), 80, onProgress && (e => onProgress({ ...e, phase: 'reference', start: starts.indexOf(d0) + 1, totalStarts: starts.length }))); nfev += r.nfev;
       if (!res || r.chi2 < res.chi2) res = r;
     }
     const P = {}; free.forEach((k, i) => P[k] = res.x[i]); P.dRough = 0; P.delta = 0; P.Ak = 0; P.k400 = 0;
@@ -1460,7 +1616,7 @@ footer details p { max-width:120ch; margin:10px 0; }
    *  лучший по χ² дотягивается до сходимости; при |δ| > 4 % — повтор с 80 подслоями, при |δ| > 12 % — со 160. Поглощение — сила хвоста A_k
    *  (старт из p0.Ak); k₄₀₀ пересчитывается по найденной дисперсии (A, A_uv, E_g фита), а не по справочной. cfg.band — полоса прибора в модели.
    *  nuis = {phiErr, backFerr, bwErr, offErr} (необязательно) — систематические погрешности от неопределённости условий, поле sys. */
-  function finalFit(data, cfg, prior, flags, p0, nuis) {
+  function finalFit(data, cfg, prior, flags, p0, nuis, onProgress) {
     const free = ['d', 'A', 'Auv', 'Eg']; if (flags.rough) free.push('dRough'); if (flags.grad) free.push('delta'); if (flags.abs) free.push('Ak');
     const fixed = { dRough: 0, delta: 0, Ak: 0 };
     const b = free.map(k => boundsFor(k, cfg, prior));
@@ -1476,6 +1632,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     // разведка бассейнов на грубой модели (10 подслоёв), затем лучший старт дотягивается на 40 подслоях
     const fn10 = makeResidJacFn(data, cfg, free, fixed, flags.grad ? 10 : 40), fn40 = makeResidJacFn(data, cfg, free, fixed, 40);
     let best = null, nfev = 0, nStarts = 0;
+    const report = (phase, M, start) => onProgress && (e => onProgress({ ...e, phase, M, start, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) }));
     let base = Object.assign({}, p0, { dRough: Math.max(0.1, p0.dRough || 0.1), Ak: 0 });
     if (flags.abs) {
       // Поглощение: опорный фит без хвоста искажает дисперсию (A, E_g растут, компенсируя затухание полос), и старт из него
@@ -1487,7 +1644,7 @@ footer details p { max-width:120ch; margin:10px 0; }
       let bestA = null;
       for (const dp of disp) for (const k of ks) {
         const x0 = clampP(Object.assign({}, base, dp, { delta: deltaStarts[0], Ak: tailAk(cfg.mat, k) }));
-        const r = lmFitJac(fn10, x0, lo, hi, 20); nfev += r.nfev; nStarts++;
+        const r = lmFitJac(fn10, x0, lo, hi, 20, report('absorption', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++;
         if (!bestA || r.chi2 < bestA.chi2) bestA = r;
       }
       const PA = {}; free.forEach((k, i) => PA[k] = bestA.x[i]);
@@ -1496,16 +1653,17 @@ footer details p { max-width:120ch; margin:10px 0; }
     }
     const cands = [];
     for (const dS of dStarts) for (const dl of deltaStarts) cands.push(clampP(Object.assign({}, base, { d: dS, delta: dl })));
-    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
-    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80); nfev += res.nfev; nStarts = Math.max(1, nStarts);
+    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25, report('starts', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
+    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80, report('refine', 40, Math.max(1, nStarts))); nfev += res.nfev; nStarts = Math.max(1, nStarts);
     const iD = free.indexOf('delta'); let Mfin = 40;
-    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
+    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40, report('layers', Mfin, nStarts)); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
     const P = { dRough: 0, delta: 0, Ak: 0 }; free.forEach((k, i) => P[k] = res.x[i]);
     const E = {}; free.forEach((k, i) => E[k] = res.err[i]);
     const mFit = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg });                  // k₄₀₀ — по найденной дисперсии
     const dk400 = (Ak) => { const h = Math.max(1e-6, 1e-3 * Ak); return (tailK400(mFit, Ak + h) - tailK400(mFit, Ak)) / h; };
     if (flags.abs) { P.k400 = tailK400(mFit, P.Ak); E.k400 = E.Ak * dk400(P.Ak); } else { P.k400 = 0; }
     let sys = null;
+    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit });
     if (nuis) { sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis); if (sys && flags.abs) { const dk = dk400(P.Ak); sys.total.k400 = sys.total.Ak * dk; for (const q of Object.keys(sys.parts)) sys.parts[q].k400 = sys.parts[q].Ak * dk; } }
     return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin };
   }
@@ -1767,7 +1925,7 @@ footer details p { max-width:120ch; margin:10px 0; }
   /** ЛМ с аналитическим якобианом. Параметры масштабированы преобразованием x = lo + (hi − lo)(1 + sin θ)/2:
    *  θ безразмерны и O(1), границы соблюдаются гладко (без отсечения). Демпфирование по Нильсену (gain ratio),
    *  диагональное масштабирование Марквардта с нижним порогом; пробные шаги — без якобиана. Ковариация — по J_x в решении. */
-  function lmFitJac(residJac, x0, lo, hi, maxIter) {
+  function lmFitJac(residJac, x0, lo, hi, maxIter, onProgress) {
     maxIter = maxIter || 60;
     const p = x0.length, W = lo.map((v, k) => hi[k] - v);
     const toX = (th) => th.map((v, k) => lo[k] + W[k] * (1 + Math.sin(v)) / 2);
@@ -1776,6 +1934,8 @@ footer details p { max-width:120ch; margin:10px 0; }
     const m = r.length;
     let F = 0; for (let i = 0; i < m; i++) F += r[i] * r[i]; F *= 0.5;
     let lam = -1, nu = 2, nfev = 1, nit = 0;
+    const report = () => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice() }); };
+    report();
     const JTJ = Array.from({ length: p }, () => new Array(p).fill(0)), g = new Array(p).fill(0), D = new Array(p).fill(0);
     for (let it = 0; it < maxIter; it++) {
       nit++;
@@ -1817,6 +1977,7 @@ footer details p { max-width:120ch; margin:10px 0; }
         }
         lam *= nu; nu *= 2;
       }
+      report();
       if (!accepted) break;
     }
     Jx = residJac(x, true).J;                                                  // якобиан в решении — для ковариации
@@ -1882,6 +2043,7 @@ footer details p { max-width:120ch; margin:10px 0; }
       for (let i = 0; i < n; i++) { const z = Z[i]; for (let k = 0; k < K; k++) { const g = (P[i][k] - (y[i] === k ? 1 : 0)) / n; gb[k] += g; const gw = gW[k]; for (let j = 0; j < D; j++) gw[j] += g * z[j]; } }
       for (let k = 0; k < K; k++) { const gw = gW[k], w = W[k]; for (let j = 0; j < D; j++) { const g = gw[j] + l2 * w[j]; mW[k][j] = b1 * mW[k][j] + (1 - b1) * g; vW[k][j] = b2 * vW[k][j] + (1 - b2) * g * g; w[j] -= lr * (mW[k][j] / (1 - b1 ** ep)) / (Math.sqrt(vW[k][j] / (1 - b2 ** ep)) + eps); }
         mb[k] = b1 * mb[k] + (1 - b1) * gb[k]; vb[k] = b2 * vb[k] + (1 - b2) * gb[k] * gb[k]; b[k] -= lr * (mb[k] / (1 - b1 ** ep)) / (Math.sqrt(vb[k] / (1 - b2 ** ep)) + eps); }
+      if (opt.onProgress) opt.onProgress(ep, epochs);
     }
     const predictProba = (x) => { const z = st.apply(x); const s = new Float64Array(K); let mx = -Infinity; for (let k = 0; k < K; k++) { let v = b[k]; for (let j = 0; j < D; j++) v += W[k][j] * z[j]; s[k] = v; if (v > mx) mx = v; } let sum = 0; for (let k = 0; k < K; k++) { s[k] = Math.exp(s[k] - mx); sum += s[k]; } return Array.from(s, v => v / sum); };
     return { predictProba, W, b, st };
@@ -1893,7 +2055,7 @@ footer details p { max-width:120ch; margin:10px 0; }
     for (let i = 0; i < n; i++) { const z = Z[i], yc = y[i] - ym; for (let a = 0; a < D; a++) { const za = z[a]; if (!za) continue; g[a] += za * yc; const row = G[a]; for (let b = a; b < D; b++) row[b] += za * z[b]; } }
     for (let a = 0; a < D; a++) { for (let b = 0; b < a; b++) G[a][b] = G[b][a]; G[a][a] += alpha; }
     const w = solveLinear(G, g) || new Array(D).fill(0);
-    return { predict: (x) => { const z = st.apply(x); let s = ym; for (let j = 0; j < D; j++) s += w[j] * z[j]; return s; } };
+    return { st, w, ym, predict: (x) => { const z = st.apply(x); let s = ym; for (let j = 0; j < D; j++) s += w[j] * z[j]; return s; } };
   }
 
   // ---------------------------------------------------------------- классы дефектов: градиент g ∈ {0, +1, −1} × шероховатость r ∈ {0, 1} × поглощение a ∈ {0, 1}
@@ -1955,6 +2117,139 @@ footer details p { max-width:120ch; margin:10px 0; }
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script id="analysis-tasks" type="text/plain">
+/* Shared, DOM-free analysis jobs. Embedded in the offline HTML and its Blob Worker. */
+(function (root) {
+  'use strict';
+  const E = typeof module !== 'undefined' && module.exports ? require('./ellip_core.js') : root.EllipCore;
+  const packSoftmax = m => ({ W: m.W, b: m.b, mu: m.st.mu, sd: m.st.sd });
+  const packRidge = m => ({ w: m.w, ym: m.ym, mu: m.st.mu, sd: m.st.sd });
+  const softmax = scores => {
+    const mx = Math.max(...scores), exp = Array.from(scores, v => Math.exp(v - mx)), sum = exp.reduce((a, b) => a + b, 0);
+    return exp.map(v => v / sum);
+  };
+  const ridgePredict = (m, x) => { let s = m.ym; for (let j = 0; j < x.length; j++) s += m.w[j] * ((x[j] - m.mu[j]) / m.sd[j]); return s; };
+
+  function train(a, emit) {
+    const { data, cfg, prior, nuis, N, seed } = a, K = E.CLASSES.length, rng = E.makeRng(seed);
+    const X = [], y = [], sz = [], t0 = Date.now();
+    for (let i = 0; i < N; i++) {
+      const s = E.trainingExample(data, cfg, prior, nuis, rng, i % K);
+      X.push(s.x); y.push(s.y); sz.push([s.delta, s.dRough, s.k400]);
+      emit({ phase: 'examples', done: i + 1, total: N, fraction: 0.7 * (i + 1) / N });
+    }
+    const idx = X.map((_, k) => k);
+    for (let k = idx.length - 1; k > 0; k--) { const j = rng.int(k + 1); [idx[k], idx[j]] = [idx[j], idx[k]]; }
+    const nte = Math.max(30, Math.floor(N / 4)), te = idx.slice(0, nte), tr = idx.slice(nte);
+    const mHold = E.trainSoftmax(tr.map(k => X[k]), tr.map(k => y[k]), K, { epochs: 250, onProgress: (done, total) => emit({ phase: 'holdout', done, total, fraction: 0.7 + 0.1 * done / total }) });
+    let acc = 0, accBig = 0, nBig = 0;
+    for (const k of te) {
+      const p = mHold.predictProba(X[k]), kk = p.indexOf(Math.max(...p));
+      const big = (sz[k][0] === 0 || Math.abs(sz[k][0]) >= 0.004) && (sz[k][1] === 0 || sz[k][1] >= 0.4) && (sz[k][2] === 0 || sz[k][2] >= 2e-4);
+      if (kk === y[k]) { acc++; if (big) accBig++; } if (big) nBig++;
+    }
+    const model = E.trainSoftmax(X, y, K, { epochs: 250, onProgress: (done, total) => emit({ phase: 'classifier', done, total, fraction: 0.8 + 0.1 * done / total }) });
+    emit({ phase: 'ridge', done: 0, total: 3, fraction: 0.9 });
+    const rd = E.ridge(X, sz.map(v => 100 * v[0]), 30);
+    emit({ phase: 'ridge', done: 1, total: 3, fraction: 0.93 });
+    const rr = E.ridge(X, sz.map(v => v[1]), 30);
+    emit({ phase: 'ridge', done: 2, total: 3, fraction: 0.96 });
+    const rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
+    let e1 = 0, e2 = 0, e3 = 0;
+    for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
+    emit({ phase: 'trained', fraction: 1 });
+    return { model: packSoftmax(model), rd: packRidge(rd), rr: packRidge(rr), rk: packRidge(rk), N, acc: 100 * acc / nte, accBig: nBig ? 100 * accBig / nBig : NaN, rmseD: Math.sqrt(e1 / nte), rmseR: Math.sqrt(e2 / nte), rmseK: Math.sqrt(e3 / nte) / 1000, sec: (Date.now() - t0) / 1000 };
+  }
+
+  // A deterministic explanation of one forward pass, not repeated inference or
+  // calibrated probabilities for incomplete spectra. Omitted features have z = 0.
+  // Accumulation order is identical to trainSoftmax.predictProba, including anchors.
+  function diagnose({ train: t, x }) {
+    const m = t.model, scores = Array.from(m.b), n = (x.length - E.N_CHANNELS) / 2;
+    const frames = [{ phase: 'bias', fraction: 0, probs: softmax(scores) }];
+    const channels = ['Ψ в HW-якорях', 'Разброс Ψ в HW', '|Δ| в HW-якорях', '|Δ| в QW-якорях', 'RMS Ψ', 'RMS Δ', 'Синий–красный тренд Ψ в HW', 'Синий–красный тренд Ψ в QW'];
+    const add = j => { const z = (x[j] - m.mu[j]) / m.sd[j]; for (let k = 0; k < scores.length; k++) scores[k] += m.W[k][j] * z; };
+    for (let channel = 0; channel < 2; channel++) {
+      for (let block = 0; block < 12; block++) {
+        const end = Math.floor((block + 1) * n / 12);
+        for (let i = Math.floor(block * n / 12); i < end; i++) add(channel * n + i);
+        frames.push({ phase: channel ? 'delta' : 'psi', scan: end / n, fraction: (channel * n + end) / x.length, probs: softmax(scores) });
+      }
+    }
+    channels.forEach((label, j) => { add(2 * n + j); frames.push({ phase: 'anchors', label, fraction: (2 * n + j + 1) / x.length, probs: softmax(scores) }); });
+    return { frames, probs: frames[frames.length - 1].probs, est: { delta: ridgePredict(t.rd, x) / 100, dRough: ridgePredict(t.rr, x), k400: Math.max(0, ridgePredict(t.rk, x) / 1000) } };
+  }
+
+  function curves(data, cfg, P) {
+    const mat = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg, Ak: P.Ak || 0 });
+    return E.modelPsiDelta(data.lam, cfg.Nsub, cfg.phi, P.d, mat, P.delta || 0, P.dRough || 0, E.subLayersFor(P.delta || 0), cfg.back, cfg.band || null);
+  }
+
+  function causes(S, emit) {
+    const Tt = S.example.truth, tk = Tt.k400 || 0, fin = S.fin, flags = S.finFlags, lam = S.data.lam;
+    const nAt = (m, l) => E.filmNK([l], m).n[0], fmt = (v, n) => Number(v).toFixed(n);
+    const mFin = Object.assign({}, S.cfg.mat, { A: fin.P.A, Auv: fin.P.Auv, Eg: fin.P.Eg, Ak: fin.P.Ak || 0 });
+    const trueFlags = { grad: Tt.delta !== 0, rough: Tt.dRough > 0, abs: tk > 0 };
+    const classOK = flags.grad === trueFlags.grad && flags.rough === trueFlags.rough && flags.abs === trueFlags.abs && (!flags.grad || Math.sign(fin.P.delta) === Math.sign(Tt.delta));
+    const p0 = Object.assign({}, S.ref.P, { d: Tt.d, dRough: Tt.dRough || 0.5, delta: Tt.delta || 0, Ak: Tt.mat.Ak || 0 });
+    const mk = (opt) => { const sy = E.synthesize(lam, S.cfg.subKey, Tt.phiTrue, Tt.d, Tt.mat, Tt.delta, Tt.dRough, Object.assign({ continuous: !!Tt.continuous, back: Tt.back || null }, opt), E.makeRng(1)); return { lam, psi: Array.from(sy.psi), del: Array.from(sy.del), sigPsi: S.data.sigPsi, sigDel: S.data.sigDel }; };
+    const cfg0 = S.cfg, cfgA = Object.assign({}, S.cfg, { phi: Tt.phiTrue, subDel: null });
+    const bwModel = S.cfg.band ? S.cfg.band.bw : 0;                          // полоса в модели фита; строка бюджета «полоса как в модели» убирает её ошибку
+    const backDiff = !!(Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > 1e-9) || (!!Tt.back !== !!S.cfg.back);
+    const cfgAB = backDiff ? Object.assign({}, cfgA, { back: Tt.back || null, subDel: null }) : cfgA;
+    const cfgAD = Object.assign({}, cfgAB, { mat: Object.assign({}, S.cfg.mat, { E0: Tt.mat.E0, C: Tt.mat.C, Euv: Tt.mat.Euv }) });
+    const fitRow = (label, data, cfg) => { emit({ phase: 'causes', row: label }); const r = E.finalFit(data, cfg, S.prior, trueFlags, p0, null, e => emit({ ...e, phase: 'causes', row: label })); const m = Object.assign({}, cfg.mat, { A: r.P.A, Auv: r.P.Auv, Eg: r.P.Eg, Ak: r.P.Ak || 0 }); return { label, d: r.P.d, delta: trueFlags.grad ? r.P.delta : 0, rough: trueFlags.rough ? r.P.dRough : 0, k: trueFlags.abs ? r.P.k400 : 0, n: nAt(m, 550), chi2: r.chi2 }; };
+    const rows = [{ label: 'измеренный спектр, модель по выбору ИИ (как есть)', d: fin.P.d, delta: flags.grad ? fin.P.delta : 0, rough: flags.rough ? fin.P.dRough : 0, k: flags.abs ? fin.P.k400 : 0, n: nAt(mFin, 550), chi2: fin.chi2 }];
+    if (!classOK) rows.push(fitRow('измеренный спектр, верный набор дефектов', S.data, cfg0));
+    const hasDrift = !!Tt.driftPsi;
+    if (hasDrift) rows.push(fitRow('без шума (дрейф, полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset, driftPsi: Tt.driftPsi, driftDel: Tt.driftDel }), cfg0));
+    rows.push(fitRow(hasDrift ? '+ без дрейфа' : 'без шума и дрейфа (полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset }), cfg0));
+    rows.push(fitRow('+ без сдвига шкалы λ', mk({ bw: Tt.bw, lamOffset: 0 }), cfg0));
+    rows.push(fitRow(bwModel > 0 ? `+ полоса в истине равна заданной в модели (${fmt(bwModel, 1)} нм)` : '+ без спектральной полосы', mk({ bw: bwModel, lamOffset: 0 }), cfg0));
+    rows.push(fitRow('+ угол известен точно', mk({ bw: bwModel, lamOffset: 0 }), cfgA));
+    if (backDiff) rows.push(fitRow('+ доля задней стороны как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAB));
+    rows.push(fitRow('+ E₀, C, E_uv как у образца (остаётся только численная точность)', mk({ bw: bwModel, lamOffset: 0 }), cfgAD));
+    const truthRow = { label: 'истина', d: Tt.d, delta: Tt.delta, rough: Tt.dRough, k: tk, n: nAt(Tt.mat, 550), chi2: NaN };
+    // вклад каждого фактора = изменение параметров при его устранении
+    const contrib = []; for (let i = 1; i < rows.length; i++) contrib.push({ label: rows[i].label, dd: rows[i - 1].d - rows[i].d, dDelta: rows[i - 1].delta - rows[i].delta, dRough: rows[i - 1].rough - rows[i].rough, dk: rows[i - 1].k - rows[i].k, dn: rows[i - 1].n - rows[i].n });
+    const last = rows[rows.length - 1]; const unexpl = { dd: last.d - Tt.d, dDelta: last.delta - Tt.delta, dRough: last.rough - Tt.dRough, dk: last.k - tk, dn: last.n - nAt(Tt.mat, 550) };
+    return { rows, truthRow, contrib, unexpl, bwModel };
+  }
+
+  function run(type, a, emit = () => {}) {
+    if (type === 'reference') {
+      const ref = E.referenceFit(a.data, a.cfg, a.prior, emit);
+      const feature = E.featureVector(a.data, a.cfg, ref.resid);
+      return { ref, feature, subDel: a.cfg.subDel, curves: curves(a.data, a.cfg, ref.P) };
+    }
+    if (type === 'train') return train(a, emit);
+    if (type === 'diagnose') return diagnose(a);
+    if (type === 'final') {
+      const fin = E.finalFit(a.data, a.cfg, a.prior, a.flags, a.p0, a.nuis, emit);
+      return { fin, curves: curves(a.data, a.cfg, fin.P) };
+    }
+    if (type === 'causes') return causes(a, emit);
+    throw new Error('Неизвестный этап анализа: ' + type);
+  }
+  const api = { run, diagnose };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.EllipAnalysis = api;
+  if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScope) {
+    root.onmessage = ({ data: { id, type, args } }) => {
+      let last = 0, phase = '';
+      const emit = p => {
+        const key = p.phase + ':' + (p.start || '') + ':' + (p.row || '');
+        const now = Date.now();
+        if (key === phase && now - last < 75 && p.fraction !== 1) return;
+        last = now; phase = key; root.postMessage({ id, progress: p });
+      };
+      try { root.postMessage({ id, result: run(type, args, emit) }); }
+      catch (error) { root.postMessage({ id, error: error.message || String(error) }); }
+    };
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+</script>
 <script>
 const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂ на BK7, 65°","mat":"tio2","sub":"bk7","phi":65,"dNom":1000,"dRange":5,"bw":1.2,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[12.423,13.5603,13.9413,14.5816,15.2856,15.6808,15.7156,15.2009,14.352,13.2827,12.3515,11.9133,12.5676,13.4306,13.528,13.6491,14.0097,14.372,14.6334,14.6676,14.4811,14.1289,13.4958,12.8728,12.1522,11.7104,11.7685,12.532,13.3094,13.4772,13.2518,13.1899,13.2937,13.4731,13.6875,13.8206,13.7388,13.6448,13.4056,13.0946,12.6395,12.188,11.849,11.5151,11.416,11.7272,12.3548,13.0797,13.4448,13.4099,13.0135,12.8042,12.7063,12.7468,12.7779,12.8505,12.94,12.969,12.8647,12.8127,12.6577,12.4317,12.1613,11.9612,11.6633,11.4149,11.2559,11.137,11.2094,11.5079,11.9264,12.5655,13.141,13.4667,13.474,13.2139,12.8866,12.5889,12.3877,12.269,12.2396,12.1842,12.1744,12.1771,12.2132,12.2033,12.1876,12.1133,12.0083,11.9061,11.773,11.6336,11.4955,11.3273,11.1845,11.0861,10.9679,10.8925,10.877,10.9621,11.1284,11.3634,11.7363,12.201,12.722,13.1403,13.4303,13.5368,13.4333,13.1656,12.8913,12.5775,12.3249,12.1257,11.9223,11.8133,11.7592,11.7008,11.6562,11.6334,11.5908,11.5927,11.5354,11.539,11.4899,11.4744,11.4088,11.345,11.2742,11.2136,11.1027,11.0517,10.9421,10.8569,10.8017,10.72,10.6512,10.6045,10.6026,10.5914,10.5949,10.725,10.8235,10.9921,11.1946,11.4773,11.8152,12.1861,12.5535,12.9031,13.2192,13.4554,13.5874,13.606,13.4827,13.2939,13.0775,12.815,12.5596,12.3084,12.1103,11.8995,11.7398,11.6084,11.4884,11.3873,11.3508,11.2716,11.2063,11.1793,11.1151,11.0517,11.0856,11.0335,11.0199,10.9798,10.927,10.9253,10.8882,10.8516,10.8148,10.7958,10.7436,10.6895,10.6614,10.6092,10.5728,10.5079,10.4775,10.4304,10.4202,10.3721,10.3237,10.317,10.3181,10.297,10.3347,10.3364,10.356,10.4316,10.4886],"del":[325.5703,36.1283,84.3029,113.2049,134.5763,153.6388,171.4707,189.4228,207.9194,228.2298,252.5326,285.0028,330.3257,23.7409,66.2939,94.7281,115.7585,133.1841,148.9564,163.6544,178.3619,192.9645,208.3942,224.7026,242.9893,264.3065,291.5184,326.1576,5.7158,42.9415,71.2601,93.1246,110.1553,124.7549,138.1015,150.7034,162.624,174.4558,186.6034,198.6876,211.1619,224.407,238.6986,254.7884,272.5727,293.9941,319.4249,348.5214,18.1926,44.4829,66.1942,83.9161,98.7798,111.446,122.9956,133.7722,144.2578,154.1221,163.8779,173.3914,182.6457,192.6477,202.2718,212.2617,222.7431,233.976,245.5209,258.1782,272.1338,287.5574,304.8394,324.4803,345.5281,7.4872,28.3453,47.0669,63.1689,76.9231,89.2004,99.8011,109.8062,118.8398,127.4224,135.9079,143.6822,151.6147,159.1018,166.7087,174.2939,181.8609,189.4826,197.1279,204.8535,212.6598,220.627,229.0336,237.5757,246.8518,256.2191,266.0934,276.612,288.0278,300.6646,313.7233,328.1697,343.4197,359.0617,14.8504,29.5989,43.086,55.2205,66.3813,76.2628,85.3477,93.5122,101.5189,108.7069,115.5665,122.1765,128.5676,134.8878,141.0543,147.033,153.0301,158.8583,164.8248,170.2659,176.0528,181.8879,187.6168,193.3683,199.0892,204.9941,211.0347,217.1891,222.9639,229.1548,235.5702,241.8804,248.7199,255.3125,262.5942,269.8926,277.4486,285.4263,293.9153,302.9191,312.0124,321.8556,332.1736,342.9777,353.7945,4.7694,15.4905,25.7786,35.5823,44.765,53.2205,61.2048,68.58,75.4958,81.9026,88.0685,93.9952,99.4392,104.7674,109.9491,114.9689,119.6881,124.559,129.1392,133.8768,138.1158,142.6206,147.084,151.1785,155.6733,159.8216,164.1042,168.3313,172.4926,176.5899,180.6338,184.8895,189.3093,193.4266,197.3666,201.677,206.0398,210.1935,214.483,218.725,223.1625,227.354,231.9971,236.2907,240.9257,245.3947,250.1165,254.7554,259.6178],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.1826,0.1672,0.1613,0.1535,0.1458,0.141,0.1399,0.1424,0.1487,0.1581,0.1683,0.1722,0.1622,0.151,0.1487,0.1462,0.1415,0.1367,0.1331,0.1315,0.1318,0.1341,0.1382,0.1438,0.1498,0.1535,0.1513,0.142,0.1327,0.1302,0.1309,0.1304,0.1282,0.1253,0.1226,0.1206,0.1195,0.1194,0.1203,0.1221,0.1247,0.1278,0.1308,0.1327,0.1322,0.1281,0.1209,0.1135,0.1097,0.1096,0.1111,0.1119,0.1117,0.1106,0.1092,0.1076,0.1063,0.1053,0.1048,0.1046,0.1049,0.1057,0.1068,0.1081,0.1096,0.1109,0.1117,0.1117,0.1103,0.1072,0.1026,0.0972,0.0925,0.0896,0.089,0.09,0.0915,0.0928,0.0936,0.0938,0.0935,0.093,0.0924,0.0918,0.0912,0.0907,0.0904,0.0903,0.0903,0.0906,0.091,0.0915,0.0922,0.0929,0.0936,0.0942,0.0947,0.0948,0.0944,0.0935,0.0919,0.0895,0.0865,0.0831,0.0798,0.077,0.0751,0.0744,0.0748,0.0759,0.0773,0.0789,0.0802,0.0814,0.0822,0.0829,0.0833,0.0835,0.0837,0.0838,0.0838,0.0839,0.084,0.0842,0.0844,0.0847,0.0851,0.0855,0.086,0.0865,0.0871,0.0877,0.0884,0.089,0.0897,0.0902,0.0907,0.0911,0.0913,0.0912,0.0909,0.0904,0.0894,0.0881,0.0865,0.0846,0.0824,0.0801,0.0778,0.0758,0.0741,0.0729,0.0722,0.0722,0.0727,0.0737,0.0749,0.0763,0.0778,0.0792,0.0805,0.0817,0.0828,0.0837,0.0845,0.0851,0.0857,0.0861,0.0865,0.0868,0.0871,0.0873,0.0876,0.0878,0.088,0.0882,0.0884,0.0887,0.0889,0.0892,0.0895,0.0898,0.0901,0.0905,0.0908,0.0912,0.0915,0.0919,0.0923,0.0926,0.0929,0.0932,0.0934,0.0936,0.0937,0.0937,0.0937,0.0935,0.0932,0.0928,0.0922],"truth":{"d":1017.3,"delta":-0.008,"dRough":2.2,"phiTrue":65.02,"bw":1.2,"lamOffset":0.06,"mat":{"name":"TiO₂ (аморфный)","A":261.96992,"E0":4.04,"C":1.82,"Eg":3.37,"Auv":131.45575,"Euv":11},"n":{"450":2.424870479363361,"550":2.324757357161206,"650":2.2783722852084396,"750":2.252247327770243}}},{"id":"ex2","file":"02_Ta2O5_on_fused_silica_60deg.xlsx","title":"Ta₂O₅ на плавленом кварце, 60°","mat":"ta2o5","sub":"silica","phi":60,"dNom":850,"dRange":6,"bw":1,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[11.2661,13.0772,14.3863,15.3654,16.185,16.6073,16.9266,17.0005,16.7803,16.4467,15.8565,15.0983,14.11,13.0131,11.7226,10.2114,8.4386,6.9577,7.0359,8.7483,10.4741,11.8959,12.9559,13.8466,14.5697,15.1741,15.6472,15.9581,16.1494,16.2185,16.1939,16.0289,15.7309,15.3283,14.8339,14.2922,13.5905,12.8173,12.0376,11.0438,9.9344,8.7595,7.5764,6.882,6.9838,7.9616,9.1721,10.3102,11.3211,12.0849,12.775,13.3919,13.895,14.2802,14.6931,14.9433,15.2085,15.4002,15.4574,15.5548,15.4914,15.4579,15.2627,15.0586,14.8531,14.5443,14.1873,13.824,13.3737,12.8796,12.3531,11.7721,11.1842,10.5466,9.8052,9.0281,8.267,7.5444,7.0255,6.8705,7.1927,7.859,8.6336,9.3926,10.1363,10.7407,11.3096,11.8076,12.273,12.6748,13.0498,13.3805,13.6787,13.9186,14.1798,14.3239,14.5127,14.6631,14.7735,14.8343,14.894,14.9023,14.8865,14.8428,14.8252,14.6939,14.5744,14.4433,14.2786,14.0787,13.8366,13.6278,13.3728,13.1134,12.818,12.4976,12.1648,11.8105,11.4567,11.0578,10.6731,10.2139,9.76,9.3049,8.8096,8.3186,7.873,7.4506,7.1552,7.0225,7.0348,7.2101,7.5765,8.0248,8.4779,8.9436,9.4098,9.8399,10.2802,10.6409,10.9842,11.3061,11.5948,11.8777,12.1351,12.3788,12.6199,12.8263,13.0232,13.2192,13.3914,13.5479,13.6662,13.8042,13.9052,14.0313,14.135,14.2049,14.2609,14.3521,14.3622,14.4003,14.3939,14.4129,14.4165,14.382,14.3389,14.3059,14.2423,14.1783,14.1065,14.0258,13.8948,13.8167,13.714,13.6177,13.4802,13.3114,13.1882,13.0169,12.8706,12.6775,12.4956,12.2972,12.1644,11.9396,11.7042,11.5148,11.2856,11.0995,10.8555,10.5927,10.3687,10.1034,9.8356,9.5454,9.286,9.0375,8.7201,8.4456,8.1652],"del":[98.9463,118.3594,132.0939,142.8658,152.1893,160.4455,168.3585,176.3018,183.739,191.7918,199.7942,208.1983,217.1098,227.3544,240.3014,257.8978,284.564,327.6931,22.5939,64.7337,92.1052,109.3833,122.5294,132.4359,140.7647,148.1946,154.9767,161.4159,167.5386,173.9812,179.7151,185.6062,191.6757,197.6899,203.9837,210.6168,217.5937,225.1743,234.3964,245.1084,258.6358,277.1479,302.7147,337.2131,16.9748,50.0307,74.9327,92.7039,106.0506,116.4276,125.1217,132.3988,138.7925,144.5355,150.0602,155.0393,159.9111,164.5876,169.2884,173.8811,178.2725,182.8881,187.3814,191.7206,196.334,200.8959,205.6536,210.5692,215.3834,221.1171,227.0952,233.3406,240.8479,249.4715,259.476,272.3151,287.8611,307.9375,331.6072,358.4136,24.5818,47.2632,65.5353,80.8027,92.5717,102.4567,110.6026,117.6768,123.8958,129.2072,134.1421,138.8306,142.8874,146.8861,150.7992,154.4693,158.2406,161.4615,164.8918,168.2896,171.4975,174.7918,178.0698,181.1899,184.4424,187.6317,190.8379,194.0209,197.2539,200.3666,203.9346,207.342,210.7882,214.1281,218.0379,221.774,225.8194,230.2225,234.941,240.1146,245.774,251.9186,259.0904,267.3427,276.3926,287.1287,299.351,313.8039,329.4969,346.9484,4.2897,21.4642,37.2258,51.2453,63.2724,73.9588,83.2247,91.0536,98.0502,104.2712,109.742,114.5429,119.2225,123.2167,127.1045,130.621,133.7595,137.0135,139.9873,142.9131,145.6613,148.4182,150.9222,153.4477,155.8255,158.2043,160.6661,162.9185,165.1867,167.5096,169.6259,171.8997,174.1627,176.282,178.4784,180.6489,182.7279,184.9352,187.0261,189.1363,191.2605,193.4426,195.6087,197.5814,199.913,202.0912,204.221,206.4501,208.8799,211.013,213.2515,215.6234,218.128,220.547,223.2353,226.052,228.638,231.8234,234.8351,237.8778,241.2303,244.8856,248.8325,252.8315,257.0782,262.0659,267.358,272.8944,278.7268,285.5227,293.0529],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.2,0.1727,0.1568,0.1461,0.1387,0.1337,0.1306,0.129,0.129,0.1305,0.1335,0.1383,0.1453,0.1553,0.1698,0.1925,0.2296,0.2753,0.2673,0.2155,0.1789,0.1574,0.1436,0.1338,0.1266,0.121,0.1168,0.1136,0.1113,0.1098,0.1091,0.1091,0.1098,0.1112,0.1135,0.1166,0.1207,0.1261,0.1332,0.1427,0.1559,0.1746,0.1989,0.2187,0.2125,0.1856,0.1601,0.142,0.1294,0.1202,0.1132,0.1077,0.1031,0.0994,0.0963,0.0937,0.0917,0.09,0.0887,0.0877,0.0871,0.0868,0.0868,0.0871,0.0877,0.0887,0.0899,0.0916,0.0936,0.0961,0.0991,0.1028,0.1073,0.1129,0.1199,0.1288,0.1397,0.1518,0.1615,0.1633,0.1551,0.1418,0.1286,0.1176,0.109,0.1022,0.0968,0.0924,0.0887,0.0856,0.0829,0.0806,0.0785,0.0768,0.0753,0.0739,0.0728,0.0719,0.0711,0.0704,0.0699,0.0696,0.0694,0.0693,0.0693,0.0695,0.0698,0.0702,0.0708,0.0714,0.0723,0.0732,0.0743,0.0756,0.0771,0.0787,0.0806,0.0827,0.0851,0.0878,0.0909,0.0945,0.0986,0.1034,0.1089,0.1151,0.1217,0.1283,0.1336,0.1365,0.1359,0.1321,0.1262,0.1196,0.1131,0.1072,0.1021,0.0978,0.0941,0.0909,0.0882,0.0858,0.0837,0.0819,0.0802,0.0788,0.0774,0.0762,0.0752,0.0742,0.0733,0.0725,0.0718,0.0712,0.0706,0.0702,0.0697,0.0694,0.0691,0.0689,0.0687,0.0686,0.0685,0.0685,0.0685,0.0686,0.0688,0.069,0.0692,0.0695,0.0698,0.0702,0.0706,0.0711,0.0717,0.0723,0.0729,0.0736,0.0744,0.0752,0.0761,0.0771,0.0781,0.0792,0.0803,0.0816,0.0829,0.0844,0.0859,0.0876,0.0894,0.0913,0.0934,0.0956,0.0981,0.1008,0.1037,0.1068,0.1102,0.1138,0.1175],"truth":{"d":862.4,"delta":0,"dRough":1.6,"phiTrue":59.98,"bw":1,"lamOffset":-0.04,"mat":{"name":"Ta₂O₅ (аморфный)","A":311.6998,"E0":5.25,"C":2.7,"Eg":4.15,"Auv":11.33,"Euv":12},"n":{"450":2.183217920220487,"550":2.12848499759607,"650":2.1003860455484404,"750":2.083816404377803}}},{"id":"ex3","file":"03_Nb2O5_on_BK7_60deg.xlsx","title":"Nb₂O₅ на BK7, 60°","mat":"nb2o5","sub":"bk7","phi":60,"dNom":1200,"dRange":5,"bw":1.4,"lam":[420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[10.78,14.6976,17.1967,18.9916,19.9776,20.29,20.1678,19.3181,18.0357,16.1542,13.6872,9.9269,5.416,7.2473,11.6554,14.5437,16.5764,18.0389,19.0238,19.5465,19.7691,19.5037,18.9112,17.9886,16.6761,14.9628,12.7112,9.713,5.906,5.5079,9.11,12.1627,14.3296,15.9353,17.1519,18.1056,18.7622,19.0893,19.1865,19.0441,18.6825,18.1091,17.1961,16.1641,14.8458,13.1198,11.0233,8.3009,5.3966,5.2475,7.9827,10.6303,12.6654,14.2277,15.504,16.5177,17.3116,17.9302,18.3684,18.6455,18.722,18.6881,18.4438,18.0601,17.5937,16.9604,16.1309,15.2162,14.0872,12.8046,11.1708,9.1622,6.9103,4.9567,5.2098,7.2135,9.4026,11.1894,12.706,13.8722,14.8811,15.6771,16.4077,16.9949,17.4584,17.7838,18.0745,18.2331,18.2774,18.2446,18.1183,17.9045,17.5286,17.1724,16.6977,16.1031,15.4473,14.6691,13.8527,12.8587,11.7123,10.3986,8.842,7.0917,5.4584,4.7516,5.4906,7.0762,8.763,10.2158,11.4381,12.5104,13.3897,14.1811,14.8482,15.4579,16.0033,16.4629,16.8288,17.1718,17.4328,17.623,17.7551,17.8476,17.8924,17.8482,17.7747,17.6414,17.4736,17.2219,16.936,16.5927,16.1904,15.7503,15.2705,14.7497,14.1567,13.5114,12.7684,11.9874,11.0854,10.0437,8.9281,7.6921,6.4296,5.3132,4.8009,5.1162,6.0454,7.2331,8.4323,9.5472,10.5418,11.4078,12.1877,12.8632,13.4731,14.0448,14.5432,14.9969,15.4141,15.7685,16.0997,16.4072,16.6612,16.9193,17.1018,17.2373,17.3786,17.4583,17.5109,17.5534,17.5533,17.5241,17.4695,17.3659,17.2485,17.1238,16.9237,16.7573,16.5401,16.2334,15.98,15.669,15.3593,15.0029,14.6218,14.2442,13.7967,13.3341,12.7877],"del":[105.4889,129.4605,144.6099,156.5649,167.3809,177.7096,187.7079,198.2146,208.7736,220.5181,235.9384,261.1183,323.6622,74.7759,111.4898,129.8432,143.003,153.3885,162.5414,171.3743,179.9132,188.4452,197.009,205.7498,215.0199,225.8837,239.9709,261.8666,307.0125,43.4313,93.3041,116.2367,130.5755,141.206,150.0023,158.2029,165.4251,172.6661,179.7262,186.7656,193.9655,200.9857,208.3698,216.2959,225.2995,235.9813,251.1996,273.9629,318.9692,36.3822,82.6286,106.1093,121.1127,131.9027,140.417,147.8891,154.6216,160.7894,166.9254,172.6294,178.491,184.2115,189.9618,195.6359,201.3732,207.3179,213.6741,220.5823,228.1198,237.4168,248.9396,265.2573,290.6124,335.3731,35.2537,74.3492,96.8451,111.7687,122.5514,131.0411,138.1556,144.4071,150.1339,155.2279,160.2687,165.1759,169.8685,174.6252,179.0425,183.5916,188.0288,192.6854,197.1577,201.8255,206.6815,211.4806,216.655,222.201,228.5053,235.4278,243.9329,254.5033,268.3368,287.4041,317.1528,0.4287,43.2676,71.914,90.9654,104.1833,114.3865,122.4644,129.1562,135.1502,140.2371,144.9782,149.4318,153.5853,157.6177,161.388,165.1874,168.7557,172.4892,176.0226,179.5393,183.1237,186.6136,190.2027,193.6427,197.1227,200.716,204.2614,207.8962,211.8052,215.8269,219.915,224.4417,229.2408,234.7614,240.9056,248.0531,256.6695,267.1457,280.5895,298.4555,323.204,354.8588,28.3895,54.8642,73.8295,87.8265,98.8739,107.8134,115.1287,120.9716,126.4939,131.2024,135.5242,139.4505,143.1122,146.4734,149.7344,152.8799,156.0583,158.9568,161.8243,164.6325,167.4359,170.1652,172.8964,175.5755,178.1926,180.9247,183.4599,186.08,188.6189,191.368,193.8132,196.4483,199.054,201.949,204.5958,207.2745,210.2211,212.9411,215.9283,219.0709,222.4467,225.8342,229.4851,233.4039],"sigPsi":[0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.1905,0.1414,0.1218,0.1114,0.1057,0.1031,0.103,0.1054,0.1108,0.1207,0.1398,0.187,0.3376,0.2474,0.1565,0.1259,0.111,0.1021,0.0966,0.0934,0.0919,0.0919,0.0935,0.0968,0.1025,0.1118,0.1285,0.1652,0.2658,0.2823,0.1706,0.1285,0.1093,0.0984,0.0913,0.0864,0.0831,0.0811,0.08,0.0798,0.0805,0.0821,0.0849,0.0892,0.0956,0.1057,0.1236,0.1613,0.2437,0.2493,0.1636,0.1228,0.1032,0.0919,0.0845,0.0792,0.0754,0.0726,0.0705,0.0691,0.0683,0.068,0.0681,0.0688,0.07,0.0718,0.0744,0.078,0.083,0.0904,0.1019,0.1221,0.1608,0.2203,0.209,0.15,0.1155,0.097,0.086,0.0787,0.0735,0.0696,0.0666,0.0642,0.0624,0.061,0.06,0.0593,0.0588,0.0587,0.0588,0.0593,0.06,0.061,0.0623,0.0641,0.0663,0.0692,0.0729,0.0778,0.0846,0.0947,0.1104,0.1364,0.1757,0.2021,0.1744,0.1359,0.1105,0.095,0.085,0.0782,0.0732,0.0694,0.0665,0.0642,0.0623,0.0607,0.0595,0.0585,0.0577,0.0572,0.0568,0.0565,0.0565,0.0565,0.0568,0.0572,0.0577,0.0584,0.0593,0.0604,0.0616,0.0632,0.065,0.0671,0.0697,0.0727,0.0765,0.0813,0.0876,0.096,0.1078,0.1248,0.1491,0.1791,0.1986,0.187,0.1581,0.1323,0.1138,0.101,0.0918,0.0851,0.08,0.076,0.0728,0.0702,0.0679,0.0661,0.0645,0.0631,0.062,0.061,0.0601,0.0594,0.0588,0.0584,0.058,0.0577,0.0575,0.0575,0.0575,0.0575,0.0577,0.058,0.0583,0.0587,0.0593,0.0599,0.0606,0.0614,0.0624,0.0634,0.0647,0.066,0.0676,0.0693,0.0714,0.0737,0.0764],"truth":{"d":1188,"delta":0.012,"dRough":0,"phiTrue":60.03,"bw":1.4,"lamOffset":0.03,"mat":{"name":"Nb₂O₅ (аморфный)","A":317.9934,"E0":4.72,"C":2.25,"Eg":3.78,"Auv":66.3072,"Euv":11},"n":{"450":2.400206437941978,"550":2.323469946259241,"650":2.285350805262707,"750":2.2632216002836487}}},{"id":"ex4","file":"04_Si3N4_on_Si_70deg.xlsx","title":"Si₃N₄ на кремнии, 70°","mat":"si3n4","sub":"si","phi":70,"dNom":600,"dRange":6,"bw":1,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[61.0079,62.0768,55.7456,48.3273,42.2892,37.9001,34.5001,31.7347,29.5984,27.5557,25.8362,24.1477,22.5381,21.1328,19.8028,18.6724,17.6516,16.9969,16.596,16.5737,16.7747,17.2036,18.0441,18.8905,19.9953,21.1741,22.3279,23.6028,24.9548,26.3294,27.8595,29.5246,31.3026,33.4201,35.7923,38.5395,41.575,44.8593,47.9424,50.2776,51.0693,50.1114,47.7919,44.7696,41.5965,38.7163,36.1245,33.8372,31.862,30.069,28.4139,27.0004,25.6175,24.3119,23.0535,21.8957,20.7922,19.6914,18.6149,17.5918,16.6205,15.7164,14.9053,14.1209,13.5091,12.9807,12.6291,12.3518,12.2632,12.3655,12.6195,12.9422,13.4668,14.0314,14.6263,15.4403,16.1577,16.9287,17.803,18.6506,19.4982,20.3766,21.2583,22.167,23.0702,24.0182,24.9637,25.9802,26.9639,28.0746,29.1763,30.3982,31.6985,33.0135,34.4001,35.9275,37.473,39.0535,40.5945,42.0741,43.3975,44.4662,45.2449,45.5676,45.4755,44.966,44.0805,42.9879,41.6313,40.23,38.8115,37.3302,35.9493,34.6097,33.322,32.1185,30.9549,29.9146,28.9102,27.9497,27.0376,26.1405,25.3285,24.5187,23.7506,22.9893,22.2468,21.5044,20.8006,20.1399,19.4523,18.7692,18.1088,17.4877,16.8489,16.1813,15.6006,14.982,14.4263,13.8642,13.2946,12.8042,12.2941,11.832,11.4223,11.0193,10.6611,10.3748,10.1197,9.9323,9.82,9.722,9.7143,9.7576,9.8344,9.9935,10.1844,10.4252,10.7092,10.9933,11.3952,11.7771,12.1366,12.5608,12.9784,13.4521,13.9222,14.3757,14.8532,15.3438,15.8302,16.3214,16.7909,17.2781,17.78,18.2958,18.7828,19.2664,19.7759,20.2834,20.7763,21.2979,21.8108,22.3231,22.8256,23.3608,23.8668,24.402,24.9584,25.5208,26.0516,26.6246,27.1832,27.8013,28.3694,28.9825,29.6116,30.2499,30.8603,31.5402,32.2016],"del":[336.9355,10.6687,36.2936,49.6423,57.5684,63.3144,68.7832,74.146,79.9744,86.5239,93.5722,101.2127,109.5069,118.6104,128.7647,139.4413,151.3474,163.4129,176.4397,189.2057,201.6145,213.5001,224.581,234.6061,243.9015,252.1746,259.6705,266.3896,272.5973,278.3843,283.7236,288.633,293.3578,298.1997,303.0628,308.5388,314.8184,322.8819,332.7685,345.291,359.343,13.1732,25.1257,34.7074,42.2142,48.1682,53.1522,57.4996,61.5611,65.4618,69.3666,73.2838,77.2259,81.4185,85.8779,90.3725,95.1787,100.1521,105.7053,111.3533,117.6635,124.3646,131.3722,139.0212,147.3492,155.7169,164.897,174.1487,183.6107,192.7746,201.6486,210.3576,218.4056,225.7644,232.6291,239.0116,244.8694,250.448,255.5886,260.2622,264.7052,268.9127,272.6221,276.3409,279.7718,283.1457,286.3802,289.361,292.3477,295.2875,298.2012,301.1528,304.1065,307.133,310.4675,313.9397,317.774,321.9615,326.5717,331.7316,337.4772,343.679,350.3513,357.1783,4.0536,10.8526,17.0374,22.8916,28.086,32.7215,36.9342,40.6643,44.1014,47.1884,50.0062,52.6351,55.1703,57.6499,59.9736,62.2501,64.4729,66.7615,69.026,71.2727,73.5702,75.9426,78.3478,80.677,83.1106,85.5647,88.2908,90.999,93.8114,96.6306,99.547,102.6478,105.8834,109.2974,112.9151,116.6892,120.4631,124.5066,128.8605,133.2657,138.0472,143.0351,148.4141,153.5006,159.3953,165.0769,170.8846,176.8685,182.8497,188.785,194.516,200.1084,205.7044,210.911,215.7328,220.6214,225.2584,229.4396,233.3663,237.3141,240.9447,244.3433,247.5896,250.6845,253.595,256.4262,259.0115,261.5617,263.9753,266.3422,268.6095,270.7321,272.7911,274.7024,276.8316,278.6612,280.4525,282.2469,283.9984,285.6343,287.3608,288.97,290.561,292.0912,293.6222,295.1269,296.7208,298.1943,299.7158,301.1922,302.7836,304.2655,305.7921,307.4128,308.957,310.5405,312.3334],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.0909,0.0921,0.0813,0.0754,0.0746,0.0759,0.0781,0.0806,0.0833,0.0863,0.0895,0.0932,0.0972,0.1016,0.1062,0.1108,0.1148,0.1178,0.1191,0.1184,0.1158,0.1118,0.1068,0.1014,0.0961,0.0909,0.0862,0.0818,0.0778,0.0741,0.0707,0.0675,0.0645,0.0618,0.0594,0.0573,0.0557,0.0548,0.0546,0.0548,0.0546,0.0537,0.0526,0.0519,0.0518,0.0523,0.0531,0.0542,0.0554,0.0568,0.0583,0.0599,0.0616,0.0634,0.0654,0.0676,0.0699,0.0726,0.0754,0.0785,0.0819,0.0854,0.089,0.0926,0.0959,0.0986,0.1006,0.1016,0.1014,0.1,0.0975,0.0942,0.0904,0.0863,0.0822,0.0782,0.0743,0.0707,0.0674,0.0643,0.0615,0.0589,0.0565,0.0543,0.0523,0.0504,0.0487,0.0471,0.0455,0.0441,0.0428,0.0415,0.0404,0.0393,0.0383,0.0374,0.0366,0.036,0.0355,0.0351,0.0348,0.0346,0.0345,0.0344,0.0342,0.0341,0.034,0.034,0.034,0.0342,0.0344,0.0348,0.0352,0.0357,0.0363,0.037,0.0376,0.0384,0.0392,0.04,0.0408,0.0417,0.0427,0.0437,0.0448,0.0459,0.0471,0.0483,0.0497,0.0511,0.0526,0.0542,0.0558,0.0576,0.0595,0.0616,0.0637,0.066,0.0684,0.071,0.0737,0.0764,0.0793,0.0822,0.0851,0.088,0.0907,0.0931,0.0953,0.0971,0.0984,0.0991,0.0993,0.099,0.0981,0.0967,0.0949,0.0928,0.0904,0.0879,0.0854,0.0828,0.0802,0.0777,0.0753,0.0729,0.0707,0.0686,0.0666,0.0647,0.0629,0.0612,0.0596,0.0581,0.0567,0.0554,0.0541,0.0529,0.0518,0.0507,0.0497,0.0488,0.0479,0.047,0.0461,0.0453,0.0446,0.0439,0.0431,0.0425,0.0418,0.0412,0.0406,0.04,0.0395,0.0389,0.0384,0.0379,0.0375,0.037,0.0366],"truth":{"d":612.5,"delta":0,"dRough":0,"phiTrue":70.01,"bw":1,"lamOffset":-0.02,"mat":{"name":"Si₃N₄ (LPCVD)","A":161.2053,"E0":7.1,"C":3.5,"Eg":4.7,"Auv":101.24380000000001,"Euv":13},"n":{"450":2.0077036633210352,"550":1.9807255827496162,"650":1.9662144679574087,"750":1.957446685740755}}},{"id":"ex5","file":"05_HfO2_on_Si_65deg.xlsx","title":"HfO₂ на кремнии, 65°","mat":"hfo2","sub":"si","phi":65,"dNom":950,"dRange":6,"bw":1.2,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[64.2258,48.8487,38.9779,33.5149,30.3218,28.2467,26.7783,25.6836,24.8734,24.3725,23.9615,23.8773,23.9177,24.2502,24.7507,25.4848,26.7205,28.3532,30.8054,34.4601,40.0566,47.9809,56.4773,56.9274,49.0604,41.0086,35.2865,31.4018,28.71,26.7668,25.2482,24.1445,23.254,22.5445,21.9355,21.5588,21.2527,21.0981,21.0872,21.2272,21.4315,21.8857,22.3614,23.0987,23.9763,25.1066,26.5195,28.3471,30.7592,33.9409,38.0271,43.0059,48.0916,51.2295,50.2005,45.9968,41.0054,36.5261,32.9884,30.1899,28.0513,26.3111,24.8918,23.8382,22.8701,22.0237,21.3656,20.7772,20.2867,19.8868,19.5692,19.3486,19.2175,19.0829,19.1265,19.1686,19.3156,19.5407,19.843,20.1802,20.6704,21.2016,21.8272,22.5769,23.4176,24.4042,25.5403,26.9049,28.5296,30.4671,32.6901,35.4195,38.3683,41.5307,44.4473,46.4732,47.0189,45.8812,43.4972,40.5995,37.5713,34.8679,32.4632,30.4128,28.622,27.1513,25.8537,24.7421,23.7972,22.9127,22.1729,21.5145,20.9497,20.3912,19.9456,19.5098,19.1207,18.7963,18.4896,18.2792,18.0529,17.9054,17.7604,17.6513,17.6293,17.6211,17.6688,17.7364,17.8423,17.966,18.1596,18.3518,18.6358,18.9473,19.2513,19.6313,20.0114,20.4714,20.9506,21.4894,22.1095,22.7562,23.4278,24.201,25.0833,26.0205,27.1148,28.2673,29.5565,30.9849,32.5654,34.2568,36.0693,37.9467,39.7416,41.4025,42.7288,43.6274,43.934,43.6146,42.7332,41.4226,39.8471,38.1126,36.385,34.7024,33.0953,31.6328,30.2951,29.0597,27.9082,26.9242,26.0009,25.1522,24.4308,23.6966,23.0608,22.4952,21.9311,21.4406,20.9683,20.5204,20.1321,19.735,19.4187,19.0616,18.7653,18.4786,18.1739,17.9694,17.7283,17.5501,17.3511,17.174,17.0108,16.8808,16.7863,16.6737,16.6322,16.528,16.51],"del":[36.6765,66.2515,78.8658,88.8259,99.2215,110.4727,122.4977,135.1705,148.0969,161.8514,175.0707,188.7999,202.0332,214.7636,227.315,239.2707,250.4962,261.2071,271.0794,281.061,292.1559,308.0851,336.3787,17.7538,47.4527,63.6618,74.6447,83.7795,92.526,101.2898,110.4287,119.893,129.5844,139.7073,149.89,160.3187,170.7435,181.4558,191.7963,202.1582,212.116,222.1125,231.3296,240.5354,249.2148,257.6523,265.6731,273.3146,281.3557,289.7213,299.4031,311.9534,329.2606,352.3687,17.3027,37.6202,52.0079,62.5494,71.1372,78.4962,85.4157,92.2158,98.8992,105.815,112.676,119.7653,127.1966,134.6291,142.0861,149.8669,157.6633,165.4546,173.4562,181.1534,188.9939,196.7482,204.3754,211.8515,219.1579,226.4018,233.1904,239.8695,246.3966,252.5694,258.6657,264.5246,270.3794,276.2009,281.9628,287.9478,294.4956,301.6891,310.1342,320.2354,332.534,346.9188,2.6577,17.81,31.2063,42.2698,51.3766,58.7889,65.2977,71.0719,76.4485,81.4018,86.4558,91.2106,95.9638,100.8985,105.749,110.7459,115.8306,120.9244,125.9919,131.2127,136.5523,141.9702,147.3349,152.8764,158.3648,164.0559,169.5929,175.1351,180.688,186.2113,191.6788,197.2606,202.5341,207.7999,212.9973,218.1523,223.0503,228.0103,232.8316,237.3972,242.0127,246.3922,250.6876,254.9788,259.1322,263.2687,267.272,271.2067,275.1181,279.0752,283.0116,287.1565,291.3674,295.7563,300.5273,305.6891,311.2765,317.5978,324.6553,332.4929,341.1428,350.3838,359.9349,9.4318,18.4838,26.9174,34.3808,41.0693,46.9823,52.358,57.1451,61.5585,65.6132,69.4306,72.9415,76.515,79.8895,83.1344,86.3613,89.5218,92.7653,95.9081,99.1559,102.2995,105.5133,108.8252,112.0944,115.299,118.7052,122.0029,125.578,128.908,132.3732,135.8686,139.4381,142.9536,146.4183,150.1343,153.629,157.3068,160.9927,164.6218,168.2684,171.8861,175.4298],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.0983,0.077,0.0773,0.0813,0.0851,0.0882,0.0905,0.0923,0.0936,0.0943,0.0944,0.094,0.0929,0.0913,0.089,0.0862,0.0828,0.0787,0.0741,0.0693,0.065,0.0638,0.0682,0.0681,0.0624,0.0617,0.0642,0.0675,0.0706,0.0733,0.0756,0.0775,0.0791,0.0803,0.0811,0.0817,0.0818,0.0815,0.0808,0.0798,0.0783,0.0765,0.0744,0.072,0.0693,0.0664,0.0633,0.0599,0.0565,0.0532,0.0503,0.0485,0.0483,0.0487,0.048,0.0468,0.0469,0.0481,0.05,0.0521,0.0541,0.056,0.0578,0.0593,0.0607,0.062,0.0631,0.064,0.0647,0.0653,0.0657,0.0659,0.0659,0.0656,0.0652,0.0645,0.0636,0.0626,0.0614,0.06,0.0586,0.057,0.0553,0.0536,0.0517,0.0498,0.0479,0.0459,0.0439,0.0419,0.0401,0.0384,0.0371,0.0361,0.0357,0.0356,0.0355,0.0352,0.0351,0.0353,0.036,0.0369,0.0381,0.0394,0.0407,0.042,0.0433,0.0446,0.0458,0.047,0.0481,0.0491,0.0501,0.0511,0.052,0.0529,0.0537,0.0544,0.055,0.0556,0.0561,0.0565,0.0568,0.057,0.0572,0.0572,0.0571,0.0569,0.0566,0.0562,0.0557,0.0551,0.0545,0.0537,0.053,0.0521,0.0513,0.0503,0.0494,0.0484,0.0474,0.0463,0.0452,0.0441,0.043,0.0418,0.0407,0.0396,0.0384,0.0374,0.0364,0.0355,0.0347,0.034,0.0336,0.0333,0.0331,0.033,0.033,0.033,0.0331,0.0333,0.0335,0.034,0.0346,0.0353,0.0361,0.0369,0.0379,0.0389,0.0399,0.0409,0.0419,0.0429,0.0438,0.0448,0.0458,0.0467,0.0476,0.0485,0.0494,0.0502,0.0511,0.0519,0.0527,0.0534,0.0542,0.0549,0.0556,0.0562,0.0568,0.0574,0.058,0.0585,0.0589,0.0593,0.0597,0.06,0.0602,0.0604,0.0606],"truth":{"d":933,"delta":0.005,"dRough":0.9,"phiTrue":64.99,"bw":1.2,"lamOffset":0.05,"mat":{"name":"HfO₂ (аморфный)","A":391.01545000000004,"E0":6.15,"C":2.85,"Eg":5.16,"Auv":17.492800000000003,"Euv":13},"n":{"450":2.002430001964388,"550":1.972409843773125,"650":1.9563276928080924,"750":1.9466342082415133}}},{"id":"ex6","file":"06_SiNx_on_fused_silica_65deg.xlsx","title":"SiNₓ:H (обогащённый Si) на плавленом кварце, 65°","mat":"sinx","sub":"silica","phi":65,"dNom":700,"dRange":6,"bw":1.1,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[6.6698,6.8603,6.9789,6.9621,6.8727,6.7957,6.5102,6.2724,5.9439,5.6067,5.2928,5.0029,4.8911,4.9061,5.1405,5.5566,5.9974,6.4876,6.9304,7.3457,7.6212,7.8779,8.1495,8.3764,8.5058,8.6626,8.804,8.8744,8.8511,8.8828,8.8727,8.8303,8.7574,8.7736,8.709,8.7645,8.814,8.8215,8.9822,9.2204,9.5101,9.8697,10.257,10.6173,10.7875,10.9065,10.8922,10.6491,10.5324,10.3528,10.2118,10.0344,9.9627,9.9485,9.8866,9.9236,9.891,9.9069,9.9608,9.9213,9.9152,9.9399,9.9328,9.9366,9.9391,9.9522,9.9416,9.9632,9.9723,9.9676,10.0446,10.0941,10.1453,10.2386,10.4033,10.5665,10.8337,11.059,11.4171,11.8094,12.2577,12.7156,13.1982,13.6209,13.9386,14.1774,14.1841,14.0114,13.7402,13.3516,12.9256,12.4954,12.0988,11.724,11.3861,11.0731,10.8518,10.6549,10.439,10.3049,10.1603,10.0524,9.9676,9.8902,9.8373,9.775,9.7238,9.6584,9.6479,9.6221,9.5819,9.5769,9.545,9.5259,9.5184,9.5201,9.4975,9.4976,9.5116,9.5069,9.4881,9.5369,9.5565,9.5901,9.6234,9.6779,9.7322,9.8001,9.8629,9.9486,10.0585,10.1815,10.3112,10.4446,10.6184,10.8109,11.008,11.2716,11.5058,11.7499,12.1016,12.4006,12.7319,13.0644,13.4061,13.6784,13.9657,14.2258,14.3772,14.5179,14.5967,14.5153,14.4497,14.2563,14.0806,13.8378,13.5568,13.2659,12.9293,12.6782,12.3953,12.111,11.8358,11.6069,11.3803,11.1688,10.9524,10.7575,10.5932,10.4806,10.307,10.1982,10.07,9.9545,9.8606,9.789,9.674,9.6123,9.5161,9.4466,9.388,9.3361,9.2913,9.2509,9.216,9.1602,9.1126,9.0805,9.0637,9.056,9.0229,9.0036,8.9933,8.9589,8.9565,8.9431,8.9209,8.9093,8.8977,8.9462,8.9068],"del":[150.0961,160.3398,169.7301,179.4008,189.4104,198.4538,210.1448,221.8515,235.3553,249.3156,266.6507,285.5313,307.8321,331.0344,355.8054,19.26,40.7261,59.4584,75.5858,90.3044,102.9083,113.6508,124.501,134.4826,143.6516,152.5496,161.7282,170.2585,178.8237,187.316,196.2719,205.3488,214.2844,223.3878,233.4432,243.4272,253.3156,264.4919,276.3229,288.8918,302.2196,316.3529,331.7157,347.7885,3.6875,19.6561,34.8042,48.8192,61.6223,72.898,83.1034,92.8972,101.6642,110.2572,118.389,126.1436,133.6904,140.824,147.991,154.665,161.6861,168.7999,175.4126,181.7975,188.6253,195.1132,201.6237,208.1334,215.042,221.5195,228.3491,234.8774,242.0146,248.9706,255.8549,263.1633,270.6383,278.2003,286.1044,294.4169,302.9713,312.4183,322.3449,332.4847,343.3623,354.6337,5.6464,16.5827,27.084,37.0223,45.9459,54.4483,62.2823,69.5185,76.8134,83.2044,89.2113,95.3653,100.9826,106.6279,111.9447,117.2688,122.5327,127.5789,132.6293,137.649,142.4444,147.539,152.2727,156.9047,161.5685,166.2858,171.1456,175.6094,180.2431,184.5578,189.1853,193.5667,198.2406,202.5111,206.949,211.4376,215.9775,220.1858,224.5484,229.1782,233.3934,237.9328,242.4789,246.5243,250.9549,255.5559,259.9865,264.5406,269.0403,273.6366,278.2875,283.0272,287.9974,293.0536,298.1221,303.3928,308.896,314.5344,320.3142,326.5499,332.6778,339.2541,345.657,352.4295,359.1061,5.7616,12.3179,18.8343,24.8297,30.9396,36.5133,42.0084,47.2792,52.1325,56.9212,61.6299,65.8926,70.2691,74.4607,78.2221,82.1992,85.8728,89.5258,93.1439,96.7383,99.875,103.4344,106.8591,110.0151,113.4303,116.6726,119.8576,123.0976,126.1807,129.2463,132.3011,135.6154,138.7828,141.5878,144.795,147.658,150.6916,153.636,156.4746,159.5689,162.306,165.3045,168.0944,171.0037,173.8547,176.7497,179.6005,182.2944,185.4122,188.2476],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.3337,0.321,0.3135,0.3104,0.311,0.3153,0.3231,0.3343,0.3489,0.3664,0.3849,0.401,0.4086,0.4018,0.3801,0.3502,0.3202,0.2944,0.2737,0.2571,0.2438,0.2329,0.2239,0.2164,0.2102,0.2051,0.201,0.1977,0.1951,0.1932,0.1918,0.1908,0.1899,0.1891,0.1881,0.1865,0.1843,0.181,0.1764,0.1707,0.1639,0.1565,0.1495,0.1435,0.1394,0.1372,0.1368,0.1374,0.1386,0.1397,0.1405,0.1408,0.1407,0.1402,0.1394,0.1383,0.1371,0.1359,0.1346,0.1334,0.1322,0.131,0.1299,0.1288,0.1278,0.1268,0.1258,0.1248,0.1237,0.1225,0.1212,0.1197,0.118,0.116,0.1137,0.1111,0.1081,0.1048,0.1012,0.0974,0.0934,0.0896,0.086,0.083,0.0806,0.0791,0.0786,0.0789,0.08,0.0816,0.0837,0.0859,0.0881,0.0903,0.0923,0.0941,0.0957,0.0971,0.0982,0.0992,0.1,0.1006,0.1012,0.1016,0.1019,0.1021,0.1023,0.1024,0.1025,0.1025,0.1025,0.1025,0.1025,0.1025,0.1024,0.1023,0.1022,0.1021,0.1019,0.1017,0.1015,0.1013,0.101,0.1006,0.1002,0.0997,0.0992,0.0986,0.0978,0.097,0.096,0.095,0.0938,0.0925,0.0911,0.0896,0.0879,0.0862,0.0844,0.0826,0.0807,0.0788,0.0769,0.0751,0.0734,0.0719,0.0705,0.0694,0.0686,0.0681,0.0679,0.068,0.0684,0.0691,0.07,0.0711,0.0725,0.074,0.0755,0.0772,0.0788,0.0805,0.0822,0.0839,0.0855,0.087,0.0885,0.0899,0.0913,0.0926,0.0938,0.0949,0.096,0.097,0.098,0.0989,0.0997,0.1005,0.1012,0.1019,0.1025,0.1031,0.1036,0.1042,0.1046,0.105,0.1054,0.1058,0.1061,0.1064,0.1067,0.1069,0.1072,0.1073,0.1075,0.1076,0.1077,0.1078,0.1078,0.1079,0.1079],"truth":{"d":712.6,"delta":0,"dRough":0,"phiTrue":65.02,"bw":1.1,"lamOffset":0.03,"mat":{"name":"SiNₓ:H (PECVD, обогащённый Si)","A":53.6012,"E0":7.42,"C":3.3,"Eg":2.14,"Auv":76.9695,"Euv":13,"Ak":1.0221660873376854},"n":{"450":2.272526747574765,"550":2.2080944669028835,"650":2.17467094076366,"750":2.1565514743568306},"k400":0.0025,"k":{"450":0.01905363035344067,"550":0.001768831482240612,"650":0.0005626806924705302,"750":0.00026042669680550963}}},{"id":"ex7","file":"07_WO3_on_BK7_60deg.xlsx","title":"WO₃ на BK7, 60° (350–800 нм)","mat":"wo3","sub":"bk7","phi":60,"dNom":850,"dRange":5,"bw":1.2,"lam":[350,352,354,356,358,360,362,364,366,368,370,372,374,376,378,380,382,384,386,388,390,392,394,396,398,400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[6.7738,5.0103,7.0041,10.1667,12.5151,13.8455,14.387,14.2984,13.3726,11.9687,9.5392,6.2664,2.9853,5.9366,9.613,11.9093,13.3328,14.2486,14.6849,14.7399,14.6298,14.0513,13.3416,12.1771,10.8642,9.2063,7.1301,5.0019,4.2531,6.0428,8.2026,9.8929,11.1662,12.1189,12.7844,13.238,13.5324,13.7498,13.7134,13.5612,13.3509,12.9235,12.3648,11.7103,10.9555,10.0805,9.0271,7.8037,6.4412,5.2683,4.6016,5.1851,6.3875,7.6621,8.8502,9.825,10.4666,11.1338,11.6184,12.0133,12.4155,12.628,12.775,12.887,12.8914,12.8501,12.7296,12.5682,12.3436,12.0781,11.7397,11.3013,10.8663,10.3541,9.8417,9.2194,8.4866,7.7264,6.9489,6.1675,5.4386,5.0999,5.0495,5.4964,6.1367,6.9659,7.7029,8.4118,8.9795,9.5422,9.9752,10.384,10.7749,11.0483,11.3068,11.5387,11.7131,11.8996,11.983,12.1054,12.1597,12.1719,12.1688,12.1484,12.0932,11.9722,11.8675,11.7408,11.5382,11.3506,11.1514,10.9034,10.6366,10.4043,10.0441,9.7401,9.4295,9.0638,8.6248,8.2223,7.7934,7.3246,6.8466,6.3666,5.9482,5.5961,5.3713,5.2661,5.317,5.5302,5.869,6.298,6.7234,7.1851,7.5987,7.9944,8.3696,8.7579,9.0349,9.3311,9.5906,9.8579,10.0837,10.2731,10.463,10.6619,10.7917,10.9417,11.0443,11.228,11.2848,11.3699,11.437,11.4978,11.5308,11.5623,11.6085,11.5833,11.6086,11.5466,11.5696,11.4921,11.4526,11.3893,11.3402,11.2263,11.1549,11.0351,10.9531,10.8562,10.6826,10.6021,10.4229,10.2958,10.1357,9.9855,9.7487,9.5933,9.4334,9.2031,9.0388,8.8087,8.5802,8.3406,8.102,7.832,7.5801,7.3341,7.0478,6.8256,6.5792,6.3059,6.0902,5.8656,5.6905,5.5531,5.4675,5.4146,5.4777,5.5244,5.663,5.8003,5.9862,6.2041,6.4466,6.7218,6.9158,7.1708,7.4132,7.6209,7.8275,8.0459,8.2194,8.4415,8.6273,8.8244,8.9733,9.1389,9.2801,9.4372,9.5597,9.7227,9.8306,9.9181,10.0527,10.1434],"del":[192.617,166.7777,140.6929,143.0743,152.3034,162.7265,173.9328,185.9094,198.171,212.1258,229.7721,256.709,343.0905,79.9655,110.1151,128.8066,143.1057,154.3039,164.7545,174.5247,184.2954,193.8362,203.6638,214.4485,226.8716,242.2848,265.4921,304.7512,11.4038,64.9484,93.7151,112.1719,125.9836,136.7051,145.7745,153.9943,161.9496,169.1979,176.4484,183.3727,190.6566,197.6617,205.3083,213.4059,222.1419,232.034,243.8872,259.6358,279.671,309.4992,350.8814,32.8794,63.7728,85.045,101.0581,112.9696,122.9498,131.7365,138.9776,145.7355,151.7412,157.7144,163.1394,168.7128,174.268,179.3103,184.5696,189.8334,195.3515,200.723,206.0098,211.929,218.1889,224.9507,232.147,240.1987,249.6312,261.0621,274.6676,291.8795,313.5551,338.9319,7.0479,32.9026,53.9845,71.4979,85.4367,96.6891,106.0901,113.9612,121.3538,127.4332,133.1058,138.2772,143.1634,147.8519,152.2389,156.4621,160.7184,164.6476,168.414,172.274,176.1332,179.9443,183.7739,187.4429,191.2065,194.9631,198.499,202.6558,206.8027,210.7947,214.9619,219.4219,223.991,229.018,234.1739,239.7098,246.2534,252.9611,260.4199,269.2748,278.76,289.7793,303.0103,317.7161,333.7102,351.2943,8.7149,25.1998,40.0598,53.4647,64.6326,75.0347,84.3782,91.9865,98.8256,104.9348,110.5102,115.6505,120.6793,124.9571,128.9484,132.7868,136.4209,139.723,143.1909,146.2144,149.2559,152.2354,155.2048,157.979,160.6782,163.3868,166.0968,168.7016,171.3296,173.9769,176.3821,179.0792,181.6174,184.1152,186.6431,189.1248,191.6105,194.0118,196.7596,199.2664,201.8653,204.5084,207.1563,209.8486,212.5421,215.2823,218.4219,221.2675,224.0535,227.2466,230.5708,233.9916,237.7122,241.4259,244.9124,249.6618,253.8043,258.6397,263.9865,269.3949,275.1651,281.8973,288.7193,295.7344,304.2039,312.8402,321.9626,331.5984,341.748,352.1396,2.3649,12.3094,22.726,31.6381,40.3586,48.4058,56.066,63.2839,69.6966,75.444,81.1334,86.0559,90.8574,95.3741,99.5757,103.3995,107.0144,110.2517,113.6318,116.6459,119.6026,122.6341,125.0634,127.5214,130.1564,132.4222,134.7344,136.8585],"sigPsi":[0.0438,0.0434,0.043,0.0427,0.0423,0.0419,0.0415,0.0412,0.0408,0.0404,0.0401,0.0397,0.0394,0.039,0.0387,0.0383,0.038,0.0376,0.0373,0.037,0.0366,0.0363,0.036,0.0356,0.0353,0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.4113,0.5529,0.391,0.27,0.2204,0.1983,0.1893,0.1894,0.1984,0.2201,0.2683,0.4067,0.5775,0.4087,0.2574,0.2085,0.1859,0.1737,0.1672,0.1646,0.1653,0.1692,0.1768,0.1892,0.2091,0.2432,0.3087,0.4386,0.4992,0.3509,0.2589,0.2144,0.1898,0.1745,0.1642,0.1571,0.1523,0.1494,0.1479,0.148,0.1494,0.1523,0.1569,0.1635,0.1727,0.1856,0.2044,0.2329,0.277,0.3382,0.377,0.3365,0.2711,0.2242,0.1943,0.1748,0.1612,0.1512,0.1437,0.1378,0.1333,0.1297,0.127,0.125,0.1237,0.123,0.1228,0.1233,0.1243,0.126,0.1283,0.1314,0.1354,0.1404,0.1468,0.155,0.1656,0.1796,0.1979,0.221,0.2462,0.2638,0.2612,0.2391,0.2112,0.1866,0.1674,0.1528,0.1417,0.1331,0.1262,0.1205,0.1159,0.112,0.1086,0.1058,0.1035,0.1015,0.0998,0.0984,0.0973,0.0964,0.0958,0.0954,0.0952,0.0952,0.0955,0.0959,0.0966,0.0976,0.0987,0.1002,0.1019,0.1039,0.1063,0.1091,0.1124,0.1162,0.1207,0.1261,0.1324,0.1398,0.1485,0.1584,0.1688,0.1788,0.1862,0.1889,0.1859,0.178,0.1674,0.1562,0.1457,0.1365,0.1286,0.1219,0.1163,0.1115,0.1075,0.104,0.1011,0.0985,0.0962,0.0942,0.0925,0.091,0.0897,0.0886,0.0876,0.0867,0.086,0.0854,0.0849,0.0845,0.0842,0.084,0.0838,0.0838,0.0838,0.0839,0.0841,0.0844,0.0847,0.0851,0.0856,0.0862,0.0869,0.0876,0.0884,0.0893,0.0903,0.0914,0.0926,0.0939,0.0953,0.0968,0.0985,0.1003,0.1023,0.1044,0.1067,0.1092,0.112,0.115,0.1183,0.1219,0.1259,0.1302,0.1349,0.14,0.1453,0.1509,0.1566,0.1621,0.167,0.171,0.1738,0.1749,0.1743,0.1721,0.1685,0.1639,0.1587,0.1533,0.1479,0.1427,0.1379,0.1333,0.1292,0.1254,0.122,0.1189,0.1161,0.1135,0.1112,0.109,0.1071,0.1053,0.1037,0.1022,0.1008,0.0995,0.0983,0.0973,0.0962,0.0953],"truth":{"d":838.2,"delta":0,"dRough":1.5,"phiTrue":60.02,"bw":1.2,"lamOffset":0.04,"mat":{"name":"WO₃ (тонкая плёнка)","A":58.3644,"E0":4.45,"C":1.24,"Eg":3.23,"Auv":304.7898,"Euv":13,"Ak":0.15746438066048823},"n":{"450":2.071348177743319,"550":2.0176153928158262,"650":1.9925486794981535,"750":1.9783675210578848},"k400":0.002,"k":{"450":0.0011451047266235518,"550":0.00047286630860364775,"650":0.0002143664802607106,"750":0.00009227501928445384}}},{"id":"ex8","file":"08_CeO2_on_Si_65deg.xlsx","title":"CeO₂ на кремнии, 65°","mat":"ceo2","sub":"si","phi":65,"dNom":900,"dRange":5,"bw":1,"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[13.2402,11.9889,10.32,9.2919,10.8881,13.7996,16.1469,17.8592,19.1592,20.0229,20.299,20.2501,20.248,20.2608,21.2937,23.8824,26.0184,24.5604,22.6001,21.7259,21.5633,21.7158,21.7667,21.807,21.7693,21.5507,21.3135,21.0852,21.1015,21.4405,22.4553,24.2445,26.4548,27.0346,25.503,23.3978,21.8051,20.8961,20.4348,20.2622,20.2429,20.2526,20.2109,20.2017,20.1444,20.0509,19.915,19.8243,19.7566,19.7975,19.9491,20.2894,20.9935,22.0415,23.4788,24.969,25.8582,25.6392,24.4503,22.9656,21.6437,20.6664,20.0016,19.5085,19.2591,19.0854,18.9505,18.8825,18.9177,18.8508,18.8464,18.8136,18.7867,18.7017,18.6351,18.6385,18.5676,18.5879,18.6332,18.7196,18.8999,19.1918,19.6257,20.2013,20.9484,21.8918,22.9054,23.856,24.5533,24.795,24.4631,23.7147,22.7789,21.7927,20.883,20.1348,19.5207,19.0269,18.6366,18.4001,18.1734,18.0258,17.9494,17.8298,17.7993,17.729,17.6994,17.6742,17.624,17.607,17.6236,17.5583,17.5502,17.5423,17.4971,17.5144,17.4926,17.521,17.5622,17.6281,17.6851,17.8036,17.9665,18.1656,18.4697,18.7953,19.1876,19.6661,20.2256,20.8409,21.5107,22.2135,22.8022,23.2962,23.6481,23.8111,23.6937,23.3253,22.8686,22.2405,21.615,20.9451,20.3571,19.8246,19.3227,18.8722,18.493,18.1865,17.9303,17.7032,17.5077,17.351,17.2001,17.0812,16.9747,16.9049,16.8575,16.7585,16.7637,16.6859,16.6798,16.6623,16.613,16.585,16.59,16.557,16.5417,16.5135,16.533,16.5108,16.5351,16.5296,16.499,16.5206,16.5388,16.5556,16.5947,16.6418,16.6662,16.7372,16.7965,16.8786,16.9709,17.1099,17.2703,17.4069,17.6001,17.7704,18.0282,18.2935,18.6408,18.9409,19.282,19.6622,20.0422,20.4621,20.8984,21.3137,21.7202,22.0917,22.4047],"del":[208.0209,233.2196,268.5724,322.4634,26.9364,75.5534,108.4695,132.5626,153.5906,173.0416,192.1315,211.6609,232.4968,255.6638,282.8221,318.1211,3.6844,47.3671,78.9283,102.2502,121.9004,139.3,155.5921,170.7619,185.7022,200.3849,215.2441,230.4993,246.3095,263.3302,282.6086,305.6335,333.8145,6.4584,37.0089,61.5983,81.2136,97.7148,112.25,125.5089,138.2123,150.0304,161.5594,172.8186,183.7607,194.9843,205.8451,216.8235,228.0332,239.5678,251.5076,264.1673,277.728,292.8878,309.9258,329.7171,351.6619,14.3885,35.1849,53.2831,68.4741,81.9402,93.9018,104.9093,115.2201,124.934,134.0942,143.1459,151.9411,160.6069,169.0981,177.3821,185.5965,193.7829,201.9918,210.2577,218.4011,226.7704,235.1435,243.797,252.399,261.5604,271.1054,281.0282,291.7229,303.4671,316.2003,330.1625,345.1042,0.7577,16.1083,30.593,43.7378,55.6445,66.3974,76.0153,85.0716,93.5045,101.3102,108.8385,116.2236,123.1851,130.1712,136.71,143.2121,149.6084,155.9389,162.1532,168.2929,174.3156,180.4053,186.3905,192.3625,198.2928,204.277,210.1165,216.0294,221.9926,227.9927,234.162,240.0469,246.217,252.4706,258.9058,265.3382,272.0158,278.9381,286.1545,293.6846,301.6936,309.9492,318.96,328.4039,338.3074,348.5961,359.026,9.4757,19.4823,29.1476,38.1408,46.6615,54.5589,61.9606,68.8816,75.4885,81.6111,87.6138,93.261,98.7296,104.0525,109.1194,114.1464,119.1269,123.9099,128.726,133.3679,137.9755,142.3805,147.0048,151.3226,155.873,160.1136,164.5461,168.6773,172.8029,177.062,181.2341,185.4024,189.6444,193.824,197.7588,201.9352,205.9922,210.0129,214.183,218.1772,222.4559,226.3497,230.5802,234.5424,238.7271,242.8097,247.0134,251.1634,255.3708,259.6806,264.1037,268.3445,272.9104,277.5828,282.138,286.9382,291.7824,296.8332,302.0094,307.4294,312.9893,318.8057,324.8136,330.9773,337.3059],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.1724,0.187,0.2141,0.2347,0.201,0.1596,0.1367,0.1234,0.1151,0.1103,0.1078,0.107,0.1066,0.1052,0.0999,0.0906,0.0843,0.087,0.092,0.094,0.0937,0.0924,0.0911,0.0902,0.0896,0.0894,0.0895,0.0893,0.0886,0.0867,0.0828,0.0772,0.072,0.0701,0.0724,0.0766,0.0802,0.0822,0.0829,0.0828,0.0822,0.0814,0.0807,0.0801,0.0796,0.0792,0.0788,0.0785,0.0781,0.0773,0.0762,0.0744,0.0718,0.0684,0.0646,0.0612,0.0592,0.059,0.0606,0.063,0.0654,0.0674,0.0688,0.0696,0.0699,0.0699,0.0696,0.0692,0.0688,0.0684,0.0679,0.0675,0.0672,0.0668,0.0665,0.0662,0.0658,0.0654,0.0648,0.0641,0.0632,0.0619,0.0604,0.0586,0.0565,0.0542,0.052,0.0501,0.0488,0.0482,0.0484,0.0492,0.0506,0.0521,0.0536,0.055,0.0562,0.0571,0.0578,0.0583,0.0586,0.0588,0.0589,0.0589,0.0589,0.0588,0.0587,0.0586,0.0586,0.0585,0.0584,0.0583,0.0582,0.0582,0.0581,0.058,0.0579,0.0578,0.0576,0.0574,0.0571,0.0567,0.0563,0.0557,0.055,0.0541,0.0531,0.0521,0.0509,0.0496,0.0484,0.0472,0.0462,0.0454,0.0449,0.0447,0.0449,0.0454,0.0461,0.0471,0.0482,0.0494,0.0506,0.0518,0.0529,0.0539,0.0548,0.0557,0.0564,0.057,0.0576,0.058,0.0584,0.0588,0.0591,0.0593,0.0595,0.0597,0.0598,0.06,0.0601,0.0602,0.0602,0.0603,0.0604,0.0604,0.0605,0.0605,0.0606,0.0606,0.0606,0.0606,0.0606,0.0606,0.0605,0.0605,0.0604,0.0602,0.0601,0.0599,0.0597,0.0594,0.0591,0.0587,0.0583,0.0578,0.0573,0.0567,0.056,0.0553,0.0546,0.0538,0.053,0.0521,0.0512,0.0504,0.0495,0.0488,0.048,0.0474,0.0469],"truth":{"d":887.5,"delta":-0.01,"dRough":0,"phiTrue":65.03,"bw":1,"lamOffset":0.05,"mat":{"name":"CeO₂ (поликристаллический)","A":66.8916,"E0":3.94,"C":0.91,"Eg":2.79,"Auv":406.28839999999997,"Euv":13,"Ak":0.06674165810448515},"n":{"450":2.435392762686345,"550":2.318642941599696,"650":2.2719487864904586,"750":2.247021591073595},"k400":0.0012,"k":{"450":0.0006231434642551472,"550":0.00022467467416822486,"650":0.00009577720632862804,"750":0.00003987155356214048}}},{"id":"ex9","file":"09_ZrO2_on_fused_silica_1mm_backside_65deg.xlsx","title":"ZrO₂ на плавленом кварце 1 мм с задней стороной, 65°","mat":"zro2","sub":"silica","phi":65,"dNom":800,"dRange":5,"bw":1,"back":{"f":0.95,"ds":1000000,"ferr":0.02},"lam":[400,402,404,406,408,410,412,414,416,418,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,456,458,460,462,464,466,468,470,472,474,476,478,480,482,484,486,488,490,492,494,496,498,500,502,504,506,508,510,512,514,516,518,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,550,552,554,556,558,560,562,564,566,568,570,572,574,576,578,580,582,584,586,588,590,592,594,596,598,600,602,604,606,608,610,612,614,616,618,620,622,624,626,628,630,632,634,636,638,640,642,644,646,648,650,652,654,656,658,660,662,664,666,668,670,672,674,676,678,680,682,684,686,688,690,692,694,696,698,700,702,704,706,708,710,712,714,716,718,720,722,724,726,728,730,732,734,736,738,740,742,744,746,748,750,752,754,756,758,760,762,764,766,768,770,772,774,776,778,780,782,784,786,788,790,792,794,796,798,800],"psi":[15.6366,15.6479,15.3724,14.8119,14.3336,13.9558,13.6743,13.4306,13.2064,13.2257,13.1161,12.9982,12.9699,12.9109,12.8615,12.8009,12.8417,12.8844,13.032,13.2993,13.6546,14.0767,14.5974,15.0687,15.5554,15.8057,15.758,15.5175,15.1782,14.7104,14.2512,13.9176,13.6203,13.4042,13.157,13.0363,12.872,12.7978,12.6677,12.6452,12.5503,12.5333,12.4761,12.421,12.4865,12.4762,12.5349,12.6071,12.7254,12.9245,13.1353,13.3904,13.7202,14.0817,14.5042,14.9144,15.3264,15.6082,15.8518,15.9248,15.9081,15.6654,15.4092,15.0577,14.7276,14.3824,14.0648,13.7715,13.5776,13.3336,13.1234,12.956,12.8196,12.6878,12.5961,12.522,12.4083,12.3485,12.3042,12.2141,12.2091,12.2002,12.1577,12.1454,12.1619,12.1468,12.2227,12.2889,12.3151,12.3936,12.4792,12.6412,12.7821,12.9348,13.1016,13.3299,13.6007,13.8166,14.0923,14.4028,14.7022,14.9639,15.2854,15.5434,15.7554,15.9043,16.0145,16.058,16.0138,15.8778,15.7396,15.5296,15.3222,15.0541,14.8048,14.5617,14.2935,14.0807,13.8432,13.6596,13.4806,13.3081,13.1013,12.9841,12.8266,12.7437,12.6205,12.5296,12.4558,12.3488,12.2891,12.204,12.1609,12.1383,12.0477,11.991,11.9628,11.9639,11.9391,11.9034,11.9042,11.871,11.8901,11.9126,11.9162,11.9761,11.996,11.9994,12.0209,12.0683,12.1313,12.1826,12.2839,12.3301,12.4272,12.5306,12.6372,12.7602,12.872,12.9948,13.1663,13.3332,13.4681,13.621,13.8197,13.9967,14.1987,14.3984,14.583,14.8008,15.0396,15.1957,15.3839,15.5598,15.6797,15.8414,15.9583,16.0741,16.1,16.1573,16.1398,16.1038,16.0869,16.0271,15.9053,15.7887,15.6425,15.5132,15.3492,15.1515,14.9877,14.8455,14.6474,14.5204,14.375,14.2042,14.0457,13.9175,13.7535,13.6349,13.4411],"del":[355.0431,8.1488,21.9282,38.5077,57.4934,76.7421,94.8437,111.5708,126.5888,140.2678,153.2118,165.7142,178.4783,190.8924,203.7433,217.1224,230.8366,245.8416,262.0507,278.9608,295.4674,311.9043,326.6136,338.7673,349.2983,358.8702,8.2803,18.2539,29.5284,42.0746,55.4515,69.4181,83.2722,96.4441,108.7127,120.3197,131.2565,141.801,152.0848,161.9558,171.5384,181.3974,191.1522,200.8149,211.0566,221.5446,232.1545,243.2373,254.7244,266.6548,278.6043,291.0251,302.7731,313.6726,323.9829,333.1663,341.2383,348.7102,355.3823,1.9972,8.4306,15.1556,22.5001,30.61,39.1269,48.381,57.797,67.5189,77.2408,86.7051,95.7713,104.6272,113.3265,121.6821,129.8282,137.4844,145.148,152.8087,160.1675,167.3375,174.6436,181.9321,188.9842,196.5602,203.8685,211.1815,218.7814,226.4464,234.1998,242.3551,250.2681,258.2665,266.6542,274.8399,283.0723,291.1125,299.2164,307.0584,314.2278,321.1044,327.5383,333.486,339.0973,344.2392,348.9192,353.4329,357.856,2.193,6.4537,10.8688,15.5963,20.3362,25.268,30.6254,36.2096,41.995,48.2364,54.3535,60.7907,67.1644,73.3513,79.8246,86.2252,92.1891,98.3179,104.2872,110.0921,115.8523,121.6313,127.0498,132.5938,137.9121,143.1801,148.3843,153.6933,158.9509,163.9357,169.0224,174.1858,179.2592,184.1478,189.3315,194.423,199.3242,204.4728,209.5888,214.7938,219.8942,225.0767,230.1246,235.2638,240.4205,245.8552,251.1368,256.4772,261.7538,267.1195,272.38,277.7313,282.8313,288.1233,293.1893,298.1369,302.9756,307.734,312.195,316.6473,320.9952,325.1663,328.8802,332.5557,336.1341,339.5731,342.65,345.7799,348.8106,351.5973,354.331,357.0151,359.728,2.4546,5.1048,7.7766,10.5649,13.3246,16.2275,19.1007,22.0361,25.0778,28.567,31.6343,35.0818,38.5602,42.2491,45.756,49.427,53.3285,57.0082,60.8505,64.7818,68.7065],"sigPsi":[0.035,0.0347,0.0344,0.0341,0.0337,0.0334,0.0331,0.0328,0.0325,0.0322,0.0319,0.0316,0.0313,0.0311,0.0308,0.0305,0.0302,0.0299,0.0297,0.0294,0.0291,0.0288,0.0286,0.0283,0.0281,0.0278,0.0275,0.0273,0.027,0.0268,0.0266,0.0263,0.0261,0.0258,0.0256,0.0254,0.0251,0.0249,0.0247,0.0245,0.0242,0.024,0.0238,0.0236,0.0234,0.0232,0.023,0.0228,0.0226,0.0224,0.0222,0.022,0.0218,0.0216,0.0215,0.0213,0.0211,0.0209,0.0207,0.0206,0.0204,0.0202,0.0201,0.0199,0.0198,0.0196,0.0195,0.0193,0.0192,0.019,0.0189,0.0187,0.0186,0.0185,0.0183,0.0182,0.0181,0.0179,0.0178,0.0177,0.0176,0.0175,0.0174,0.0173,0.0172,0.017,0.0169,0.0168,0.0168,0.0167,0.0166,0.0165,0.0164,0.0163,0.0162,0.0162,0.0161,0.016,0.0159,0.0159,0.0158,0.0157,0.0157,0.0156,0.0156,0.0155,0.0155,0.0154,0.0154,0.0153,0.0153,0.0153,0.0152,0.0152,0.0152,0.0151,0.0151,0.0151,0.0151,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015,0.015],"sigDel":[0.1486,0.1466,0.1479,0.151,0.1543,0.1569,0.1586,0.1595,0.1597,0.1595,0.1591,0.1586,0.158,0.1572,0.1563,0.155,0.1534,0.1511,0.1482,0.1444,0.1397,0.1345,0.1289,0.1237,0.1194,0.1167,0.1158,0.1164,0.118,0.1201,0.1222,0.124,0.1254,0.1263,0.1269,0.1272,0.1272,0.1271,0.1267,0.1263,0.1257,0.125,0.1242,0.1232,0.1221,0.1208,0.1192,0.1174,0.1154,0.113,0.1103,0.1073,0.1041,0.1007,0.0973,0.0941,0.0911,0.0887,0.0868,0.0857,0.0853,0.0856,0.0862,0.0872,0.0884,0.0896,0.0907,0.0917,0.0926,0.0933,0.0939,0.0943,0.0946,0.0948,0.0949,0.0949,0.0948,0.0946,0.0944,0.0941,0.0937,0.0933,0.0928,0.0923,0.0917,0.091,0.0902,0.0894,0.0884,0.0874,0.0863,0.0851,0.0837,0.0823,0.0808,0.0793,0.0776,0.0759,0.0742,0.0725,0.0709,0.0693,0.0679,0.0666,0.0656,0.0647,0.0642,0.0639,0.0638,0.064,0.0644,0.065,0.0658,0.0666,0.0675,0.0684,0.0694,0.0703,0.0713,0.0722,0.0731,0.0739,0.0747,0.0754,0.0761,0.0768,0.0775,0.078,0.0786,0.0791,0.0795,0.0799,0.0803,0.0806,0.0809,0.0811,0.0813,0.0815,0.0817,0.0818,0.0818,0.0819,0.0819,0.0818,0.0817,0.0816,0.0814,0.0812,0.081,0.0807,0.0803,0.0799,0.0795,0.079,0.0785,0.078,0.0774,0.0767,0.076,0.0753,0.0745,0.0737,0.0729,0.0721,0.0712,0.0703,0.0695,0.0686,0.0677,0.0669,0.0661,0.0653,0.0646,0.0639,0.0634,0.0629,0.0625,0.0622,0.0619,0.0618,0.0618,0.0619,0.0621,0.0624,0.0627,0.0631,0.0636,0.0642,0.0648,0.0654,0.066,0.0667,0.0674,0.0681,0.0688,0.0695,0.0702,0.0709,0.0716,0.0722,0.0729],"truth":{"d":780.4,"delta":-0.006,"dRough":1,"phiTrue":65.01,"bw":1,"lamOffset":-0.03,"mat":{"name":"ZrO₂ (аморфный)","A":455.73499999999996,"E0":5.98,"C":3.04,"Eg":4.96,"Auv":29.6022,"Euv":13},"n":{"450":2.2129378993270374,"550":2.176076644086906,"650":2.1564091712750244,"750":2.1445791581673856},"back":{"f":0.96,"ds":1000000}}}];
 </script>
@@ -1962,7 +2257,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.1.2';
+  const APP_VERSION = '1.2.0';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -2010,8 +2305,16 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     else if (name !== was) window.scrollTo(0, 0);
   }
   function routeFromHash() {
+    if (typeof astraBusy !== 'undefined' && astraBusy) return;
     const h = (location.hash || '#analysis').slice(1);
-    if (h === 'demo' || h.startsWith('dm-')) showPage('demo', h === 'demo' ? null : h); else showPage('analysis', /^s\d$/.test(h) && $(h) ? h : null);
+    if (h === 'demo' || h.startsWith('dm-')) showPage('demo', h === 'demo' ? null : h);
+    else {
+      showPage('analysis');
+      if (/^s[0-4]$/.test(h)) {
+        const n = Number(h.slice(1)), ready = [true, S.ref, S.train, S.probs, S.fin];
+        if (ready[n]) showAnalysisStage(n, true);
+      }
+    }
   }
   window.addEventListener('hashchange', routeFromHash);
 
@@ -2026,6 +2329,8 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   // ---------------------------------------------------------------- данные
   /** Сброс панелей и состояния шагов 1–4 (новый спектр или смена модели измерения). */
   function resetSteps() {
+    showAnalysisStage(0);
+    for (let n = 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('stageLive' + n).classList.remove('is-running'); }
     S.analysisStale=false;if($('analysisFreshness'))$('analysisFreshness').textContent='От измерения к параметрам';
     S.ref = S.train = S.probs = S.fin = null; S.refFeat = null; S.est = null; S.aiFlags = null; S.choice = null; S.finFlags = null;
     $('btn1').disabled = !S.data; $('btn2').disabled = true; $('btn3').disabled = true; $('btn4').disabled = true;
@@ -2033,7 +2338,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     $('refOut').textContent = 'Нажмите «Опорный фит».'; $('trainOut').textContent = 'Сначала опорный фит.'; $('diagOut').textContent = 'Сначала обучение.'; $('finOut').textContent = 'Сначала диагноз.';
     $('modelChoice').style.display = 'none'; $('truthOut').innerHTML = ''; $('causeOut').innerHTML = ''; $('chanOut').textContent = ''; $('trainBar').style.width = '0%';
     ['chRes', 'chResFin', 'chFinger', 'chN'].forEach(destroyChart); $('chNTitle').textContent = 'Показатель преломления плёнки';
-    if (S.onDataChange) S.onDataChange();
+    refreshStageNav(); if (S.onDataChange) S.onDataChange();
   }
   function backInfoText() { return $('ckBack').checked ? `, задняя сторона подложки: доля ${fmt(+$('backF').value, 2)}` : ', задней стороны нет'; }
   function setData(d, example) {
@@ -2329,6 +2634,7 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
 
   // ---------------------------------------------------------------- очистка панелей перед новым запуском шага k
   function clearFrom(k) {
+    for (let n = k + 1; n <= 4; n++) $('stageLive' + n).hidden = true;
     if (k <= 1) { $('refOut').className = 'empty'; $('refOut').textContent = 'Идёт опорный фит…'; $('chanOut').textContent = ''; destroyChart('chRes'); S.ref = null; S.refFeat = null; }
     if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? 'Идёт обучение…' : 'Сначала опорный фит.'; $('trainBar').style.width = '0%'; S.train = null; $('btn3').disabled = true; }
     if (k <= 3) { $('diagOut').className = 'empty'; $('diagOut').textContent = k === 3 ? 'Идёт диагноз…' : 'Сначала обучение.'; $('modelChoice').style.display = 'none'; S.probs = null; S.est = null; S.aiFlags = null; S.choice = null; $('btn4').disabled = true; }
@@ -2340,14 +2646,14 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   const cfgRef = () => Object.assign({}, S.cfg, { band: null });               // конфигурация опорного фита и обучения: без полосы в модели
   // кривые модели для графика — с тем же числом подслоёв, что и в фите (40/80/160 по |δ|), и с той же полосой (band), что и в данном фите
   function modelCurves(P, band) { return E.modelPsiDelta(S.data.lam, S.cfg.Nsub, S.cfg.phi, P.d, matOf(P), P.delta || 0, P.dRough || 0, E.subLayersFor(P.delta || 0), S.cfg.back, band || null); }
-  function step1() {
+  async function step1() {
     S.analysisStale=false;$('analysisFreshness').textContent='От измерения к параметрам';
     if (!S.data) return; clearFrom(1); readCfg();
     // опорный фит — без полосы в модели (как и обучающие примеры): его остаток — «отпечаток», одинаково устроенный для измерения и обучения
-    const t = performance.now(); const ref = E.referenceFit(S.data, cfgRef(), S.prior); S.ref = ref; const ms = performance.now() - t;
-    const c = modelCurves(ref.P, null); drawSpectrum({ label: 'однородная модель', psi: c.psi, del: c.del });
+    const t = performance.now(); const result = await analysisTask('reference', { data: S.data, cfg: cfgRef(), prior: S.prior }, referenceProgress); const ref = result.ref; S.ref = ref; S.cfg.subDel = result.subDel; const ms = performance.now() - t;
+    const c = result.curves; drawSpectrum({ label: 'однородная модель', psi: c.psi, del: c.del });
     drawResidual('chRes', ref.resid, 'Остаток опорного фита однородной плёнки');
-    const x = E.featureVector(S.data, S.cfg, ref.resid); S.refFeat = x;
+    const x = result.feature; S.refFeat = x;
     const tagChi = ref.chi2 < 2 ? 'ok' : (ref.chi2 < 10 ? 'warn' : 'bad');
     $('refOut').className = ''; $('refOut').innerHTML = T(`<span class="tag ${tagChi}">χ²/ν = ${fmt(ref.chi2, 2)}</span><span class="tag">d = ${fmt(ref.P.d, 2)} ± ${fmt(ref.E.d, 2)} нм</span><span class="tag">A = ${fmt(ref.P.A, 1)}</span><span class="tag">A_uv = ${fmt(ref.P.Auv, 1)}</span><span class="tag">E_g = ${fmt(ref.P.Eg, 3)} эВ</span><span class="tag">${fmt(ms, 0)} мс</span>
       <p class="note">${ref.chi2 < 2 ? 'Однородная прозрачная модель описывает спектр в пределах шума: дефектов, различимых на этом уровне шума, скорее всего нет — ИИ подтвердит или опровергнет.' : 'Однородная прозрачная модель отвергнута: остаток структурирован. Что именно не так — решает ИИ по форме остатка (шаги 2–3).'}</p>`);
@@ -2357,53 +2663,30 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     S.cfgDirty = false; if (S.onFitChange) S.onFitChange();                   // иллюстрации строятся на опорном фите — пометить устаревшими
   }
 
-  // ---------------------------------------------------------------- шаг 2 (порциями, чтобы не замораживать интерфейс)
-  function step2() {
-    return new Promise((resolve) => {
-      if (!S.ref) { resolve(false); return; }
-      clearFrom(2);
-      const N = +$('nTrain').value, K = E.CLASSES.length, rng = E.makeRng(+$('seed').value || 7); const X = [], y = [], sz = []; let i = 0; const t0 = performance.now(); const cfgR = cfgRef();
-      $('trainOut').className = ''; $('btn2').disabled = true;
-      const tick = () => {
-        const tb = performance.now();
-        while (i < N && performance.now() - tb < 120) { const s = E.trainingExample(S.data, cfgR, S.prior, S.nuis, rng, i % K); X.push(s.x); y.push(s.y); sz.push([s.delta, s.dRough, s.k400]); i++; }
-        // ход обучения — и в панели шага 2, и в закреплённой панели запуска (шаг 2 часто ниже края экрана)
-        const pct = (100 * i / N).toFixed(0), sec = ((performance.now() - t0) / 1000).toFixed(0);
-        $('trainBar').style.width = pct + '%'; $('runProgress').style.width = pct + '%';
-        $('trainOut').textContent = `Смоделировано и профитировано ${i} из ${N} примеров (${sec} с)…`;
-        $('globalStatus').textContent = `Обучение ИИ: ${i} из ${N} примеров (${pct} %), ${sec} с…`;
-        if (i < N) { setTimeout(tick, 0); return; }
-        $('trainOut').textContent = 'Обучение логистической регрессии…'; $('globalStatus').textContent = 'Обучение логистической регрессии…';
-        setTimeout(() => {
-          const idx = X.map((_, k) => k); for (let k = idx.length - 1; k > 0; k--) { const j = rng.int(k + 1); [idx[k], idx[j]] = [idx[j], idx[k]]; }
-          const nte = Math.max(30, Math.floor(N / 4)), te = idx.slice(0, nte), tr = idx.slice(nte);
-          const mHold = E.trainSoftmax(tr.map(k => X[k]), tr.map(k => y[k]), K, { epochs: 250 });
-          let acc = 0, accBig = 0, nBig = 0;
-          for (const k of te) { const p = mHold.predictProba(X[k]); const kk = p.indexOf(Math.max(...p)); const big = (sz[k][0] === 0 || Math.abs(sz[k][0]) >= 0.004) && (sz[k][1] === 0 || sz[k][1] >= 0.4) && (sz[k][2] === 0 || sz[k][2] >= 2e-4); if (kk === y[k]) { acc++; if (big) accBig++; } if (big) nBig++; }
-          const model = E.trainSoftmax(X, y, K, { epochs: 250 });
-          const rd = E.ridge(X, sz.map(v => 100 * v[0]), 30), rr = E.ridge(X, sz.map(v => v[1]), 30), rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
-          let e1 = 0, e2 = 0, e3 = 0; for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
-          S.train = { model, rd, rr, rk, N, acc: 100 * acc / nte, accBig: nBig ? 100 * accBig / nBig : NaN, rmseD: Math.sqrt(e1 / nte), rmseR: Math.sqrt(e2 / nte), rmseK: Math.sqrt(e3 / nte) / 1000, sec: (performance.now() - t0) / 1000 };
-          $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">регрессия: δ ± ${fmt(S.train.rmseD, 2)} %, слой ± ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ± ${fmtK(S.train.rmseK)}</span>
-            <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» занижена примерами с дефектами ниже порога обнаружения — их не видно ни одному методу; с двенадцатью классами на класс приходится N/12 примеров, и точность растёт с N заметно дольше, чем с шестью. Оценки регрессии в обучении внутри заданного разброса толщины и дисперсии ±5 %; при выходе за него нужно переобучение.</p>`);
-          $('runProgress').style.width = '0%'; $('globalStatus').textContent = `Обучение завершено за ${fmt(S.train.sec, 0)} с.`;
-          $('btn3').disabled = false; $('btn2').disabled = false; resolve(true);
-        }, 10);
-      };
-      tick();
-    });
+  // ---------------------------------------------------------------- шаг 2 (в фоновом потоке, с прогрессом каждой фазы)
+  async function step2() {
+    if (!S.ref) throw new Error('Сначала выполните опорный фит.');
+    clearFrom(2); $('trainOut').className = '';
+    const N = +$('nTrain').value, K = E.CLASSES.length;
+    S.train = await analysisTask('train', { data: S.data, cfg: cfgRef(), prior: S.prior, nuis: S.nuis, N, seed: +$('seed').value || 7 }, trainingProgress);
+    $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">регрессия: δ ± ${fmt(S.train.rmseD, 2)} %, слой ± ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ± ${fmtK(S.train.rmseK)}</span>
+      <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» занижена примерами с дефектами ниже порога обнаружения — их не видно ни одному методу; с двенадцатью классами на класс приходится N/12 примеров, и точность растёт с N заметно дольше, чем с шестью. Оценки регрессии в обучении внутри заданного разброса толщины и дисперсии ±5 %; при выходе за него нужно переобучение.</p>`);
+    $('btn3').disabled = false;
   }
 
   // ---------------------------------------------------------------- шаг 3
-  function step3() {
+  async function step3() {
     if (!S.train) return; clearFrom(3);
-    const x = S.refFeat; const p = S.train.model.predictProba(x); S.probs = p;
+    prepareInference();
+    const diagnosis = await analysisTask('diagnose', { train: S.train, x: S.refFeat });
+    await animateInference(diagnosis.frames);
+    const p = diagnosis.probs; S.probs = p;
     const order = p.map((v, i) => i).sort((a, b) => p[b] - p[a]); const best = order[0]; const cls = E.CLASSES[best];
     const choice = E.chooseFlags(p); S.choice = choice;                            // при неуверенном ИИ — объединение дефектов двух лучших классов (решает вето в шаге 4)
     const pGrad = sumP(p, c => c.g !== 0), pRough = sumP(p, c => c.r === 1), pNeg = sumP(p, c => c.g === -1), pAbs = sumP(p, c => c.a === 1);
-    const dEst = S.train.rd.predict(x), rEst = S.train.rr.predict(x), kEst = Math.max(0, S.train.rk.predict(x) / 1000);
-    S.est = { delta: dEst / 100, dRough: rEst, k400: kEst };
-    $('diagOut').className = ''; $('diagOut').innerHTML = T(`<div class="probs">${order.map(i => `<span class="${i === best ? 'best' : ''}">${classDots(E.CLASSES[i])}${E.CLASSES[i].name}</span><div class="pb"><div style="width:${(100 * p[i]).toFixed(1)}%"></div></div><span class="pct ${i === best ? 'best' : ''}">${fmt(100 * p[i], 1)} %</span>`).join('')}</div>
+    const dEst = diagnosis.est.delta * 100, rEst = diagnosis.est.dRough, kEst = diagnosis.est.k400;
+    S.est = diagnosis.est;
+    $('diagOut').className = ''; $('diagOut').innerHTML = T(`<details class="all-probabilities"><summary>Все 12 комбинаций</summary><div class="probs">${order.map(i => `<span class="${i === best ? 'best' : ''}">${classDots(E.CLASSES[i])}${E.CLASSES[i].name}</span><div class="pb"><div style="width:${(100 * p[i]).toFixed(1)}%"></div></div><span class="pct ${i === best ? 'best' : ''}">${fmt(100 * p[i], 1)} %</span>`).join('')}</div></details>
       <div class="verdict">Наиболее вероятно: ${cls.name} (${fmt(100 * p[best], 1)} %)</div>
       <div class="note">P(градиент) = ${fmt(100 * pGrad, 1)} % (из них n падает к поверхности: ${fmt(100 * pNeg, 1)} %), P(шероховатость) = ${fmt(100 * pRough, 1)} %, P(поглощение) = ${fmt(100 * pAbs, 1)} %. Оценка размеров регрессией: δ ≈ ${fmt(dEst, 2)} %, слой ≈ ${fmt(rEst, 2)} нм, k₄₀₀ ≈ ${fmtK(kEst)} — это стартовые значения для окончательного фита.${choice.merged ? ` <b>ИИ не уверен</b> (${fmt(100 * choice.pBest, 0)} % против ${fmt(100 * choice.pSecond, 0)} % у «${E.CLASSES[choice.second].name}»): для окончательного фита включены дефекты обоих классов — незначимый на 3σ отбросит вето.` : ''}</div>`);
     $('modelChoice').style.display = 'block'; $('ckGrad').checked = choice.flags.grad; $('ckRough').checked = choice.flags.rough; $('ckAbs').checked = choice.flags.abs;
@@ -2412,13 +2695,15 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   }
 
   // ---------------------------------------------------------------- шаг 4
-  function step4() {
-    if (!S.probs) return; clearFrom(4);
+  async function step4() {
+    if (!S.probs) return; clearFrom(4); fitHistory = []; $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…';
     let flags = { grad: $('ckGrad').checked, rough: $('ckRough').checked, abs: $('ckAbs').checked };
     const sgn = S.choice && S.choice.sign ? S.choice.sign : 0, dStart = sgn ? sgn * Math.max(0.002, Math.abs(S.est.delta)) : S.est.delta;   // знак старта δ — из класса ИИ
     const p0 = Object.assign({}, S.ref.P, { dRough: Math.max(0.1, S.est.dRough), delta: dStart, Ak: S.est.k400 > 0 ? E.tailAk(S.cfg.mat, S.est.k400) : 0, starts: S.ref.starts, startCosts: S.ref.startCosts });
     // S.nuis — заявленные неопределённости условий (угол, доля задней стороны, полоса, шкала λ): finalFit возвращает их линейно распространённую систематику (fin.sys)
-    const t = performance.now(); let fin = E.finalFit(S.data, S.cfg, S.prior, flags, p0, S.nuis); let veto = [];
+    const t = performance.now();
+    const fit = pass => analysisTask('final', { data: S.data, cfg: S.cfg, prior: S.prior, flags, p0, nuis: S.nuis }, e => finalProgress(e, pass));
+    let result = await fit(0), fin = result.fin, veto = [];
     // вето: дефект убирается, если |p| < √((3σ_форм)² + сист.²) — он должен превышать и формальную погрешность, и систематику заявленных неопределённостей условий
     const vetoMsg = (name, k, scale, unit) => `${name} ${fmt(scale * Math.abs(fin.P[k]), 3)}${unit} не превышает порога √((3σ)² + сист.²) = ${fmt(scale * E.vetoThreshold(fin, k), 3)}${unit} — убран`;
     for (let pass = 0; pass < 2; pass++) {
@@ -2426,12 +2711,12 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
       if (flags.rough && fin.P.dRough < Math.max(0.03, E.vetoThreshold(fin, 'dRough'))) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
       if (flags.grad && Math.abs(fin.P.delta) < Math.max(3e-4, E.vetoThreshold(fin, 'delta'))) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
       if (flags.abs && fin.P.Ak < Math.max(3e-4, E.vetoThreshold(fin, 'Ak'))) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
-      if (!changed) break; fin = E.finalFit(S.data, S.cfg, S.prior, flags, p0, S.nuis);
+      if (!changed) break; result = await fit(pass + 1); fin = result.fin;
     }
     const ms = performance.now() - t; S.fin = fin; S.finFlags = flags;
     const sysOf = (k) => (fin.sys && fin.sys.total && isFinite(fin.sys.total[k])) ? fin.sys.total[k] : 0;
     const pm = (k, v, e, digits, scale) => `${fmt(scale * v, digits)} ± ${fmt(scale * e, digits)}${fin.sys ? ` <span class="note">(сист. ± ${fmt(scale * sysOf(k), digits)})</span>` : ''}`;
-    const c = modelCurves(fin.P, S.cfg.band); drawSpectrum({ label: 'окончательная модель', psi: c.psi, del: c.del });
+    const c = result.curves; drawSpectrum({ label: 'окончательная модель', psi: c.psi, del: c.del });
     drawResidual('chResFin', fin.resid, 'Остаток окончательного фита'); drawFinger(S.ref.resid, fin.resid);
     const mRef = matOf(S.ref.P), mFin = matOf(fin.P), nkRef = E.filmNK(S.data.lam, mRef), nkFin = E.filmNK(S.data.lam, mFin); S.finMat = mFin;   // снимок дисперсии окончательного фита (для иллюстраций при изменённых условиях)
     const curves = [{ label: 'опорный фит', n: nkRef.n, k: nkRef.k }, { label: 'окончательный фит', n: nkFin.n, k: nkFin.k }];
@@ -2460,14 +2745,18 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
         ['Профиль градиента в истине', Tt.delta ? (Tt.continuous ? 'непрерывный (Риккати)' : (Tt.back ? 'лестница, 160 подслоёв' : 'лестница, 40 подслоёв')) : '—', Tt.delta ? 'в фите — лестница из 40 подслоёв (80 при |δ| > 4 %, 160 при |δ| > 12 %)' : '']];
       $('truthOut').innerHTML = T(`<h3>Проверка по скрытой истине образца</h3><table><thead><tr><th>параметр</th><th class="num">истина</th><th>сравнение</th></tr></thead><tbody>${rowsT.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`);
       $('causeOut').innerHTML = '<div class="status">Анализ причин отклонения…</div>';
-      setTimeout(causeAnalysis, 30);
+
     } else { $('causeOut').innerHTML = ''; }
-    drawN(curves);
+    drawN(curves); fitComplete(fin); formatResultTables();
+    if (S.example) {
+      stageStatus('Фит завершён. Проверяем причины отклонения от скрытой истины…');
+      await yieldPaint(); await causeAnalysis(); formatResultTables();
+    }
     if (S.onFitChange) S.onFitChange();                                        // раздел «Дисперсия» иллюстраций показывает окончательный фит
   }
 
   // ---------------------------------------------------------------- анализ причин отклонения от истины (только когда истина известна)
-  function causeAnalysis() {
+  async function causeAnalysis() {
     if (!S.example || !S.fin) return;
     const Tt = S.example.truth, tk = Tt.k400 || 0, fin = S.fin, flags = S.finFlags, lam = S.data.lam, nAt = (m, l) => E.filmNK([l], m).n[0];
     const mFin = matOf(fin.P);
@@ -2504,28 +2793,10 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     if (!Tt.back && S.cfg.back) F.push(`В модели включена задняя сторона подложки (доля ${fmt(S.cfg.back.f, 2)}), а в измерении её нет — та же ошибка с обратным знаком.`);
     if (Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > S.nuis.backFerr + 1e-9) F.push(`Истинная доля задней стороны ${fmt(Tt.back.f, 3)} отличается от заданной ${fmt(S.cfg.back.f, 3)} больше заявленной неопределённости ±${S.nuis.backFerr}: доля не фитируется, и её ошибка целиком уходит в остаток (см. строку бюджета).`);
     // --- бюджет: последовательное устранение факторов при верном наборе дефектов
-    const p0 = Object.assign({}, S.ref.P, { d: Tt.d, dRough: Tt.dRough || 0.5, delta: Tt.delta || 0, Ak: Tt.mat.Ak || 0 });
-    const mk = (opt) => { const sy = E.synthesize(lam, S.cfg.subKey, Tt.phiTrue, Tt.d, Tt.mat, Tt.delta, Tt.dRough, Object.assign({ continuous: !!Tt.continuous, back: Tt.back || null }, opt), E.makeRng(1)); return { lam, psi: Array.from(sy.psi), del: Array.from(sy.del), sigPsi: S.data.sigPsi, sigDel: S.data.sigDel }; };
-    const cfg0 = S.cfg, cfgA = Object.assign({}, S.cfg, { phi: Tt.phiTrue, subDel: null });
-    const bwModel = S.cfg.band ? S.cfg.band.bw : 0;                          // полоса в модели фита; строка бюджета «полоса как в модели» убирает её ошибку
-    const backDiff = !!(Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > 1e-9) || (!!Tt.back !== !!S.cfg.back);
-    const cfgAB = backDiff ? Object.assign({}, cfgA, { back: Tt.back || null, subDel: null }) : cfgA;
-    const cfgAD = Object.assign({}, cfgAB, { mat: Object.assign({}, S.cfg.mat, { E0: Tt.mat.E0, C: Tt.mat.C, Euv: Tt.mat.Euv }) });
-    const fitRow = (label, data, cfg) => { const r = E.finalFit(data, cfg, S.prior, trueFlags, p0); const m = Object.assign({}, cfg.mat, { A: r.P.A, Auv: r.P.Auv, Eg: r.P.Eg, Ak: r.P.Ak || 0 }); return { label, d: r.P.d, delta: trueFlags.grad ? r.P.delta : 0, rough: trueFlags.rough ? r.P.dRough : 0, k: trueFlags.abs ? r.P.k400 : 0, n: nAt(m, 550), chi2: r.chi2 }; };
-    const rows = [{ label: 'измеренный спектр, модель по выбору ИИ (как есть)', d: fin.P.d, delta: flags.grad ? fin.P.delta : 0, rough: flags.rough ? fin.P.dRough : 0, k: flags.abs ? fin.P.k400 : 0, n: nAt(mFin, 550), chi2: fin.chi2 }];
-    if (!classOK) rows.push(fitRow('измеренный спектр, верный набор дефектов', S.data, cfg0));
-    const hasDrift = !!Tt.driftPsi;
-    if (hasDrift) rows.push(fitRow('без шума (дрейф, полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset, driftPsi: Tt.driftPsi, driftDel: Tt.driftDel }), cfg0));
-    rows.push(fitRow(hasDrift ? '+ без дрейфа' : 'без шума и дрейфа (полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset }), cfg0));
-    rows.push(fitRow('+ без сдвига шкалы λ', mk({ bw: Tt.bw, lamOffset: 0 }), cfg0));
-    rows.push(fitRow(bwModel > 0 ? `+ полоса в истине равна заданной в модели (${fmt(bwModel, 1)} нм)` : '+ без спектральной полосы', mk({ bw: bwModel, lamOffset: 0 }), cfg0));
-    rows.push(fitRow('+ угол известен точно', mk({ bw: bwModel, lamOffset: 0 }), cfgA));
-    if (backDiff) rows.push(fitRow('+ доля задней стороны как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAB));
-    rows.push(fitRow('+ E₀, C, E_uv как у образца (остаётся только численная точность)', mk({ bw: bwModel, lamOffset: 0 }), cfgAD));
-    const truthRow = { label: 'истина', d: Tt.d, delta: Tt.delta, rough: Tt.dRough, k: tk, n: nAt(Tt.mat, 550), chi2: NaN };
-    // вклад каждого фактора = изменение параметров при его устранении
-    const contrib = []; for (let i = 1; i < rows.length; i++) contrib.push({ label: rows[i].label, dd: rows[i - 1].d - rows[i].d, dDelta: rows[i - 1].delta - rows[i].delta, dRough: rows[i - 1].rough - rows[i].rough, dk: rows[i - 1].k - rows[i].k, dn: rows[i - 1].n - rows[i].n });
-    const last = rows[rows.length - 1]; const unexpl = { dd: last.d - Tt.d, dDelta: last.delta - Tt.delta, dRough: last.rough - Tt.dRough, dk: last.k - tk, dn: last.n - nAt(Tt.mat, 550) };
+    const { rows, truthRow, contrib, unexpl, bwModel } = await analysisTask('causes', { data: S.data, example: S.example, cfg: S.cfg, prior: S.prior, ref: S.ref, fin: S.fin, finFlags: S.finFlags }, e => {
+      const text = 'Проверка по скрытой истине · ' + e.row + (e.iteration !== undefined ? ` · итерация ${e.iteration}` : '');
+      stageStatus(text); $('causeOut').textContent = text;
+    });
     // словесные выводы по бюджету
     const big = (v, thr) => Math.abs(v) > thr;
     for (const c of contrib) {
@@ -2723,31 +2994,51 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     if(+$('dNom').value<=0||+$('dRange').value<=0||+$('dRange').value>=100)throw new Error('Укажите положительную толщину и разброс больше 0 и меньше 100%.');
     if(+$('sigDef').value<=0||+$('bw').value<0||+$('phiErr').value<0)throw new Error('Шум должен быть положительным; полоса и неопределённость угла — неотрицательными.');
   }
-  async function runAnalysis(stage){
-    if(astraBusy||DM.building)return;
-    try{
-      validateAnalysis();if(stage>1&&S.analysisStale)throw new Error('Условия изменились. Начните с опорного фита.'); astraBusy=true;
-      $('analysisControls').inert=true; $('analysisControls').setAttribute('aria-busy','true');
-      ['btnAll','btn1','btn2','btn3','btn4','dmBuild'].forEach(id=>$(id).disabled=true);
-      document.querySelectorAll('.appbar nav a').forEach(a=>a.setAttribute('aria-disabled','true'));
-      $('globalStatus').textContent=stage===2?'Обучение ИИ…':'Выполняется расчёт…';
-      await new Promise(r=>setTimeout(r,20));
-      if(stage===0||stage===1)step1();
-      if(stage===0||stage===2)await step2();
-      if(stage===0||stage===3)step3();
-      if(stage===0||stage===4)step4();
-      $('globalStatus').textContent='Готово.';
-      if(stage===0&&$('s4').scrollIntoView)$('s4').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(error){$('globalStatus').textContent='Ошибка: '+error.message;}
-    finally{
-      astraBusy=false;$('analysisControls').inert=false;$('analysisControls').removeAttribute('aria-busy');
-      $('btnAll').disabled=!S.data;$('btn1').disabled=!S.data;$('btn2').disabled=!S.ref||S.analysisStale;$('btn3').disabled=!S.train||S.analysisStale;$('btn4').disabled=!S.probs||S.analysisStale;$('dmBuild').disabled=false;
-      document.querySelectorAll('.appbar nav a').forEach(a=>a.removeAttribute('aria-disabled'));
-      $('runProgress').style.width='0%';updateSummary();
+  async function runAnalysis(stage) {
+    if (astraBusy || DM.building) return;
+    let started = false;
+    try {
+      validateAnalysis();
+      if (stage > 1 && S.analysisStale) throw new Error('Условия изменились. Начните с опорного фита.');
+      if ((stage === 2 && !S.ref) || (stage === 3 && !S.train) || (stage === 4 && !S.probs)) throw new Error('Сначала выполните предыдущий шаг.');
+      astraBusy = true; started = true; analysisAbort = new AbortController();
+      $('analysisControls').inert = true; $('analysisControls').setAttribute('aria-busy', 'true');
+      $('modelChoice').inert = true;
+      ['btnAll', 'btn1', 'btn2', 'btn3', 'btn4', 'dmBuild'].forEach(id => $(id).disabled = true);
+      document.querySelectorAll('.appbar nav a').forEach(a => a.setAttribute('aria-disabled', 'true'));
+      const actions = [null, step1, step2, step3, step4];
+      for (const n of stage ? [stage] : [1, 2, 3, 4]) {
+        if (analysisAbort.signal.aborted) throw abortError();
+        showAnalysisStage(n); progressCard(n); stageStatus(`Шаг ${n} из 4 · ${stageNames[n]}…`); progressValue(0);
+        analysisStarted = Date.now();
+        analysisTimer = setInterval(() => { $('elapsed' + n).textContent = Math.floor((Date.now() - analysisStarted) / 1000) + ' с'; }, 1000);
+        await yieldPaint(); showAnalysisStage(n, true); await actions[n]();
+        clearInterval(analysisTimer); analysisTimer = null;
+        $('elapsed' + n).textContent = fmt((Date.now() - analysisStarted) / 1000, 1) + ' с';
+        $('stageLive' + n).classList.remove('is-running'); progressValue(1);
+        $('stageStatus' + n).textContent = n === 3 ? 'Все признаки учтены · итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
+        refreshStageNav(); await yieldPaint();
+      }
+      stageStatus('Готово.');
+    } catch (error) {
+      const text = error.name === 'AbortError' ? 'Расчёт остановлен. Можно повторить шаг.' : 'Ошибка: ' + error.message;
+      stageStatus(text);
+      if (analysisStage === 4 && S.fin && S.example) $('causeOut').textContent = 'Фит сохранён. Проверка причин отклонения не завершена.';
+    } finally {
+      if (started) {
+        clearInterval(analysisTimer); analysisTimer = null;
+        for (let n = 1; n <= 4; n++) $('stageLive' + n).classList.remove('is-running');
+        astraBusy = false; analysisAbort = null;
+      }
+      $('analysisControls').inert = false; $('analysisControls').removeAttribute('aria-busy'); $('modelChoice').inert = false;
+      $('btnAll').disabled = !S.data; $('btn1').disabled = !S.data; $('btn2').disabled = !S.ref || S.analysisStale; $('btn3').disabled = !S.train || S.analysisStale; $('btn4').disabled = !S.probs || S.analysisStale; $('dmBuild').disabled = false;
+      document.querySelectorAll('.appbar nav a').forEach(a => a.removeAttribute('aria-disabled'));
+      $('runProgress').style.width = '0%'; updateSummary(); refreshStageNav();
     }
   }
   [1,2,3,4].forEach(n=>$('btn'+n).addEventListener('click',()=>runAnalysis(n)));
   $('btnAll').addEventListener('click',()=>runAnalysis(0));
+  ['ckGrad', 'ckRough', 'ckAbs'].forEach(id => $(id).addEventListener('change', () => { if (!astraBusy) { clearFrom(4); $('finOut').textContent = 'Модель изменена. Выполните окончательный фит.'; $('stageLive4').hidden = true; if (S.onFitChange) S.onFitChange(); refreshStageNav(); } }));
   document.querySelectorAll('.appbar nav a').forEach(a=>a.addEventListener('click',ev=>{if(astraBusy)ev.preventDefault();}));
   // Guard controls that the original step routines enable before a long batch completes.
   $('runbar').addEventListener('click',ev=>{if(astraBusy){ev.preventDefault();ev.stopImmediatePropagation();}},true);
@@ -2830,10 +3121,10 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
   const tipLam = { callbacks: { title: (items) => (items.length && items[0].raw && items[0].raw.lam !== undefined) ? `λ = ${fmtVal(items[0].raw.lam)} нм` : '', label: (it) => `${it.dataset.label}: Ψ ${fmtVal(it.raw.x)} σ, Δ ${fmtVal(it.raw.y)} σ` } };
 
   /** Опорный фит для иллюстраций: фит страницы «Анализ», если он есть и «Априорные условия» после него не менялись; если его нет —
-   *  выполняется шаг 1 (панели «Анализа» пусты, терять нечего); если условия менялись (S.cfgDirty) — свой фит для текущих условий,
+   *  используется свой фит; если условия менялись (S.cfgDirty) — также свой фит для текущих условий,
    *  не трогая результаты шагов 1–4 на «Анализе». Возвращает {P, resid, feat, own}. */
   function ensureRef() {
-    if (!S.ref && S.data) step1();
+    // Illustrations use their own synchronous reference when Analysis has not run.
     if (S.ref && !S.cfgDirty) return { P: S.ref.P, resid: S.ref.resid, feat: S.refFeat, own: false };
     const ref = E.referenceFit(S.data, dmCfgRef(), DM.prior);
     return { P: ref.P, resid: ref.resid, feat: E.featureVector(S.data, DM.cfg, ref.resid), own: true };
@@ -3248,6 +3539,190 @@ const EXAMPLES = [{"id":"ex1","file":"01_TiO2_on_BK7_65deg.xlsx","title":"TiO₂
     document.querySelectorAll('#page-demo section.step').forEach(s => io.observe(s));
   }
   document.querySelectorAll('#dmNav a').forEach(a => a.addEventListener('click', (ev) => { ev.preventDefault(); const id = a.getAttribute('href').slice(1); history.replaceState(null, '', '#' + id); const el = $(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+
+  // The analysis workspace shows one stage; computation runs in a reusable Worker.
+let analysisWorker = null, analysisRequest = 0, analysisPending = null, analysisAbort = null;
+let analysisStage = 0, fitHistory = [], analysisStarted = 0, analysisTimer = null;
+const stageNames = ['Спектр', 'Опорный фит', 'Обучение ИИ', 'Диагноз', 'Окончательный фит'];
+const abortError = () => new DOMException('Расчёт остановлен.', 'AbortError');
+const yieldPaint = () => new Promise(resolve => setTimeout(resolve, 24));
+function stopAnalysisWorker(error) {
+  if (analysisWorker) analysisWorker.terminate();
+  analysisWorker = null;
+  const pending = analysisPending; analysisPending = null;
+  if (pending) { pending.cleanup(); pending.reject(error); }
+}
+function analysisTask(type, args, onProgress) {
+  return new Promise((resolve, reject) => {
+    if (analysisAbort?.signal.aborted) { reject(abortError()); return; }
+    if (analysisPending) { reject(new Error('Предыдущий расчёт ещё выполняется.')); return; }
+    try {
+      if (!analysisWorker) {
+        if (typeof Worker === 'undefined') throw new Error('Фоновые вычисления недоступны. Откройте приложение в актуальном Safari, Chrome, Firefox или Edge.');
+        const code = $('ellip-core').textContent + '\n' + $('analysis-tasks').textContent;
+        const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+        try { analysisWorker = new Worker(url); } finally { URL.revokeObjectURL(url); }
+        analysisWorker.onmessage = ({ data }) => {
+          const p = analysisPending;
+          if (!p || p.id !== data.id) return;
+          if (data.progress) { p.onProgress?.(data.progress); return; }
+          analysisPending = null; p.cleanup();
+          if (data.error) p.reject(new Error(data.error)); else p.resolve(data.result);
+        };
+        analysisWorker.onerror = e => { e.preventDefault?.(); stopAnalysisWorker(new Error('Фоновый расчёт прерван: ' + (e.message || 'ошибка запуска'))); };
+        analysisWorker.onmessageerror = () => stopAnalysisWorker(new Error('Не удалось получить результат фонового расчёта. Повторите шаг.'));
+      }
+      const id = ++analysisRequest, signal = analysisAbort?.signal;
+      const onAbort = () => stopAnalysisWorker(abortError());
+      signal?.addEventListener('abort', onAbort, { once: true });
+      analysisPending = { id, resolve, reject, onProgress, cleanup: () => signal?.removeEventListener('abort', onAbort) };
+      analysisWorker.postMessage({ id, type, args });
+    } catch (e) { if (analysisPending) stopAnalysisWorker(e); else reject(e); }
+  });
+}
+window.addEventListener('pagehide', () => { analysisAbort?.abort(); stopAnalysisWorker(abortError()); });
+
+function refreshStageNav() {
+  const done = [S.data, S.ref, S.train, S.probs, S.fin];
+  document.querySelectorAll('[data-analysis-stage]').forEach(b => {
+    const n = Number(b.dataset.analysisStage), selected = n === analysisStage;
+    b.disabled = astraBusy ? !selected : !done[n];
+    b.setAttribute('aria-selected', String(selected)); b.tabIndex = selected ? 0 : -1;
+    b.classList.toggle('is-complete', !!done[n] && n > 0);
+  });
+  [1, 2, 3, 4].forEach(n => {
+    $('btn' + n).classList.toggle('stage-active', astraBusy && n === analysisStage);
+    $('btn' + n).setAttribute('aria-current', n === analysisStage ? 'step' : 'false');
+  });
+  $('btnCancel').hidden = !astraBusy;
+}
+function showAnalysisStage(n, scroll = false) {
+  analysisStage = n;
+  for (let i = 0; i <= 4; i++) $('s' + i).hidden = i !== n;
+  $('resultsHeading').hidden = n === 0;
+  refreshStageNav();
+  if (scroll) {
+    const section = $('s' + n); section.scrollIntoView?.({ behavior: 'instant', block: 'start' });
+    section.querySelector('h2').focus({ preventScroll: true });
+  }
+  requestAnimationFrame(() => { for (const c of Object.values(S.charts)) if (c.canvas.closest('#s' + n)) c.resize(); });
+}
+document.querySelectorAll('[data-analysis-stage]').forEach(b => {
+  b.addEventListener('click', () => showAnalysisStage(Number(b.dataset.analysisStage), true));
+  b.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const tabs = [...document.querySelectorAll('[data-analysis-stage]')].filter(t => !t.disabled);
+    let i = tabs.indexOf(b);
+    i = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    e.preventDefault(); tabs[i].click(); tabs[i].focus();
+  });
+});
+$('btnCancel').addEventListener('click', () => analysisAbort?.abort());
+
+function stageStatus(text) {
+  $('globalStatus').textContent = text;
+  const out = $('stageStatus' + analysisStage); if (out) out.textContent = text;
+}
+function progressCard(stage) {
+  const el = $('stageLive' + stage); el.hidden = false; el.classList.add('is-running');
+  $('stageStatus' + stage).textContent = 'Подготовка…';
+  $('elapsed' + stage).textContent = '0 с';
+}
+function progressValue(fraction) {
+  if (!Number.isFinite(fraction)) return;
+  const value = Math.max(0, Math.min(100, fraction * 100));
+  $('runProgress').style.width = value + '%';
+  const bar = $('stageBar' + analysisStage);
+  if (bar) { bar.value = value; bar.setAttribute('aria-valuetext', Math.round(value) + ' %'); }
+}
+function referenceProgress(e) {
+  if (e.phase === 'scan') { stageStatus('Перебор толщины · d = ' + fmt(e.d, 1) + ' нм'); progressValue(e.fraction * 0.45); }
+  else { stageStatus(`Опорный фит · старт ${e.start}/${e.totalStarts} · итерация ${e.iteration} · χ²/ν = ${fmt(e.chi2, 2)}`); progressValue(0.45 + 0.5 * (e.start - 1) / e.totalStarts); }
+}
+function trainingProgress(e) {
+  const labels = { examples: 'Смоделировано и профитировано', holdout: 'Проверка классификатора · эпоха', classifier: 'Обучение классификатора · эпоха', ridge: 'Оценка размеров дефектов · регрессия' };
+  const text = e.phase === 'trained' ? 'Обучение завершено.' : `${labels[e.phase]} ${e.done} из ${e.total}`;
+  stageStatus(text); $('trainOut').textContent = text;
+  progressValue(e.fraction); $('trainBar').style.width = (100 * e.fraction) + '%';
+}
+
+function renderInferenceFrame(frame, final = false) {
+  const order = frame.probs.map((_, i) => i).sort((a, b) => frame.probs[b] - frame.probs[a]);
+  for (let i = 0; i < E.CLASSES.length; i++) {
+    const row = $('probLive' + i), rank = order.indexOf(i), visible = rank < 5;
+    row.style.transform = `translateY(${Math.min(rank, 5) * 72}px)`;
+    row.style.opacity = visible ? '1' : '0'; row.style.visibility = visible ? 'visible' : 'hidden';
+    row.setAttribute('aria-hidden', String(!visible));
+    row.querySelector('.live-rank').textContent = String(rank + 1).padStart(2, '0');
+    row.querySelector('.live-prob-value').textContent = fmt(100 * frame.probs[i], 1) + ' %';
+    row.querySelector('.live-prob-bar').style.width = (100 * frame.probs[i]) + '%';
+  }
+  $('otherProbs').textContent = 'Остальные 7 комбинаций: ' + fmt(100 * order.slice(5).reduce((s, i) => s + frame.probs[i], 0), 1) + ' %';
+  const label = final ? 'Все признаки учтены · итоговые вероятности' : frame.phase === 'bias' ? 'Начальные оценки обученной модели' : frame.phase === 'anchors' ? 'Канал: ' + frame.label : `Учитываем ${frame.phase === 'psi' ? 'Ψ' : 'Δ'}-остаток · ${Math.round(frame.scan * 100)} % диапазона`;
+  stageStatus(label); progressValue(frame.fraction);
+  const scan = $('residualScan');
+  scan.setAttribute('x1', 16 + 568 * (frame.scan || 0)); scan.setAttribute('x2', 16 + 568 * (frame.scan || 0));
+  scan.style.opacity = final || frame.phase === 'anchors' ? '0' : '1';
+  $('inferencePhase').textContent = final ? 'Готово' : frame.phase === 'anchors' ? 'Якорные каналы' : 'Спектральный остаток';
+}
+function prepareInference() {
+  $('inferenceTop').innerHTML = E.CLASSES.map((c, i) => `<div class="live-prob-row" id="probLive${i}"><span class="live-rank"></span><span class="live-prob-name">${classDots(c)}${c.name}</span><b class="live-prob-value">—</b><span class="live-prob-track"><span class="live-prob-bar"></span></span></div>`).join('');
+  const r = S.ref.resid, n = S.data.lam.length;
+  const amp = Math.max(1, ...Array.from(r, Math.abs));
+  const path = offset => {
+    const step = Math.max(1, Math.ceil(n / 200)), pts = [];
+    for (let i = 0; i < n; i += step) pts.push(`${16 + 568 * i / (n - 1)},${100 - 78 * r[offset + i] / amp}`);
+    pts.push(`${584},${100 - 78 * r[offset + n - 1] / amp}`); return pts.join(' ');
+  };
+  $('inferencePsi').setAttribute('points', path(0)); $('inferenceDelta').setAttribute('points', path(n));
+  $('inferenceRange').textContent = `${fmt(S.data.lam[0], 0)}–${fmt(S.data.lam[n - 1], 0)} нм · остаток в единицах σ`;
+}
+async function animateInference(frames) {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const duration = reduced ? 0 : 2200, started = performance.now();
+  let previous = -1;
+  do {
+    if (analysisAbort?.signal.aborted) throw abortError();
+    const i = duration ? Math.min(frames.length - 1, Math.floor((performance.now() - started) / duration * (frames.length - 1))) : frames.length - 1;
+    if (i !== previous) { renderInferenceFrame(frames[i], i === frames.length - 1); previous = i; }
+    if (i === frames.length - 1) break;
+    await new Promise(resolve => setTimeout(resolve, 32));
+  } while (true);
+  if (!reduced) await new Promise(resolve => setTimeout(resolve, 200));
+  if (analysisAbort?.signal.aborted) throw abortError();
+}
+
+function finalProgress(e, pass = 0) {
+  const names = { absorption: 'Поиск силы поглощения', starts: 'Проверка стартов', refine: 'Точный фит', layers: 'Уточнение профиля', uncertainty: 'Оценка погрешностей' };
+  const prefix = pass ? `Повтор после вето ${pass} · ` : '';
+  const info = e.phase === 'uncertainty' ? '' : ` · старт ${e.start} · итерация ${e.iteration}`;
+  stageStatus(prefix + (names[e.phase] || 'Окончательный фит') + info);
+  if (!Number.isFinite(e.chi2)) return;
+  $('fitChi').textContent = fmt(e.chi2, 3); $('fitD').textContent = e.P ? fmt(e.P.d, 2) + ' нм' : '—';
+  $('fitIteration').textContent = String(e.iteration ?? '—');
+  $('fitPhase').textContent = `${e.M || 40} подслоёв · ${e.nfev || 0} вычислений в текущем запуске`;
+  fitHistory.push(e.chi2);
+  // Bounded rendering cost even for a long multistart fit.
+  if (fitHistory.length > 240) fitHistory = fitHistory.filter((_, i) => i % 2 === 0);
+  const values = fitHistory.map(v => Math.log10(Math.max(v, 1e-12))), lo = Math.min(...values), hi = Math.max(lo + 0.1, ...values);
+  $('fitTrace').setAttribute('points', values.map((v, i) => `${20 + 560 * i / Math.max(1, values.length - 1)},${160 - 140 * (v - lo) / (hi - lo)}`).join(' '));
+  $('fitScale').textContent = `χ²/ν: ${fmt(Math.pow(10, lo), 2)}–${fmt(Math.pow(10, hi), 2)} · логарифмическая шкала`;
+}
+function fitComplete(fin) {
+  $('fitChi').textContent = fmt(fin.chi2, 3); $('fitD').textContent = fmt(fin.P.d, 2) + ' нм';
+  $('fitPhase').textContent = `Фит завершён · ${fin.M} подслоёв · ${fin.starts} стартов`;
+}
+
+function formatResultTables() {
+  document.querySelectorAll('#finOut table, #truthOut table, #causeOut table').forEach(table => {
+    table.classList.add('analysis-table');
+    if (table.closest('#causeOut')) table.classList.add('budget-table');
+    const labels = [...table.querySelectorAll('thead th')].map(t => t.textContent);
+    table.querySelectorAll('thead th').forEach(th => th.scope = 'col');
+    table.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => td.dataset.label = labels[i]));
+  });
+}
+
 
   // Interface enhancements share the original application's state and actions.
 function selectPanel(name) {

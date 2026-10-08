@@ -568,12 +568,12 @@
   }
   /** Опорный фит однородной плёнки: грубый перебор d при справочной дисперсии → три лучших локальных минимума χ²(d) →
    *  ЛМ (аналитический якобиан, масштабированные параметры) по (d, A, Auv, Eg) из каждого; лучший по χ². */
-  function referenceFit(data, cfg, prior) {
+  function referenceFit(data, cfg, prior, onProgress) {
     const fixed = { dRough: 0, delta: 0, Ak: 0 };
     const base = { A: cfg.mat.A, Auv: cfg.mat.Auv, Eg: cfg.mat.Eg };
     const scan = makeResidJacFn(data, cfg, ['d'], Object.assign({}, fixed, base), 1);
     const step = Math.max(0.5, (prior.dMax - prior.dMin) / 120), grid = [], cost = [];
-    for (let dg = prior.dMin; dg <= prior.dMax + 1e-9; dg += step) { const r = scan([dg], false).r; let c = 0; for (let i = 0; i < r.length; i++) c += r[i] * r[i]; grid.push(dg); cost.push(c); }
+    for (let dg = prior.dMin; dg <= prior.dMax + 1e-9; dg += step) { const r = scan([dg], false).r; let c = 0; for (let i = 0; i < r.length; i++) c += r[i] * r[i]; grid.push(dg); cost.push(c); if (onProgress) onProgress({ phase: 'scan', fraction: (dg - prior.dMin) / (prior.dMax - prior.dMin), d: dg }); }
     const cands = [];
     for (let i = 0; i < grid.length; i++) if ((i === 0 || cost[i] <= cost[i - 1]) && (i === grid.length - 1 || cost[i] <= cost[i + 1])) cands.push(i);
     cands.sort((a, b) => cost[a] - cost[b]);
@@ -584,7 +584,7 @@
     const fn = makeResidJacFn(data, cfg, free, fixed, 1);
     let res = null, nfev = 0;
     for (const d0 of starts) {
-      const r = lmFitJac(fn, [d0, base.A, base.Auv, base.Eg], b.map(v => v[0]), b.map(v => v[1]), 80); nfev += r.nfev;
+      const r = lmFitJac(fn, [d0, base.A, base.Auv, base.Eg], b.map(v => v[0]), b.map(v => v[1]), 80, onProgress && (e => onProgress({ ...e, phase: 'reference', start: starts.indexOf(d0) + 1, totalStarts: starts.length }))); nfev += r.nfev;
       if (!res || r.chi2 < res.chi2) res = r;
     }
     const P = {}; free.forEach((k, i) => P[k] = res.x[i]); P.dRough = 0; P.delta = 0; P.Ak = 0; P.k400 = 0;
@@ -628,7 +628,7 @@
    *  лучший по χ² дотягивается до сходимости; при |δ| > 4 % — повтор с 80 подслоями, при |δ| > 12 % — со 160. Поглощение — сила хвоста A_k
    *  (старт из p0.Ak); k₄₀₀ пересчитывается по найденной дисперсии (A, A_uv, E_g фита), а не по справочной. cfg.band — полоса прибора в модели.
    *  nuis = {phiErr, backFerr, bwErr, offErr} (необязательно) — систематические погрешности от неопределённости условий, поле sys. */
-  function finalFit(data, cfg, prior, flags, p0, nuis) {
+  function finalFit(data, cfg, prior, flags, p0, nuis, onProgress) {
     const free = ['d', 'A', 'Auv', 'Eg']; if (flags.rough) free.push('dRough'); if (flags.grad) free.push('delta'); if (flags.abs) free.push('Ak');
     const fixed = { dRough: 0, delta: 0, Ak: 0 };
     const b = free.map(k => boundsFor(k, cfg, prior));
@@ -644,6 +644,7 @@
     // разведка бассейнов на грубой модели (10 подслоёв), затем лучший старт дотягивается на 40 подслоях
     const fn10 = makeResidJacFn(data, cfg, free, fixed, flags.grad ? 10 : 40), fn40 = makeResidJacFn(data, cfg, free, fixed, 40);
     let best = null, nfev = 0, nStarts = 0;
+    const report = (phase, M, start) => onProgress && (e => onProgress({ ...e, phase, M, start, P: Object.assign({}, fixed, Object.fromEntries(free.map((k, i) => [k, e.x[i]]))) }));
     let base = Object.assign({}, p0, { dRough: Math.max(0.1, p0.dRough || 0.1), Ak: 0 });
     if (flags.abs) {
       // Поглощение: опорный фит без хвоста искажает дисперсию (A, E_g растут, компенсируя затухание полос), и старт из него
@@ -655,7 +656,7 @@
       let bestA = null;
       for (const dp of disp) for (const k of ks) {
         const x0 = clampP(Object.assign({}, base, dp, { delta: deltaStarts[0], Ak: tailAk(cfg.mat, k) }));
-        const r = lmFitJac(fn10, x0, lo, hi, 20); nfev += r.nfev; nStarts++;
+        const r = lmFitJac(fn10, x0, lo, hi, 20, report('absorption', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++;
         if (!bestA || r.chi2 < bestA.chi2) bestA = r;
       }
       const PA = {}; free.forEach((k, i) => PA[k] = bestA.x[i]);
@@ -664,16 +665,17 @@
     }
     const cands = [];
     for (const dS of dStarts) for (const dl of deltaStarts) cands.push(clampP(Object.assign({}, base, { d: dS, delta: dl })));
-    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
-    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80); nfev += res.nfev; nStarts = Math.max(1, nStarts);
+    if (cands.length > 1) cands.forEach((x0) => { const r = lmFitJac(fn10, x0, lo, hi, 25, report('starts', flags.grad ? 10 : 40, nStarts + 1)); nfev += r.nfev; nStarts++; if (!best || r.chi2 < best.chi2) best = r; });
+    let res = lmFitJac(fn40, best ? best.x : cands[0], lo, hi, 80, report('refine', 40, Math.max(1, nStarts))); nfev += res.nfev; nStarts = Math.max(1, nStarts);
     const iD = free.indexOf('delta'); let Mfin = 40;
-    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
+    if (iD >= 0 && subLayersFor(res.x[iD]) > 40) { Mfin = subLayersFor(res.x[iD]); const rM = lmFitJac(makeResidJacFn(data, cfg, free, fixed, Mfin), res.x, lo, hi, 40, report('layers', Mfin, nStarts)); nfev += rM.nfev; res = rM; }   // 80 или 160 подслоёв
     const P = { dRough: 0, delta: 0, Ak: 0 }; free.forEach((k, i) => P[k] = res.x[i]);
     const E = {}; free.forEach((k, i) => E[k] = res.err[i]);
     const mFit = Object.assign({}, cfg.mat, { A: P.A, Auv: P.Auv, Eg: P.Eg });                  // k₄₀₀ — по найденной дисперсии
     const dk400 = (Ak) => { const h = Math.max(1e-6, 1e-3 * Ak); return (tailK400(mFit, Ak + h) - tailK400(mFit, Ak)) / h; };
     if (flags.abs) { P.k400 = tailK400(mFit, P.Ak); E.k400 = E.Ak * dk400(P.Ak); } else { P.k400 = 0; }
     let sys = null;
+    if (onProgress) onProgress({ phase: 'uncertainty', P, chi2: res.chi2, M: Mfin, nfev, iteration: res.nit });
     if (nuis) { sys = sysErrors(data, cfg, free, fixed, Mfin, res.x, nuis); if (sys && flags.abs) { const dk = dk400(P.Ak); sys.total.k400 = sys.total.Ak * dk; for (const q of Object.keys(sys.parts)) sys.parts[q].k400 = sys.parts[q].Ak * dk; } }
     return { P, E, sys, resid: res.resid, chi2: res.chi2, free, nfev, starts: nStarts, M: Mfin };
   }
@@ -935,7 +937,7 @@
   /** ЛМ с аналитическим якобианом. Параметры масштабированы преобразованием x = lo + (hi − lo)(1 + sin θ)/2:
    *  θ безразмерны и O(1), границы соблюдаются гладко (без отсечения). Демпфирование по Нильсену (gain ratio),
    *  диагональное масштабирование Марквардта с нижним порогом; пробные шаги — без якобиана. Ковариация — по J_x в решении. */
-  function lmFitJac(residJac, x0, lo, hi, maxIter) {
+  function lmFitJac(residJac, x0, lo, hi, maxIter, onProgress) {
     maxIter = maxIter || 60;
     const p = x0.length, W = lo.map((v, k) => hi[k] - v);
     const toX = (th) => th.map((v, k) => lo[k] + W[k] * (1 + Math.sin(v)) / 2);
@@ -944,6 +946,8 @@
     const m = r.length;
     let F = 0; for (let i = 0; i < m; i++) F += r[i] * r[i]; F *= 0.5;
     let lam = -1, nu = 2, nfev = 1, nit = 0;
+    const report = () => { if (onProgress) onProgress({ iteration: nit, nfev, chi2: 2 * F / Math.max(1, m - p), x: x.slice() }); };
+    report();
     const JTJ = Array.from({ length: p }, () => new Array(p).fill(0)), g = new Array(p).fill(0), D = new Array(p).fill(0);
     for (let it = 0; it < maxIter; it++) {
       nit++;
@@ -985,6 +989,7 @@
         }
         lam *= nu; nu *= 2;
       }
+      report();
       if (!accepted) break;
     }
     Jx = residJac(x, true).J;                                                  // якобиан в решении — для ковариации
@@ -1050,6 +1055,7 @@
       for (let i = 0; i < n; i++) { const z = Z[i]; for (let k = 0; k < K; k++) { const g = (P[i][k] - (y[i] === k ? 1 : 0)) / n; gb[k] += g; const gw = gW[k]; for (let j = 0; j < D; j++) gw[j] += g * z[j]; } }
       for (let k = 0; k < K; k++) { const gw = gW[k], w = W[k]; for (let j = 0; j < D; j++) { const g = gw[j] + l2 * w[j]; mW[k][j] = b1 * mW[k][j] + (1 - b1) * g; vW[k][j] = b2 * vW[k][j] + (1 - b2) * g * g; w[j] -= lr * (mW[k][j] / (1 - b1 ** ep)) / (Math.sqrt(vW[k][j] / (1 - b2 ** ep)) + eps); }
         mb[k] = b1 * mb[k] + (1 - b1) * gb[k]; vb[k] = b2 * vb[k] + (1 - b2) * gb[k] * gb[k]; b[k] -= lr * (mb[k] / (1 - b1 ** ep)) / (Math.sqrt(vb[k] / (1 - b2 ** ep)) + eps); }
+      if (opt.onProgress) opt.onProgress(ep, epochs);
     }
     const predictProba = (x) => { const z = st.apply(x); const s = new Float64Array(K); let mx = -Infinity; for (let k = 0; k < K; k++) { let v = b[k]; for (let j = 0; j < D; j++) v += W[k][j] * z[j]; s[k] = v; if (v > mx) mx = v; } let sum = 0; for (let k = 0; k < K; k++) { s[k] = Math.exp(s[k] - mx); sum += s[k]; } return Array.from(s, v => v / sum); };
     return { predictProba, W, b, st };
@@ -1061,7 +1067,7 @@
     for (let i = 0; i < n; i++) { const z = Z[i], yc = y[i] - ym; for (let a = 0; a < D; a++) { const za = z[a]; if (!za) continue; g[a] += za * yc; const row = G[a]; for (let b = a; b < D; b++) row[b] += za * z[b]; } }
     for (let a = 0; a < D; a++) { for (let b = 0; b < a; b++) G[a][b] = G[b][a]; G[a][a] += alpha; }
     const w = solveLinear(G, g) || new Array(D).fill(0);
-    return { predict: (x) => { const z = st.apply(x); let s = ym; for (let j = 0; j < D; j++) s += w[j] * z[j]; return s; } };
+    return { st, w, ym, predict: (x) => { const z = st.apply(x); let s = ym; for (let j = 0; j < D; j++) s += w[j] * z[j]; return s; } };
   }
 
   // ---------------------------------------------------------------- классы дефектов: градиент g ∈ {0, +1, −1} × шероховатость r ∈ {0, 1} × поглощение a ∈ {0, 1}

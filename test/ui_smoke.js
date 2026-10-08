@@ -7,7 +7,7 @@ html = html.replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*chart[^"]*"><
            .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*xlsx[^"]*"><\/script>/, '<script>window.XLSX = {};</script>')
            .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*"><\/script>/, '')
            .replace(/<link rel="stylesheet" href="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*">/, '');
-const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({});
+const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true, beforeParse: require("./worker_shim") }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({});
 const $ = (id) => w.document.getElementById(id); const txt = (el) => el.textContent.replace(/\s+/g, " ").trim();
 let failures = 0; const check = (ok, msg) => { console.log((ok ? "  ok   " : "  FAIL ") + msg); if (!ok) failures++; };
 w.addEventListener("error", (e) => { console.log("window error:", e.message); failures++; });

@@ -11,7 +11,7 @@ html = html.replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*chart[^"]*"><
   .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*xlsx[^"]*"><\/script>/, '<script>window.XLSX = {};</script>')
   .replace(/<script src="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*"><\/script>/, '')
   .replace(/<link rel="stylesheet" href="(?:https:\/\/cdnjs|vendor\/)[^"]*katex[^"]*">/, '');
-const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({}); w.scrollTo = () => {};
+const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true, beforeParse: require("./worker_shim") }); const w = dom.window; w.HTMLCanvasElement.prototype.getContext = () => ({}); w.scrollTo = () => {};
 const $ = (id) => w.document.getElementById(id); const txt = (el) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();
 let failures = 0; const out = {};
 const check = (ok, msg) => { console.log((ok ? "  ok   " : "  FAIL ") + msg); if (!ok) failures++; };
@@ -138,7 +138,7 @@ function checkChart(id, c, exp) {
     check($("dmIbw").value === "3" && /заданы здесь: полоса/.test($("dmInstrSrc").textContent), "смена полосы в симуляторе не трогает закреплённое поле: " + $("dmIbw").value);
     $("dmInstrReset").click(); await sleep(300); { const t0 = Date.now(); while (!/пересчитаны|Ошибка/.test($("dmStatus").textContent) && Date.now() - t0 < 120000) await sleep(100); }
     check($("dmInstrReset").hidden && $("dmIbw").value === "0.7" && /пересчитаны/.test($("dmStatus").textContent) && /FWHM 0\.7 нм/.test(txt($("dmInstrTable"))), `кнопка «Как на «Анализе»» вернула полосу ${$("dmIbw").value} из симулятора и пересчитала эффекты: ${$("dmStatus").textContent}`);
-    $("btn1").click(); await sleep(100);
+    $("btn1").click(); { const t = Date.now(); while ($("btnAll").disabled && Date.now() - t < 30000) await sleep(25); }
     check(/выполнен фит/.test($("dmStatus").textContent), "опорный фит на «Анализе» помечает иллюстрации устаревшими: " + $("dmStatus").textContent);
   }
   if (jsonFile) fs.writeFileSync(jsonFile, JSON.stringify(out, null, 1));

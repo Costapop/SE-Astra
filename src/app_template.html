@@ -234,7 +234,7 @@ footer p { margin: 4px 0; }
 <body>
 <a class="skip-link" href="#s0">Перейти к спектру</a>
 <header class="appbar">
-  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.1.2</span></a>
+  <a class="brand" href="#analysis" aria-label="SE Astra — анализ"><span class="brand-symbol" aria-hidden="true">✳</span><span class="brand-name">SE <b>Astra</b></span><span class="ver" id="appVer">v1.2.0</span></a>
   <nav aria-label="Страницы"><a href="#analysis" data-page="analysis" class="active">Анализ</a><a href="#demo" data-page="demo">Иллюстрации</a></nav>
   <div class="tools"><span class="seg" role="group" aria-label="Тема оформления"><button type="button" data-theme="auto" title="Как в системе">Авто</button><button type="button" data-theme="light" title="Светлая тема">Светлая</button><button type="button" data-theme="dark" title="Тёмная тема">Тёмная</button></span><a class="docs-link" href="https://github.com/Costapop/SE-Astra#readme" target="_blank" rel="noopener">Руководство ↗</a></div>
 </header>
@@ -390,35 +390,68 @@ footer p { margin: 4px 0; }
     <div id="globalStatus" class="status" role="status" aria-live="polite">Готово к анализу · 800 обучающих примеров</div>
     <div class="tb-progress" aria-hidden="true"><div id="runProgress"></div></div>
   </div>
-  <section class="step spectrum-card" id="s0">
+  <div class="analysis-navigation">
+    <div class="analysis-tabs" role="tablist" aria-label="Разделы анализа">
+      <button id="viewStage0" role="tab" data-analysis-stage="0" aria-controls="s0" aria-selected="true" aria-label="Спектр"><span class="analysis-tab-full">Спектр</span><span class="analysis-tab-short" aria-hidden="true">Спектр</span></button>
+      <button id="viewStage1" role="tab" data-analysis-stage="1" aria-controls="s1" aria-selected="false" tabindex="-1" disabled aria-label="1. Фит"><span class="analysis-tab-full">1. Фит</span><span class="analysis-tab-short" aria-hidden="true">1</span></button>
+      <button id="viewStage2" role="tab" data-analysis-stage="2" aria-controls="s2" aria-selected="false" tabindex="-1" disabled aria-label="2. Обучение"><span class="analysis-tab-full">2. Обучение</span><span class="analysis-tab-short" aria-hidden="true">2</span></button>
+      <button id="viewStage3" role="tab" data-analysis-stage="3" aria-controls="s3" aria-selected="false" tabindex="-1" disabled aria-label="3. Диагноз"><span class="analysis-tab-full">3. Диагноз</span><span class="analysis-tab-short" aria-hidden="true">3</span></button>
+      <button id="viewStage4" role="tab" data-analysis-stage="4" aria-controls="s4" aria-selected="false" tabindex="-1" disabled aria-label="4. Решение"><span class="analysis-tab-full">4. Решение</span><span class="analysis-tab-short" aria-hidden="true">4</span></button>
+    </div>
+    <button id="btnCancel" type="button" hidden>Остановить</button>
+  </div>
+  <section class="step spectrum-card" id="s0" role="tabpanel" aria-labelledby="viewStage0">
 <div class="sample-summary" aria-label="Текущие условия"><div><span>Материал</span><b id="summaryMaterial">—</b></div><div><span>Подложка</span><b id="summarySubstrate">—</b></div><div><span>Угол падения</span><b id="summaryAngle">—</b></div><div><span>Диапазон</span><b id="summaryRange">—</b></div></div>
-    <h2>Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
+    <h2 tabindex="-1">Измеренный спектр <span class="spectrum-type">Ψ / Δ</span></h2>
     <p class="lead">Экспериментальные данные и физическая модель.</p>
     <figure class="fig" data-fig="se-ai_spectrum"><figcaption><span class="fig-title">Ψ и Δ измерения</span><span class="fig-tools"></span></figcaption>
       <div class="chart tall"><canvas id="chSpec"></canvas></div><div class="fig-table hidden"></div></figure>
     <div id="specNote" class="note"></div>
   </section>
 
-  <div class="results-heading"><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
-  <section class="step" id="s1">
-    <h2><span class="num">1</span>Опорный фит: однородная плёнка</h2>
+  <div class="results-heading" id="resultsHeading" hidden><h2>Результаты анализа</h2><span id="analysisFreshness">От измерения к параметрам</span></div>
+  <section class="step" id="s1" role="tabpanel" aria-labelledby="viewStage1" hidden>
+    <h2 tabindex="-1"><span class="num">1</span>Опорный фит: однородная плёнка</h2>
     <p class="lead">Толщина ищется грубым перебором в заданном разбросе, затем метод Левенберга–Марквардта с аналитическим якобианом (формулы Фурмана–Тихонравова, разд. 1.4.1) по d, A, A<sub>uv</sub>, E<sub>g</sub> из трёх лучших стартов. Остаток (измерено − модель) в единицах σ — то, что модель не смогла объяснить.</p>
+    <div class="stage-live" id="stageLive1" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus1" role="status" aria-live="polite">Подготовка…</p><span id="elapsed1" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar1" max="100" value="0" aria-label="Ход шага 1"></progress>
+    </div>
     <div id="refOut" class="empty">Загрузите спектр и нажмите «Опорный фит».</div>
     <figure class="fig empty" data-fig="se-ai_residual_reference_fit"><figcaption><span class="fig-title">Остаток опорного фита однородной плёнки</span><span class="fig-tools"></span></figcaption>
       <div class="chart"><canvas id="chRes"></canvas></div><div class="fig-table hidden"></div></figure>
     <div id="chanOut" class="note"></div>
   </section>
 
-  <section class="step" id="s2">
-    <h2><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
+  <section class="step" id="s2" role="tabpanel" aria-labelledby="viewStage2" hidden>
+    <h2 tabindex="-1"><span class="num">2</span>Обучение ИИ-модели на смоделированных остатках</h2>
     <p class="lead">Для тех же условий генерируются спектры со случайными дефектами двенадцати классов (без дефектов; градиент δ&gt;0 или δ&lt;0; шероховатость; поглощение; их сочетания) и с мешающими факторами: толщина в заданном разбросе, дисперсия ±5 %, ошибка угла, полоса, сдвиг шкалы λ, дрейф, шум по σ из файла. Если включена задняя сторона подложки, её доля в каждом примере разыгрывается в пределах заданной неопределённости, а фит использует заданную долю. Каждый пример фитируется той же однородной прозрачной моделью; на его остатке и учится логистическая регрессия. У поглощения своя сигнатура: не сдвиг Ψ в полуволновых точках, как у градиента, а затухание контраста полос, растущее к синему краю.</p>
     <div class="bar"><div id="trainBar"></div></div>
+    <div class="stage-live" id="stageLive2" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus2" role="status" aria-live="polite">Подготовка…</p><span id="elapsed2" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar2" max="100" value="0" aria-label="Ход шага 2"></progress>
+    </div>
     <div id="trainOut" class="empty">Сначала опорный фит.</div>
   </section>
 
-  <section class="step" id="s3">
-    <h2><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
+  <section class="step" id="s3" role="tabpanel" aria-labelledby="viewStage3" hidden>
+    <h2 tabindex="-1"><span class="num">3</span>Диагноз: вероятности наборов дефектов</h2>
     <p class="lead">Остаток измеренного спектра подаётся в обученную модель. Ниже — вероятность каждого класса и оценка размеров дефектов регрессией. Модель для окончательного фита можно поправить вручную.</p>
+    <div class="stage-live" id="stageLive3" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus3" role="status" aria-live="polite">Подготовка…</p><span id="elapsed3" class="stage-elapsed">0 с</span></div>
+      <progress id="stageBar3" max="100" value="0" aria-label="Ход шага 3"></progress>
+      <div class="inference-layout">
+        <div class="inference-input"><h3>Остаток опорного фита</h3><span class="inference-phase" id="inferencePhase">Спектральный остаток</span>
+          <svg class="residual-viz" viewBox="0 0 600 200" role="img" aria-label="Остатки Ψ и Δ, передаваемые обученной модели">
+            <path class="viz-axis" d="M16 100H584"/><polyline id="inferencePsi" class="viz-psi" fill="none"/><polyline id="inferenceDelta" class="viz-delta" fill="none"/>
+            <line id="residualScan" x1="16" x2="16" y1="16" y2="184" class="residual-scan"/>
+          </svg>
+          <div class="residual-key"><span>Ψ-остаток</span><span>Δ-остаток</span></div><p id="inferenceRange" class="note"></p>
+          <details class="inference-explanation"><summary>Как читать анимацию</summary><p class="note">Визуализация вклада признаков обученной модели. Промежуточные оценки рассчитаны по части признаков; итоговые вероятности — после всего остатка и якорных каналов.</p></details>
+        </div>
+        <div><h3>Топ-5 комбинаций</h3><div class="live-prob-list" id="inferenceTop" aria-label="Пять наиболее вероятных комбинаций"></div><p id="otherProbs" class="note"></p></div>
+      </div>
+    </div>
     <div id="diagOut" class="empty">Сначала обучение.</div>
     <div class="checks" id="modelChoice" style="display:none">
       <label><input type="checkbox" id="ckGrad"> градиент показателя по глубине</label>
@@ -427,9 +460,16 @@ footer p { margin: 4px 0; }
     </div>
   </section>
 
-  <section class="step" id="s4">
-    <h2><span class="num">4</span>Окончательный фит и решение</h2>
+  <section class="step" id="s4" role="tabpanel" aria-labelledby="viewStage4" hidden>
+    <h2 tabindex="-1"><span class="num">4</span>Окончательный фит и решение</h2>
     <p class="lead">Фит в выбранной модели: однородная плёнка плюс слой Бруггемана (50 % плёнка / 50 % пустота), и/или линейный градиент показателя (лестница из 40 подслоёв, 80 при |δ| &gt; 4 %), и/или хвост поглощения ниже края (второй осциллятор Тауца–Лоренца с теми же E₀, C и порогом E<sub>t</sub> = 1.2 эВ; свободна его сила, выводится k хвоста при 400 нм). Несколько стартов — толщины из перебора опорного фита, оба знака градиента, а при поглощении ещё и несколько сил хвоста со справочной дисперсией — разведываются на грубой модели, лучший дотягивается на точной. Параметр дефекта, не отличимый от нуля на 3σ, отбрасывается, и фит повторяется.</p>
+    <div class="stage-live" id="stageLive4" hidden>
+      <div class="stage-live-heading"><span class="activity-mark" aria-hidden="true"></span><p id="stageStatus4" role="status" aria-live="polite">Подготовка…</p><span id="elapsed4" class="stage-elapsed">0 с</span></div>
+      <div class="fit-metrics"><div><span>Текущий χ²/ν</span><b id="fitChi">—</b></div><div><span>Толщина d</span><b id="fitD">—</b></div><div><span>Итерация</span><b id="fitIteration">—</b></div></div>
+      <svg class="fit-viz" viewBox="0 0 600 180" role="img" aria-label="Динамика невязки по итерациям окончательного фита"><path class="viz-axis" d="M20 20V160H580"/><polyline id="fitTrace" fill="none"/></svg>
+      <p id="fitScale" class="note">Ожидаем первые итерации…</p><p id="fitPhase" class="note">Перебор стартов, точный фит и оценка погрешностей.</p>
+      <p class="note">Показаны реальные расчёты. При смене старта, числа подслоёв или модели после вето невязка может увеличиваться.</p>
+    </div>
     <div id="finOut" class="empty">Сначала диагноз.</div>
     <div class="grid2">
       <figure class="fig empty" data-fig="se-ai_residual_final_fit"><figcaption><span class="fig-title">Остаток окончательного фита</span><span class="fig-tools"></span></figcaption>
@@ -626,8 +666,11 @@ footer p { margin: 4px 0; }
   <p><b>ИИ.</b> Мультиномиальная логистическая регрессия на остатке и якорных каналах, гребневая регрессия для размеров. Все вычисления идут в браузере; внешние библиотеки — Chart.js, SheetJS, KaTeX.</p>
 </details><p class="footer-links"><a href="https://github.com/Costapop/SE-Astra">Исходный код</a><span>Спектральная эллипсометрия · Локальные вычисления</span></p></footer>
 
-<script>
+<script id="ellip-core">
 /*__CORE__*/
+</script>
+<script id="analysis-tasks" type="text/plain">
+/*__ANALYSIS_TASKS__*/
 </script>
 <script>
 const EXAMPLES = /*__EXAMPLES__*/[];
@@ -636,7 +679,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 (function () {
   'use strict';
   const E = window.EllipCore;
-  const APP_VERSION = '1.1.2';
+  const APP_VERSION = '1.2.0';
   const $ = (id) => document.getElementById(id);
   const S = { data: null, example: null, cfg: null, prior: null, ref: null, train: null, probs: null, choice: null, fin: null, charts: {}, redraw: {} };
   const MINUS = '−';
@@ -684,8 +727,16 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     else if (name !== was) window.scrollTo(0, 0);
   }
   function routeFromHash() {
+    if (typeof astraBusy !== 'undefined' && astraBusy) return;
     const h = (location.hash || '#analysis').slice(1);
-    if (h === 'demo' || h.startsWith('dm-')) showPage('demo', h === 'demo' ? null : h); else showPage('analysis', /^s\d$/.test(h) && $(h) ? h : null);
+    if (h === 'demo' || h.startsWith('dm-')) showPage('demo', h === 'demo' ? null : h);
+    else {
+      showPage('analysis');
+      if (/^s[0-4]$/.test(h)) {
+        const n = Number(h.slice(1)), ready = [true, S.ref, S.train, S.probs, S.fin];
+        if (ready[n]) showAnalysisStage(n, true);
+      }
+    }
   }
   window.addEventListener('hashchange', routeFromHash);
 
@@ -700,6 +751,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   // ---------------------------------------------------------------- данные
   /** Сброс панелей и состояния шагов 1–4 (новый спектр или смена модели измерения). */
   function resetSteps() {
+    showAnalysisStage(0);
+    for (let n = 1; n <= 4; n++) { $('stageLive' + n).hidden = true; $('stageLive' + n).classList.remove('is-running'); }
     S.analysisStale=false;if($('analysisFreshness'))$('analysisFreshness').textContent='От измерения к параметрам';
     S.ref = S.train = S.probs = S.fin = null; S.refFeat = null; S.est = null; S.aiFlags = null; S.choice = null; S.finFlags = null;
     $('btn1').disabled = !S.data; $('btn2').disabled = true; $('btn3').disabled = true; $('btn4').disabled = true;
@@ -707,7 +760,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     $('refOut').textContent = 'Нажмите «Опорный фит».'; $('trainOut').textContent = 'Сначала опорный фит.'; $('diagOut').textContent = 'Сначала обучение.'; $('finOut').textContent = 'Сначала диагноз.';
     $('modelChoice').style.display = 'none'; $('truthOut').innerHTML = ''; $('causeOut').innerHTML = ''; $('chanOut').textContent = ''; $('trainBar').style.width = '0%';
     ['chRes', 'chResFin', 'chFinger', 'chN'].forEach(destroyChart); $('chNTitle').textContent = 'Показатель преломления плёнки';
-    if (S.onDataChange) S.onDataChange();
+    refreshStageNav(); if (S.onDataChange) S.onDataChange();
   }
   function backInfoText() { return $('ckBack').checked ? `, задняя сторона подложки: доля ${fmt(+$('backF').value, 2)}` : ', задней стороны нет'; }
   function setData(d, example) {
@@ -1003,6 +1056,7 @@ const EXAMPLES = /*__EXAMPLES__*/[];
 
   // ---------------------------------------------------------------- очистка панелей перед новым запуском шага k
   function clearFrom(k) {
+    for (let n = k + 1; n <= 4; n++) $('stageLive' + n).hidden = true;
     if (k <= 1) { $('refOut').className = 'empty'; $('refOut').textContent = 'Идёт опорный фит…'; $('chanOut').textContent = ''; destroyChart('chRes'); S.ref = null; S.refFeat = null; }
     if (k <= 2) { $('trainOut').className = 'empty'; $('trainOut').textContent = k === 2 ? 'Идёт обучение…' : 'Сначала опорный фит.'; $('trainBar').style.width = '0%'; S.train = null; $('btn3').disabled = true; }
     if (k <= 3) { $('diagOut').className = 'empty'; $('diagOut').textContent = k === 3 ? 'Идёт диагноз…' : 'Сначала обучение.'; $('modelChoice').style.display = 'none'; S.probs = null; S.est = null; S.aiFlags = null; S.choice = null; $('btn4').disabled = true; }
@@ -1014,14 +1068,14 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   const cfgRef = () => Object.assign({}, S.cfg, { band: null });               // конфигурация опорного фита и обучения: без полосы в модели
   // кривые модели для графика — с тем же числом подслоёв, что и в фите (40/80/160 по |δ|), и с той же полосой (band), что и в данном фите
   function modelCurves(P, band) { return E.modelPsiDelta(S.data.lam, S.cfg.Nsub, S.cfg.phi, P.d, matOf(P), P.delta || 0, P.dRough || 0, E.subLayersFor(P.delta || 0), S.cfg.back, band || null); }
-  function step1() {
+  async function step1() {
     S.analysisStale=false;$('analysisFreshness').textContent='От измерения к параметрам';
     if (!S.data) return; clearFrom(1); readCfg();
     // опорный фит — без полосы в модели (как и обучающие примеры): его остаток — «отпечаток», одинаково устроенный для измерения и обучения
-    const t = performance.now(); const ref = E.referenceFit(S.data, cfgRef(), S.prior); S.ref = ref; const ms = performance.now() - t;
-    const c = modelCurves(ref.P, null); drawSpectrum({ label: 'однородная модель', psi: c.psi, del: c.del });
+    const t = performance.now(); const result = await analysisTask('reference', { data: S.data, cfg: cfgRef(), prior: S.prior }, referenceProgress); const ref = result.ref; S.ref = ref; S.cfg.subDel = result.subDel; const ms = performance.now() - t;
+    const c = result.curves; drawSpectrum({ label: 'однородная модель', psi: c.psi, del: c.del });
     drawResidual('chRes', ref.resid, 'Остаток опорного фита однородной плёнки');
-    const x = E.featureVector(S.data, S.cfg, ref.resid); S.refFeat = x;
+    const x = result.feature; S.refFeat = x;
     const tagChi = ref.chi2 < 2 ? 'ok' : (ref.chi2 < 10 ? 'warn' : 'bad');
     $('refOut').className = ''; $('refOut').innerHTML = T(`<span class="tag ${tagChi}">χ²/ν = ${fmt(ref.chi2, 2)}</span><span class="tag">d = ${fmt(ref.P.d, 2)} ± ${fmt(ref.E.d, 2)} нм</span><span class="tag">A = ${fmt(ref.P.A, 1)}</span><span class="tag">A_uv = ${fmt(ref.P.Auv, 1)}</span><span class="tag">E_g = ${fmt(ref.P.Eg, 3)} эВ</span><span class="tag">${fmt(ms, 0)} мс</span>
       <p class="note">${ref.chi2 < 2 ? 'Однородная прозрачная модель описывает спектр в пределах шума: дефектов, различимых на этом уровне шума, скорее всего нет — ИИ подтвердит или опровергнет.' : 'Однородная прозрачная модель отвергнута: остаток структурирован. Что именно не так — решает ИИ по форме остатка (шаги 2–3).'}</p>`);
@@ -1031,53 +1085,30 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     S.cfgDirty = false; if (S.onFitChange) S.onFitChange();                   // иллюстрации строятся на опорном фите — пометить устаревшими
   }
 
-  // ---------------------------------------------------------------- шаг 2 (порциями, чтобы не замораживать интерфейс)
-  function step2() {
-    return new Promise((resolve) => {
-      if (!S.ref) { resolve(false); return; }
-      clearFrom(2);
-      const N = +$('nTrain').value, K = E.CLASSES.length, rng = E.makeRng(+$('seed').value || 7); const X = [], y = [], sz = []; let i = 0; const t0 = performance.now(); const cfgR = cfgRef();
-      $('trainOut').className = ''; $('btn2').disabled = true;
-      const tick = () => {
-        const tb = performance.now();
-        while (i < N && performance.now() - tb < 120) { const s = E.trainingExample(S.data, cfgR, S.prior, S.nuis, rng, i % K); X.push(s.x); y.push(s.y); sz.push([s.delta, s.dRough, s.k400]); i++; }
-        // ход обучения — и в панели шага 2, и в закреплённой панели запуска (шаг 2 часто ниже края экрана)
-        const pct = (100 * i / N).toFixed(0), sec = ((performance.now() - t0) / 1000).toFixed(0);
-        $('trainBar').style.width = pct + '%'; $('runProgress').style.width = pct + '%';
-        $('trainOut').textContent = `Смоделировано и профитировано ${i} из ${N} примеров (${sec} с)…`;
-        $('globalStatus').textContent = `Обучение ИИ: ${i} из ${N} примеров (${pct} %), ${sec} с…`;
-        if (i < N) { setTimeout(tick, 0); return; }
-        $('trainOut').textContent = 'Обучение логистической регрессии…'; $('globalStatus').textContent = 'Обучение логистической регрессии…';
-        setTimeout(() => {
-          const idx = X.map((_, k) => k); for (let k = idx.length - 1; k > 0; k--) { const j = rng.int(k + 1); [idx[k], idx[j]] = [idx[j], idx[k]]; }
-          const nte = Math.max(30, Math.floor(N / 4)), te = idx.slice(0, nte), tr = idx.slice(nte);
-          const mHold = E.trainSoftmax(tr.map(k => X[k]), tr.map(k => y[k]), K, { epochs: 250 });
-          let acc = 0, accBig = 0, nBig = 0;
-          for (const k of te) { const p = mHold.predictProba(X[k]); const kk = p.indexOf(Math.max(...p)); const big = (sz[k][0] === 0 || Math.abs(sz[k][0]) >= 0.004) && (sz[k][1] === 0 || sz[k][1] >= 0.4) && (sz[k][2] === 0 || sz[k][2] >= 2e-4); if (kk === y[k]) { acc++; if (big) accBig++; } if (big) nBig++; }
-          const model = E.trainSoftmax(X, y, K, { epochs: 250 });
-          const rd = E.ridge(X, sz.map(v => 100 * v[0]), 30), rr = E.ridge(X, sz.map(v => v[1]), 30), rk = E.ridge(X, sz.map(v => 1000 * v[2]), 30);
-          let e1 = 0, e2 = 0, e3 = 0; for (const k of te) { e1 += (rd.predict(X[k]) - 100 * sz[k][0]) ** 2; e2 += (rr.predict(X[k]) - sz[k][1]) ** 2; e3 += (rk.predict(X[k]) - 1000 * sz[k][2]) ** 2; }
-          S.train = { model, rd, rr, rk, N, acc: 100 * acc / nte, accBig: nBig ? 100 * accBig / nBig : NaN, rmseD: Math.sqrt(e1 / nte), rmseR: Math.sqrt(e2 / nte), rmseK: Math.sqrt(e3 / nte) / 1000, sec: (performance.now() - t0) / 1000 };
-          $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">регрессия: δ ± ${fmt(S.train.rmseD, 2)} %, слой ± ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ± ${fmtK(S.train.rmseK)}</span>
-            <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» занижена примерами с дефектами ниже порога обнаружения — их не видно ни одному методу; с двенадцатью классами на класс приходится N/12 примеров, и точность растёт с N заметно дольше, чем с шестью. Оценки регрессии в обучении внутри заданного разброса толщины и дисперсии ±5 %; при выходе за него нужно переобучение.</p>`);
-          $('runProgress').style.width = '0%'; $('globalStatus').textContent = `Обучение завершено за ${fmt(S.train.sec, 0)} с.`;
-          $('btn3').disabled = false; $('btn2').disabled = false; resolve(true);
-        }, 10);
-      };
-      tick();
-    });
+  // ---------------------------------------------------------------- шаг 2 (в фоновом потоке, с прогрессом каждой фазы)
+  async function step2() {
+    if (!S.ref) throw new Error('Сначала выполните опорный фит.');
+    clearFrom(2); $('trainOut').className = '';
+    const N = +$('nTrain').value, K = E.CLASSES.length;
+    S.train = await analysisTask('train', { data: S.data, cfg: cfgRef(), prior: S.prior, nuis: S.nuis, N, seed: +$('seed').value || 7 }, trainingProgress);
+    $('trainOut').innerHTML = T(`<span class="tag">${N} примеров (${K} классов) за ${fmt(S.train.sec, 0)} с</span><span class="tag ${S.train.acc > 70 ? 'ok' : 'warn'}">точность на отложенных ${fmt(S.train.acc, 1)} %</span><span class="tag">выше порога (|δ| ≥ 0.4 %, слой ≥ 0.4 нм, k₄₀₀ ≥ 0.2·10⁻³): ${fmt(S.train.accBig, 1)} %</span><span class="tag">регрессия: δ ± ${fmt(S.train.rmseD, 2)} %, слой ± ${fmt(S.train.rmseR, 2)} нм, k₄₀₀ ± ${fmtK(S.train.rmseK)}</span>
+      <p class="note">Половина обучающих градиентов лежит в тонкой шкале (до 2 %), половина — от 2 % до заданного максимума; так же и хвост поглощения: половина до k₄₀₀ = 10⁻³, половина — от 10⁻³ до заданного максимума. Точность «по всем размерам» занижена примерами с дефектами ниже порога обнаружения — их не видно ни одному методу; с двенадцатью классами на класс приходится N/12 примеров, и точность растёт с N заметно дольше, чем с шестью. Оценки регрессии в обучении внутри заданного разброса толщины и дисперсии ±5 %; при выходе за него нужно переобучение.</p>`);
+    $('btn3').disabled = false;
   }
 
   // ---------------------------------------------------------------- шаг 3
-  function step3() {
+  async function step3() {
     if (!S.train) return; clearFrom(3);
-    const x = S.refFeat; const p = S.train.model.predictProba(x); S.probs = p;
+    prepareInference();
+    const diagnosis = await analysisTask('diagnose', { train: S.train, x: S.refFeat });
+    await animateInference(diagnosis.frames);
+    const p = diagnosis.probs; S.probs = p;
     const order = p.map((v, i) => i).sort((a, b) => p[b] - p[a]); const best = order[0]; const cls = E.CLASSES[best];
     const choice = E.chooseFlags(p); S.choice = choice;                            // при неуверенном ИИ — объединение дефектов двух лучших классов (решает вето в шаге 4)
     const pGrad = sumP(p, c => c.g !== 0), pRough = sumP(p, c => c.r === 1), pNeg = sumP(p, c => c.g === -1), pAbs = sumP(p, c => c.a === 1);
-    const dEst = S.train.rd.predict(x), rEst = S.train.rr.predict(x), kEst = Math.max(0, S.train.rk.predict(x) / 1000);
-    S.est = { delta: dEst / 100, dRough: rEst, k400: kEst };
-    $('diagOut').className = ''; $('diagOut').innerHTML = T(`<div class="probs">${order.map(i => `<span class="${i === best ? 'best' : ''}">${classDots(E.CLASSES[i])}${E.CLASSES[i].name}</span><div class="pb"><div style="width:${(100 * p[i]).toFixed(1)}%"></div></div><span class="pct ${i === best ? 'best' : ''}">${fmt(100 * p[i], 1)} %</span>`).join('')}</div>
+    const dEst = diagnosis.est.delta * 100, rEst = diagnosis.est.dRough, kEst = diagnosis.est.k400;
+    S.est = diagnosis.est;
+    $('diagOut').className = ''; $('diagOut').innerHTML = T(`<details class="all-probabilities"><summary>Все 12 комбинаций</summary><div class="probs">${order.map(i => `<span class="${i === best ? 'best' : ''}">${classDots(E.CLASSES[i])}${E.CLASSES[i].name}</span><div class="pb"><div style="width:${(100 * p[i]).toFixed(1)}%"></div></div><span class="pct ${i === best ? 'best' : ''}">${fmt(100 * p[i], 1)} %</span>`).join('')}</div></details>
       <div class="verdict">Наиболее вероятно: ${cls.name} (${fmt(100 * p[best], 1)} %)</div>
       <div class="note">P(градиент) = ${fmt(100 * pGrad, 1)} % (из них n падает к поверхности: ${fmt(100 * pNeg, 1)} %), P(шероховатость) = ${fmt(100 * pRough, 1)} %, P(поглощение) = ${fmt(100 * pAbs, 1)} %. Оценка размеров регрессией: δ ≈ ${fmt(dEst, 2)} %, слой ≈ ${fmt(rEst, 2)} нм, k₄₀₀ ≈ ${fmtK(kEst)} — это стартовые значения для окончательного фита.${choice.merged ? ` <b>ИИ не уверен</b> (${fmt(100 * choice.pBest, 0)} % против ${fmt(100 * choice.pSecond, 0)} % у «${E.CLASSES[choice.second].name}»): для окончательного фита включены дефекты обоих классов — незначимый на 3σ отбросит вето.` : ''}</div>`);
     $('modelChoice').style.display = 'block'; $('ckGrad').checked = choice.flags.grad; $('ckRough').checked = choice.flags.rough; $('ckAbs').checked = choice.flags.abs;
@@ -1086,13 +1117,15 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   }
 
   // ---------------------------------------------------------------- шаг 4
-  function step4() {
-    if (!S.probs) return; clearFrom(4);
+  async function step4() {
+    if (!S.probs) return; clearFrom(4); fitHistory = []; $('fitTrace').setAttribute('points', ''); ['fitChi', 'fitD', 'fitIteration'].forEach(id => $(id).textContent = '—'); $('fitScale').textContent = 'Ожидаем первые итерации…';
     let flags = { grad: $('ckGrad').checked, rough: $('ckRough').checked, abs: $('ckAbs').checked };
     const sgn = S.choice && S.choice.sign ? S.choice.sign : 0, dStart = sgn ? sgn * Math.max(0.002, Math.abs(S.est.delta)) : S.est.delta;   // знак старта δ — из класса ИИ
     const p0 = Object.assign({}, S.ref.P, { dRough: Math.max(0.1, S.est.dRough), delta: dStart, Ak: S.est.k400 > 0 ? E.tailAk(S.cfg.mat, S.est.k400) : 0, starts: S.ref.starts, startCosts: S.ref.startCosts });
     // S.nuis — заявленные неопределённости условий (угол, доля задней стороны, полоса, шкала λ): finalFit возвращает их линейно распространённую систематику (fin.sys)
-    const t = performance.now(); let fin = E.finalFit(S.data, S.cfg, S.prior, flags, p0, S.nuis); let veto = [];
+    const t = performance.now();
+    const fit = pass => analysisTask('final', { data: S.data, cfg: S.cfg, prior: S.prior, flags, p0, nuis: S.nuis }, e => finalProgress(e, pass));
+    let result = await fit(0), fin = result.fin, veto = [];
     // вето: дефект убирается, если |p| < √((3σ_форм)² + сист.²) — он должен превышать и формальную погрешность, и систематику заявленных неопределённостей условий
     const vetoMsg = (name, k, scale, unit) => `${name} ${fmt(scale * Math.abs(fin.P[k]), 3)}${unit} не превышает порога √((3σ)² + сист.²) = ${fmt(scale * E.vetoThreshold(fin, k), 3)}${unit} — убран`;
     for (let pass = 0; pass < 2; pass++) {
@@ -1100,12 +1133,12 @@ const EXAMPLES = /*__EXAMPLES__*/[];
       if (flags.rough && fin.P.dRough < Math.max(0.03, E.vetoThreshold(fin, 'dRough'))) { flags.rough = false; changed = true; veto.push(vetoMsg('слой шероховатости', 'dRough', 1, ' нм')); }
       if (flags.grad && Math.abs(fin.P.delta) < Math.max(3e-4, E.vetoThreshold(fin, 'delta'))) { flags.grad = false; changed = true; veto.push(vetoMsg('градиент', 'delta', 100, ' %')); }
       if (flags.abs && fin.P.Ak < Math.max(3e-4, E.vetoThreshold(fin, 'Ak'))) { flags.abs = false; changed = true; veto.push(vetoMsg('хвост поглощения (A_k)', 'Ak', 1, ' эВ')); }
-      if (!changed) break; fin = E.finalFit(S.data, S.cfg, S.prior, flags, p0, S.nuis);
+      if (!changed) break; result = await fit(pass + 1); fin = result.fin;
     }
     const ms = performance.now() - t; S.fin = fin; S.finFlags = flags;
     const sysOf = (k) => (fin.sys && fin.sys.total && isFinite(fin.sys.total[k])) ? fin.sys.total[k] : 0;
     const pm = (k, v, e, digits, scale) => `${fmt(scale * v, digits)} ± ${fmt(scale * e, digits)}${fin.sys ? ` <span class="note">(сист. ± ${fmt(scale * sysOf(k), digits)})</span>` : ''}`;
-    const c = modelCurves(fin.P, S.cfg.band); drawSpectrum({ label: 'окончательная модель', psi: c.psi, del: c.del });
+    const c = result.curves; drawSpectrum({ label: 'окончательная модель', psi: c.psi, del: c.del });
     drawResidual('chResFin', fin.resid, 'Остаток окончательного фита'); drawFinger(S.ref.resid, fin.resid);
     const mRef = matOf(S.ref.P), mFin = matOf(fin.P), nkRef = E.filmNK(S.data.lam, mRef), nkFin = E.filmNK(S.data.lam, mFin); S.finMat = mFin;   // снимок дисперсии окончательного фита (для иллюстраций при изменённых условиях)
     const curves = [{ label: 'опорный фит', n: nkRef.n, k: nkRef.k }, { label: 'окончательный фит', n: nkFin.n, k: nkFin.k }];
@@ -1134,14 +1167,18 @@ const EXAMPLES = /*__EXAMPLES__*/[];
         ['Профиль градиента в истине', Tt.delta ? (Tt.continuous ? 'непрерывный (Риккати)' : (Tt.back ? 'лестница, 160 подслоёв' : 'лестница, 40 подслоёв')) : '—', Tt.delta ? 'в фите — лестница из 40 подслоёв (80 при |δ| > 4 %, 160 при |δ| > 12 %)' : '']];
       $('truthOut').innerHTML = T(`<h3>Проверка по скрытой истине образца</h3><table><thead><tr><th>параметр</th><th class="num">истина</th><th>сравнение</th></tr></thead><tbody>${rowsT.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`);
       $('causeOut').innerHTML = '<div class="status">Анализ причин отклонения…</div>';
-      setTimeout(causeAnalysis, 30);
+
     } else { $('causeOut').innerHTML = ''; }
-    drawN(curves);
+    drawN(curves); fitComplete(fin); formatResultTables();
+    if (S.example) {
+      stageStatus('Фит завершён. Проверяем причины отклонения от скрытой истины…');
+      await yieldPaint(); await causeAnalysis(); formatResultTables();
+    }
     if (S.onFitChange) S.onFitChange();                                        // раздел «Дисперсия» иллюстраций показывает окончательный фит
   }
 
   // ---------------------------------------------------------------- анализ причин отклонения от истины (только когда истина известна)
-  function causeAnalysis() {
+  async function causeAnalysis() {
     if (!S.example || !S.fin) return;
     const Tt = S.example.truth, tk = Tt.k400 || 0, fin = S.fin, flags = S.finFlags, lam = S.data.lam, nAt = (m, l) => E.filmNK([l], m).n[0];
     const mFin = matOf(fin.P);
@@ -1178,28 +1215,10 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     if (!Tt.back && S.cfg.back) F.push(`В модели включена задняя сторона подложки (доля ${fmt(S.cfg.back.f, 2)}), а в измерении её нет — та же ошибка с обратным знаком.`);
     if (Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > S.nuis.backFerr + 1e-9) F.push(`Истинная доля задней стороны ${fmt(Tt.back.f, 3)} отличается от заданной ${fmt(S.cfg.back.f, 3)} больше заявленной неопределённости ±${S.nuis.backFerr}: доля не фитируется, и её ошибка целиком уходит в остаток (см. строку бюджета).`);
     // --- бюджет: последовательное устранение факторов при верном наборе дефектов
-    const p0 = Object.assign({}, S.ref.P, { d: Tt.d, dRough: Tt.dRough || 0.5, delta: Tt.delta || 0, Ak: Tt.mat.Ak || 0 });
-    const mk = (opt) => { const sy = E.synthesize(lam, S.cfg.subKey, Tt.phiTrue, Tt.d, Tt.mat, Tt.delta, Tt.dRough, Object.assign({ continuous: !!Tt.continuous, back: Tt.back || null }, opt), E.makeRng(1)); return { lam, psi: Array.from(sy.psi), del: Array.from(sy.del), sigPsi: S.data.sigPsi, sigDel: S.data.sigDel }; };
-    const cfg0 = S.cfg, cfgA = Object.assign({}, S.cfg, { phi: Tt.phiTrue, subDel: null });
-    const bwModel = S.cfg.band ? S.cfg.band.bw : 0;                          // полоса в модели фита; строка бюджета «полоса как в модели» убирает её ошибку
-    const backDiff = !!(Tt.back && S.cfg.back && Math.abs(Tt.back.f - S.cfg.back.f) > 1e-9) || (!!Tt.back !== !!S.cfg.back);
-    const cfgAB = backDiff ? Object.assign({}, cfgA, { back: Tt.back || null, subDel: null }) : cfgA;
-    const cfgAD = Object.assign({}, cfgAB, { mat: Object.assign({}, S.cfg.mat, { E0: Tt.mat.E0, C: Tt.mat.C, Euv: Tt.mat.Euv }) });
-    const fitRow = (label, data, cfg) => { const r = E.finalFit(data, cfg, S.prior, trueFlags, p0); const m = Object.assign({}, cfg.mat, { A: r.P.A, Auv: r.P.Auv, Eg: r.P.Eg, Ak: r.P.Ak || 0 }); return { label, d: r.P.d, delta: trueFlags.grad ? r.P.delta : 0, rough: trueFlags.rough ? r.P.dRough : 0, k: trueFlags.abs ? r.P.k400 : 0, n: nAt(m, 550), chi2: r.chi2 }; };
-    const rows = [{ label: 'измеренный спектр, модель по выбору ИИ (как есть)', d: fin.P.d, delta: flags.grad ? fin.P.delta : 0, rough: flags.rough ? fin.P.dRough : 0, k: flags.abs ? fin.P.k400 : 0, n: nAt(mFin, 550), chi2: fin.chi2 }];
-    if (!classOK) rows.push(fitRow('измеренный спектр, верный набор дефектов', S.data, cfg0));
-    const hasDrift = !!Tt.driftPsi;
-    if (hasDrift) rows.push(fitRow('без шума (дрейф, полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset, driftPsi: Tt.driftPsi, driftDel: Tt.driftDel }), cfg0));
-    rows.push(fitRow(hasDrift ? '+ без дрейфа' : 'без шума и дрейфа (полоса, сдвиг λ, угол — остаются)', mk({ bw: Tt.bw, lamOffset: Tt.lamOffset }), cfg0));
-    rows.push(fitRow('+ без сдвига шкалы λ', mk({ bw: Tt.bw, lamOffset: 0 }), cfg0));
-    rows.push(fitRow(bwModel > 0 ? `+ полоса в истине равна заданной в модели (${fmt(bwModel, 1)} нм)` : '+ без спектральной полосы', mk({ bw: bwModel, lamOffset: 0 }), cfg0));
-    rows.push(fitRow('+ угол известен точно', mk({ bw: bwModel, lamOffset: 0 }), cfgA));
-    if (backDiff) rows.push(fitRow('+ доля задней стороны как у образца', mk({ bw: bwModel, lamOffset: 0 }), cfgAB));
-    rows.push(fitRow('+ E₀, C, E_uv как у образца (остаётся только численная точность)', mk({ bw: bwModel, lamOffset: 0 }), cfgAD));
-    const truthRow = { label: 'истина', d: Tt.d, delta: Tt.delta, rough: Tt.dRough, k: tk, n: nAt(Tt.mat, 550), chi2: NaN };
-    // вклад каждого фактора = изменение параметров при его устранении
-    const contrib = []; for (let i = 1; i < rows.length; i++) contrib.push({ label: rows[i].label, dd: rows[i - 1].d - rows[i].d, dDelta: rows[i - 1].delta - rows[i].delta, dRough: rows[i - 1].rough - rows[i].rough, dk: rows[i - 1].k - rows[i].k, dn: rows[i - 1].n - rows[i].n });
-    const last = rows[rows.length - 1]; const unexpl = { dd: last.d - Tt.d, dDelta: last.delta - Tt.delta, dRough: last.rough - Tt.dRough, dk: last.k - tk, dn: last.n - nAt(Tt.mat, 550) };
+    const { rows, truthRow, contrib, unexpl, bwModel } = await analysisTask('causes', { data: S.data, example: S.example, cfg: S.cfg, prior: S.prior, ref: S.ref, fin: S.fin, finFlags: S.finFlags }, e => {
+      const text = 'Проверка по скрытой истине · ' + e.row + (e.iteration !== undefined ? ` · итерация ${e.iteration}` : '');
+      stageStatus(text); $('causeOut').textContent = text;
+    });
     // словесные выводы по бюджету
     const big = (v, thr) => Math.abs(v) > thr;
     for (const c of contrib) {
@@ -1397,31 +1416,51 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     if(+$('dNom').value<=0||+$('dRange').value<=0||+$('dRange').value>=100)throw new Error('Укажите положительную толщину и разброс больше 0 и меньше 100%.');
     if(+$('sigDef').value<=0||+$('bw').value<0||+$('phiErr').value<0)throw new Error('Шум должен быть положительным; полоса и неопределённость угла — неотрицательными.');
   }
-  async function runAnalysis(stage){
-    if(astraBusy||DM.building)return;
-    try{
-      validateAnalysis();if(stage>1&&S.analysisStale)throw new Error('Условия изменились. Начните с опорного фита.'); astraBusy=true;
-      $('analysisControls').inert=true; $('analysisControls').setAttribute('aria-busy','true');
-      ['btnAll','btn1','btn2','btn3','btn4','dmBuild'].forEach(id=>$(id).disabled=true);
-      document.querySelectorAll('.appbar nav a').forEach(a=>a.setAttribute('aria-disabled','true'));
-      $('globalStatus').textContent=stage===2?'Обучение ИИ…':'Выполняется расчёт…';
-      await new Promise(r=>setTimeout(r,20));
-      if(stage===0||stage===1)step1();
-      if(stage===0||stage===2)await step2();
-      if(stage===0||stage===3)step3();
-      if(stage===0||stage===4)step4();
-      $('globalStatus').textContent='Готово.';
-      if(stage===0&&$('s4').scrollIntoView)$('s4').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(error){$('globalStatus').textContent='Ошибка: '+error.message;}
-    finally{
-      astraBusy=false;$('analysisControls').inert=false;$('analysisControls').removeAttribute('aria-busy');
-      $('btnAll').disabled=!S.data;$('btn1').disabled=!S.data;$('btn2').disabled=!S.ref||S.analysisStale;$('btn3').disabled=!S.train||S.analysisStale;$('btn4').disabled=!S.probs||S.analysisStale;$('dmBuild').disabled=false;
-      document.querySelectorAll('.appbar nav a').forEach(a=>a.removeAttribute('aria-disabled'));
-      $('runProgress').style.width='0%';updateSummary();
+  async function runAnalysis(stage) {
+    if (astraBusy || DM.building) return;
+    let started = false;
+    try {
+      validateAnalysis();
+      if (stage > 1 && S.analysisStale) throw new Error('Условия изменились. Начните с опорного фита.');
+      if ((stage === 2 && !S.ref) || (stage === 3 && !S.train) || (stage === 4 && !S.probs)) throw new Error('Сначала выполните предыдущий шаг.');
+      astraBusy = true; started = true; analysisAbort = new AbortController();
+      $('analysisControls').inert = true; $('analysisControls').setAttribute('aria-busy', 'true');
+      $('modelChoice').inert = true;
+      ['btnAll', 'btn1', 'btn2', 'btn3', 'btn4', 'dmBuild'].forEach(id => $(id).disabled = true);
+      document.querySelectorAll('.appbar nav a').forEach(a => a.setAttribute('aria-disabled', 'true'));
+      const actions = [null, step1, step2, step3, step4];
+      for (const n of stage ? [stage] : [1, 2, 3, 4]) {
+        if (analysisAbort.signal.aborted) throw abortError();
+        showAnalysisStage(n); progressCard(n); stageStatus(`Шаг ${n} из 4 · ${stageNames[n]}…`); progressValue(0);
+        analysisStarted = Date.now();
+        analysisTimer = setInterval(() => { $('elapsed' + n).textContent = Math.floor((Date.now() - analysisStarted) / 1000) + ' с'; }, 1000);
+        await yieldPaint(); showAnalysisStage(n, true); await actions[n]();
+        clearInterval(analysisTimer); analysisTimer = null;
+        $('elapsed' + n).textContent = fmt((Date.now() - analysisStarted) / 1000, 1) + ' с';
+        $('stageLive' + n).classList.remove('is-running'); progressValue(1);
+        $('stageStatus' + n).textContent = n === 3 ? 'Все признаки учтены · итоговые вероятности' : `Шаг ${n} завершён · ${stageNames[n]}`;
+        refreshStageNav(); await yieldPaint();
+      }
+      stageStatus('Готово.');
+    } catch (error) {
+      const text = error.name === 'AbortError' ? 'Расчёт остановлен. Можно повторить шаг.' : 'Ошибка: ' + error.message;
+      stageStatus(text);
+      if (analysisStage === 4 && S.fin && S.example) $('causeOut').textContent = 'Фит сохранён. Проверка причин отклонения не завершена.';
+    } finally {
+      if (started) {
+        clearInterval(analysisTimer); analysisTimer = null;
+        for (let n = 1; n <= 4; n++) $('stageLive' + n).classList.remove('is-running');
+        astraBusy = false; analysisAbort = null;
+      }
+      $('analysisControls').inert = false; $('analysisControls').removeAttribute('aria-busy'); $('modelChoice').inert = false;
+      $('btnAll').disabled = !S.data; $('btn1').disabled = !S.data; $('btn2').disabled = !S.ref || S.analysisStale; $('btn3').disabled = !S.train || S.analysisStale; $('btn4').disabled = !S.probs || S.analysisStale; $('dmBuild').disabled = false;
+      document.querySelectorAll('.appbar nav a').forEach(a => a.removeAttribute('aria-disabled'));
+      $('runProgress').style.width = '0%'; updateSummary(); refreshStageNav();
     }
   }
   [1,2,3,4].forEach(n=>$('btn'+n).addEventListener('click',()=>runAnalysis(n)));
   $('btnAll').addEventListener('click',()=>runAnalysis(0));
+  ['ckGrad', 'ckRough', 'ckAbs'].forEach(id => $(id).addEventListener('change', () => { if (!astraBusy) { clearFrom(4); $('finOut').textContent = 'Модель изменена. Выполните окончательный фит.'; $('stageLive4').hidden = true; if (S.onFitChange) S.onFitChange(); refreshStageNav(); } }));
   document.querySelectorAll('.appbar nav a').forEach(a=>a.addEventListener('click',ev=>{if(astraBusy)ev.preventDefault();}));
   // Guard controls that the original step routines enable before a long batch completes.
   $('runbar').addEventListener('click',ev=>{if(astraBusy){ev.preventDefault();ev.stopImmediatePropagation();}},true);
@@ -1504,10 +1543,10 @@ const EXAMPLES = /*__EXAMPLES__*/[];
   const tipLam = { callbacks: { title: (items) => (items.length && items[0].raw && items[0].raw.lam !== undefined) ? `λ = ${fmtVal(items[0].raw.lam)} нм` : '', label: (it) => `${it.dataset.label}: Ψ ${fmtVal(it.raw.x)} σ, Δ ${fmtVal(it.raw.y)} σ` } };
 
   /** Опорный фит для иллюстраций: фит страницы «Анализ», если он есть и «Априорные условия» после него не менялись; если его нет —
-   *  выполняется шаг 1 (панели «Анализа» пусты, терять нечего); если условия менялись (S.cfgDirty) — свой фит для текущих условий,
+   *  используется свой фит; если условия менялись (S.cfgDirty) — также свой фит для текущих условий,
    *  не трогая результаты шагов 1–4 на «Анализе». Возвращает {P, resid, feat, own}. */
   function ensureRef() {
-    if (!S.ref && S.data) step1();
+    // Illustrations use their own synchronous reference when Analysis has not run.
     if (S.ref && !S.cfgDirty) return { P: S.ref.P, resid: S.ref.resid, feat: S.refFeat, own: false };
     const ref = E.referenceFit(S.data, dmCfgRef(), DM.prior);
     return { P: ref.P, resid: ref.resid, feat: E.featureVector(S.data, DM.cfg, ref.resid), own: true };
@@ -1922,6 +1961,8 @@ const EXAMPLES = /*__EXAMPLES__*/[];
     document.querySelectorAll('#page-demo section.step').forEach(s => io.observe(s));
   }
   document.querySelectorAll('#dmNav a').forEach(a => a.addEventListener('click', (ev) => { ev.preventDefault(); const id = a.getAttribute('href').slice(1); history.replaceState(null, '', '#' + id); const el = $(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+
+  /*__ANALYSIS_UI__*/
 
   /*__ASTRA_JS__*/
 

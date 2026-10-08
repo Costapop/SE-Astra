@@ -1,6 +1,6 @@
 {
   "name": "se-astra",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Спектральная эллипсометрия: анализ тонких плёнок, симулятор и научные иллюстрации",
   "private": true,
   "scripts": {
@@ -14,7 +14,8 @@
     "verify:backside": "node test/verify_backside.js",
     "start": "node tools/serve.js",
     "test:astra": "node test/astra_ui.js",
-    "test:illustrations": "node test/illustration_regression.js"
+    "test:illustrations": "node test/illustration_regression.js",
+    "test:analysis": "node test/analysis_progress.js && node test/analysis_workflow.js"
   },
   "devDependencies": {
     "jsdom": "^24.0.0"

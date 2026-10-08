@@ -10,7 +10,7 @@ html = html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/, `<script>win
 html = html.replace('  // ---------------------------------------------------------------- стартовое состояние:',
   '  window.__test={S,DM,E,dmSizes,dmBase,dmAnchors,renderAnchors,dmFingerOne,redrawCharts,sizesFromAnalysis,step1,step4,clearFrom,pageHooks,exportPng};\n  // ---------------------------------------------------------------- стартовое состояние:');
 const errors = [];
-const dom = new JSDOM(html, { runScripts:'dangerously', pretendToBeVisual:true, url:'http://localhost', beforeParse(w) {
+const dom = new JSDOM(html, { runScripts:'dangerously', pretendToBeVisual:true, url:'http://localhost', beforeParse(w) {require('./worker_shim')(w);
   w.scrollTo=()=>{}; w.addEventListener('error', e=>errors.push(e.message));
 }});
 const w=dom.window, $=id=>w.document.getElementById(id), delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -44,8 +44,8 @@ async function waitBuild(){const start=Date.now();while(w.__test.DM.building){as
  S.cfgDirty=false;S.analysisStale=true;T.sizesFromAnalysis();assert.deepEqual(values(),[.8,2.2,8]);
  S.analysisStale=false;S.fin=null;input('simK',0);
  // Real final fit: no classifier stub can conceal a misplaced field or callback.
- T.step1();S.probs=[1,...Array(11).fill(0)];S.est={delta:0,dRough:0,k400:0};
- $('ckGrad').checked=$('ckRough').checked=$('ckAbs').checked=false;T.step4();
+ await T.step1();S.probs=[1,...Array(11).fill(0)];S.est={delta:0,dRough:0,k400:0};
+ $('ckGrad').checked=$('ckRough').checked=$('ckAbs').checked=false;await T.step4();
  assert.deepEqual(values(),[0,0,0]);assert.ok(S.fin.P);assert.match($('dmSizesSrc').textContent,/окончательного фита/);
  // Clearing downstream results without onFitChange is caught when Illustrations opens.
  T.clearFrom(3);DM.building=true;T.pageHooks.demo[0]();DM.building=false;

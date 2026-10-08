@@ -4,7 +4,7 @@ const {JSDOM}=require('jsdom');
 let html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 html=html.replace(/<script src="vendor\/chart[^" ]*"><\/script>/,'<script>window.Chart=class{constructor(el,cfg){this.canvas=el;this.config=cfg;this.data=cfg.data;this.options=cfg.options;}destroy(){}resize(){}update(){}};</script>').replace(/<script src="vendor\/[^" ]*"><\/script>/g,'');
 const errors=[],registrations=[];
-const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'http://localhost',beforeParse(w){w.scrollTo=()=>{};w.document.modelContext={registerTool(tool){registrations.push(tool);}};w.addEventListener('error',e=>errors.push(e.message));}});
+const dom=new JSDOM(html,{runScripts:'dangerously',pretendToBeVisual:true,url:'http://localhost',beforeParse(w){require('./worker_shim')(w);w.scrollTo=()=>{};w.document.modelContext={registerTool(tool){registrations.push(tool);}};w.addEventListener('error',e=>errors.push(e.message));}});
 const w=dom.window,$=id=>w.document.getElementById(id);
 (async()=>{
  await new Promise(r=>setTimeout(r,30));
@@ -26,7 +26,7 @@ const w=dom.window,$=id=>w.document.getElementById(id);
  select.execute({index:9});assert.equal(read.execute().material,'zro2');assert.equal($('ckBack').checked,true);
  select.execute({index:1});
  $('phi').value='95';$('btnAll').click();await new Promise(r=>setTimeout(r,30));assert.match($('globalStatus').textContent,/Ошибка: Угол/);assert.equal($('btnAll').disabled,false);
- $('phi').value='65';$('btn1').click();await new Promise(r=>setTimeout(r,300));assert.equal(read.execute().stages.reference,true);assert.equal($('btn2').disabled,false);
+ $('phi').value='65';$('btn1').click();{const start=Date.now();while(read.execute().busy&&Date.now()-start<15000)await new Promise(r=>setTimeout(r,30));}assert.equal(read.execute().stages.reference,true);assert.equal($('btn2').disabled,false);
  $('phi').value='64.9';$('phi').dispatchEvent(new w.Event('change'));assert.equal(read.execute().stages.reference,true);assert.equal(read.execute().stale,true);assert.equal($('btn2').disabled,true);
  assert.equal(errors.length,0,errors.join('\n'));dom.window.close();console.log('PASS: Astra tabs, keyboard navigation, spectrum validation, reference fit, invalidation, WebMCP success/error paths.');
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});
