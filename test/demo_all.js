@@ -84,10 +84,10 @@ function checkChart(id, c, exp) {
       const nk = E.filmNK([550], tr.mat).n[0]; check(Math.abs(num(T["n(550 нм)"]) - nk) < 6e-5, `дисперсия/истина: n(550) = ${T["n(550 нм)"]} (ядро ${nk.toFixed(4)})`);
       const k4 = tr.k400 || 0; check(Math.abs(num(T["k₄₀₀ хвоста"]) - k4) < 6e-6, `дисперсия/истина: k₄₀₀ хвоста = ${T["k₄₀₀ хвоста"]} (истина ${k4})`);
     } else check(false, "в таблице дисперсии нет столбца «истина»");
-    // якоря: у однородной плёнки отклонения в HW равны нулю
-    // (для прозрачной плёнки — точно нули; у материала с поглощением в диапазоне Ψ-отклонение однородной плёнки отлично от нуля, о чём должно быть сказано в примечании)
+    // В этих контрольных прозрачных конфигурациях Ψ-отклонение в HW близко к нулю.
+    // Это свойство выбранных примеров, а не любого фазового якоря; пояснение обязано сохранять это ограничение.
     const hom = R.texts.anchorTable[1], kFilm = E.filmNK([ex.lam[0]], tr.mat).k[0], absorbs = kFilm > 1e-4, noteA = txt($("dmAnchorTable").querySelector("p.note"));
-    check(/однородная/.test(hom[0]) && Math.abs(num(hom[4])) < 2e-3 && Math.abs(num(hom[3])) < 2e-3 && (absorbs ? /Материал поглощает/.test(noteA) : Math.abs(num(hom[1])) < 2e-3 && /исчезает/.test(noteA)), `якоря/однородная плёнка: ⟨Ψ − Ψподл⟩ HW = ${hom[1]}${absorbs ? ` (материал поглощает, k(${ex.lam[0]}) = ${kFilm.toFixed(4)}: примечание есть)` : ""}, ⟨Ψ − Ψоднор⟩ QW = ${hom[3]}, ⟨|Δ − Δподл|⟩ HW = ${hom[4]}`);
+    check(/однородная/.test(hom[0]) && Math.abs(num(hom[4])) < 2e-3 && Math.abs(num(hom[3])) < 2e-3 && (absorbs ? /Материал поглощает/.test(noteA) : Math.abs(num(hom[1])) < 2e-3 && /не гарантирует равенства Ψ/.test(noteA)), `якоря/однородная плёнка: ⟨Ψ − Ψподл⟩ HW = ${hom[1]}${absorbs ? ` (материал поглощает, k(${ex.lam[0]}) = ${kFilm.toFixed(4)}: примечание есть)` : ""}, ⟨Ψ − Ψоднор⟩ QW = ${hom[3]}, ⟨|Δ − Δподл|⟩ HW = ${hom[4]}`);
     // таблица фигуры отпечатков — по длине волны, на ряд два столбца (Ψ, Δ), строки отсортированы, числа с настоящим минусом
     { const fig = $("figFingerOverlay"), tb = fig.querySelector('[data-act="table"]'); tb.click(); const t = fig.querySelector(".fig-table table"); const head = [...t.querySelectorAll("thead th")].map(txt), rows = [...t.querySelectorAll("tbody tr")].map(r => [...r.children].map(txt));
       check(head[0] === "λ, нм" && head.length === 1 + 2 * 6 && rows.length === ex.lam.length && rows.every(r => r.every(v => v !== "" && !/-/.test(v))) && +rows[0][0] === ex.lam[0], `таблица отпечатков: ${rows.length} строк по λ, ${head.length} столбцов (${head.slice(0, 3).join(" | ")} …), без пустых ячеек`); tb.click(); }
